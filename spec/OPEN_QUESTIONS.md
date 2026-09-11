@@ -1,0 +1,124 @@
+# Physics Cognitive Lab — Open Questions
+
+> Version: 0.1
+> Purpose: Keep hypotheses separate from settled decisions.
+
+## O001 — Does One Physical Environment Produce Transfer?
+
+**Question:** After completing the microwave-bread environment, can students apply the model to genuinely new contexts?
+
+**Current hypothesis:** Yes, if the environment includes explicit prediction, explanation, model construction, and multiple transfer scenarios.
+
+**What would count as evidence:** Students independently identify the same structural relationship in novel situations.
+
+**Status:** Unvalidated
+
+---
+
+## O002 — How Much AI Scaffolding Is Optimal?
+
+**Question:** How many tutor interactions are useful before the student becomes passive?
+
+**Current hypothesis:** One meaningful question at a time, with progressive hints, is safer than continuous dialogue.
+
+**Status:** Unvalidated
+
+---
+
+## O003 — Does Model Construction Improve Exam Performance?
+
+**Question:** Does requiring students to explicitly build a causal/model diagram improve their ability to analyze exam questions?
+
+**Current hypothesis:** It should improve problem representation and model recognition.
+
+**Status:** Unvalidated
+
+---
+
+## O004 — How Much Physics Language Should Be Introduced Explicitly?
+
+**Question:** What is the right balance between everyday language and formal Grade 9 physics terminology?
+
+**Current hypothesis:** Begin from the student's language, then progressively move toward accepted physics terms.
+
+**Status:** Needs teacher/PER review and student testing
+
+---
+
+## O005 — How Realistic Should the Physical Simulation Be?
+
+**Question:** Does greater physical realism improve learning enough to justify additional complexity?
+
+**Current hypothesis:** For early MVP testing, deterministic conceptual realism matters more than visual or numerical fidelity.
+
+**Status:** Unvalidated
+
+---
+
+## O006 — Which Transfer Distance Is Most Productive?
+
+**Question:** How much should surface context change between the original environment and transfer tasks?
+
+**Current hypothesis:** Use a progression from near → medium → far transfer.
+
+**Status:** Unvalidated
+
+---
+
+## O007 — How Should “Understanding” Be Assessed?
+
+**Question:** Is explanation + transfer + independent exam performance enough to constitute meaningful evidence of model formation?
+
+**Current hypothesis:** It is a useful MVP criterion, but not a validated psychometric measure.
+
+**Status:** Unvalidated
+
+---
+
+## O008 — Can Students Distinguish “Heat”, “Temperature”, and “Internal Energy” Through Interaction?
+
+**Question:** Can the environment reduce the common tendency to treat these terms as interchangeable?
+
+**Current hypothesis:** Contrasting examples and counterexamples should help.
+
+**Status:** Unvalidated
+
+---
+
+## O009 — What Makes Students Want to Return?
+
+**Question:** Does curiosity about the physical phenomenon create stronger engagement than points, badges, or streaks?
+
+**Current hypothesis:** Curiosity + agency + mastery is more aligned with the product philosophy than reward mechanics.
+
+**Status:** Unvalidated
+
+---
+
+## O010 — Can a Single Prompt System Remain Reliable?
+
+**Question:** At what complexity point should tutor responsibilities be split into multiple agents?
+
+**Current hypothesis:** Keep one constrained tutor until actual failures justify decomposition.
+
+**Status:** Unvalidated
+
+---
+
+## O011 — How Well Do Environmental Models Generalize Across Textbook Curricula?
+
+**Question:** Will the same environment and language work across different Chinese Grade 9 physics curricula and exam styles?
+
+**Current hypothesis:** Core physical models should generalize, but terminology and assessment mappings may require curriculum-specific adaptation.
+
+**Status:** Needs curriculum research
+
+---
+
+## O012 — How Should the Product Handle a Student Who Refuses to Explain?
+
+**Question:** What is the best alternative when a student repeatedly chooses answers but avoids explanation?
+
+**Current hypothesis:** Use lightweight structured prompts, prediction choices, and visual model construction rather than forcing long text input.
+
+**Status:** Unvalidated

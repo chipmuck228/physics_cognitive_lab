@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #efe8dc;
+  --foreground: #1c1916;
+  --ink: #1c1916;
+  --ink-muted: #6b6258;
+  --paper: #f7f3eb;
+  --line: #d9d0c3;
+  --heat: #c45c26;
+  --heat-strong: #a4481a;
+  --heat-soft: #f0c08a;
+  --scene: #161412;
 }
 
 @theme inline {
@@ -10,17 +18,48 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-serif: var(--font-newsreader);
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--ink);
+}
+
+@keyframes cavity-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}
+
+@keyframes turntable {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes subtle-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cavity-heating,
+  .animate-\[cavity-glow_1\.8s_ease-in-out_infinite\],
+  .animate-\[turntable_8s_linear_infinite\],
+  .animate-\[subtle-pulse_2\.4s_ease-in-out_infinite\] {
+    animation: none !important;
+  }
 }
