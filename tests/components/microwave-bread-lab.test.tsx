@@ -80,6 +80,21 @@ describe("MicrowaveBreadLab", () => {
 
     await user.type(
       screen.getByLabelText("How would you describe the change in the bread?"),
+      "The bread became hot.",
+    );
+    await user.click(screen.getByRole("button", { name: "Save description" }));
+
+    expect(
+      await screen.findByText("Try again in physics language"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Describe the change in physics language.",
+      }),
+    ).toBeInTheDocument();
+
+    await user.type(
+      screen.getByLabelText("How would you describe the change in the bread?"),
       "The temperature of the bread increased.",
     );
     await user.click(screen.getByRole("button", { name: "Save description" }));
@@ -141,7 +156,24 @@ describe("MicrowaveBreadLab", () => {
     );
     await user.click(screen.getByRole("button", { name: "Save prediction" }));
 
-    await user.click(screen.getByRole("button", { name: "Continue to explanation" }));
+    expect(
+      screen.getByText(/The first observation run does not count here/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Continue to explanation" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Heat again" }));
+    await screen.findByLabelText("How does the actual result compare with your prediction?");
+    await user.type(
+      screen.getByLabelText("How does the actual result compare with your prediction?"),
+      "The temperature rose again, matching my prediction.",
+    );
+    await user.type(
+      screen.getByLabelText("What did this experiment show you?"),
+      "A longer or repeated run added more energy and the bread got hotter.",
+    );
+    await user.click(screen.getByRole("button", { name: "Save comparison" }));
 
     expect(
       await screen.findByRole("heading", {
@@ -198,6 +230,10 @@ describe("MicrowaveBreadLab", () => {
         name: "Connect the model to an exam-style question.",
       }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Microwave oven with a slice of bread"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/Exam World is separate/)).toBeInTheDocument();
 
     await answerExamQuestion(user, {
       representation: "internal energy",
@@ -209,6 +245,7 @@ describe("MicrowaveBreadLab", () => {
     });
 
     expect(await screen.findByText(/Which statement is always correct/)).toBeInTheDocument();
+    expect(screen.queryByText("Choose your answer.")).not.toBeInTheDocument();
 
     await answerExamQuestion(user, {
       representation: "conditions of a claim",
@@ -333,7 +370,10 @@ async function answerExamQuestion(
   },
 ) {
   await user.click(screen.getByRole("radio", { name: input.representation }));
+  await user.click(screen.getByRole("button", { name: "Continue to the model" }));
   await user.click(screen.getByRole("radio", { name: input.model }));
+  expect(screen.queryByText("Choose your answer.")).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Reveal answer choices" }));
   await user.click(screen.getByRole("radio", { name: input.answer }));
   await user.type(screen.getByLabelText(/4\./), input.reasoning);
   await user.click(screen.getByRole("button", { name: "Save exam response" }));

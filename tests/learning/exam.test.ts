@@ -44,9 +44,13 @@ describe("exam evaluation", () => {
       hasCompletedExamSet([
         {
           questionId: EXAM_QUESTIONS[0].id,
+          representation: ["internal energy"],
+          modelRecognition:
+            "energy enters -> internal energy changes -> temperature increases",
           selectedAnswer: EXAM_QUESTIONS[0].correctAnswer,
           reasoning: "Because energy and internal energy changed.",
           correct: true,
+          correctness: true,
           reasoningQuality: "adequate",
           timestamp: "t",
         },
@@ -58,8 +62,21 @@ describe("exam evaluation", () => {
         EXAM_QUESTIONS.map((question) => ({
           questionId: question.id,
           selectedAnswer: question.correctAnswer,
+          timestamp: "t",
+        })),
+      ),
+    ).toBe(false);
+
+    expect(
+      hasCompletedExamSet(
+        EXAM_QUESTIONS.map((question) => ({
+          questionId: question.id,
+          representation: [question.representationOptions[0]],
+          modelRecognition: question.modelOptions[0],
+          selectedAnswer: question.correctAnswer,
           reasoning: "A saved response.",
           correct: true,
+          correctness: true,
           reasoningQuality: "adequate" as const,
           timestamp: "t",
         })),

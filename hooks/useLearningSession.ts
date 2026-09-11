@@ -5,7 +5,11 @@ import { useCallback, useSyncExternalStore } from "react";
 import { createLearningEvent } from "@/lib/learning/events";
 import type { ExamQuestionDefinition } from "@/lib/content/exam-questions";
 import { INDEPENDENT_EXAM_QUESTION } from "@/lib/content/independent-challenge";
+import { evaluateDescription } from "@/lib/learning/describe";
 import { evaluateExamAttempt } from "@/lib/learning/exam";
+import {
+  buildExperimentEvidence,
+} from "@/lib/learning/experiment-evidence";
 import {
   classifyExplanationLevel,
 } from "@/lib/learning/explanation";
@@ -33,6 +37,7 @@ import {
   LearningStage,
   type DescriptionEvidence,
   type ExamAttempt,
+  type ExperimentEvidence,
   type ExplanationEvidence,
   type IndependentAssessment,
   type LearningSession,
@@ -104,17 +109,13 @@ export function useLearningSession() {
       }
 
       const trimmed = text.trim();
+      const evaluation = evaluateDescription(trimmed);
       const description: DescriptionEvidence = {
         text: trimmed,
-        object: trimmed.toLowerCase().includes("bread") ? "bread" : undefined,
-        quantity: trimmed.toLowerCase().includes("temperature")
-          ? "temperature"
-          : undefined,
-        change:
-          trimmed.toLowerCase().includes("increase") ||
-          trimmed.toLowerCase().includes("increased")
-            ? "increase"
-            : undefined,
+        object: evaluation.object,
+        quantity: evaluation.quantity,
+        change: evaluation.change,
+        sufficient: evaluation.sufficient,
         timestamp: new Date().toISOString(),
       };
 
@@ -159,6 +160,39 @@ export function useLearningSession() {
       return tryAdvance(next);
     });
   }, []);
+
+  const saveExperimentEvidence = useCallback(
+    (predictionComparison: string, reflection: string) => {
+      updateSession((current) => {
+        if (current.stage !== LearningStage.EXPERIMENT) {
+          return current;
+        }
+
+        const evidence: ExperimentEvidence | null = buildExperimentEvidence({
+          session: current,
+          predictionComparison,
+          reflection,
+        });
+        if (!evidence) {
+          return current;
+        }
+
+        const next = {
+          ...current,
+          experimentEvidence: [...(current.experimentEvidence ?? []), evidence],
+          events: [
+            ...current.events,
+            createLearningEvent("student_response", current.stage, {
+              kind: "experiment_evidence",
+            }),
+          ],
+        };
+
+        return tryAdvance(next);
+      });
+    },
+    [],
+  );
 
   const saveExplanation = useCallback((text: string) => {
     updateSession((current) => {
@@ -283,9 +317,11 @@ export function useLearningSession() {
           questionId: input.question.id,
           representation: input.representation,
           modelFocus: input.modelFocus,
+          modelRecognition: input.modelFocus,
           selectedAnswer: input.selectedAnswer,
           reasoning: input.reasoning.trim(),
           correct: evaluation.correct,
+          correctness: evaluation.correct,
           reasoningQuality: evaluation.reasoningQuality,
           timestamp: new Date().toISOString(),
         };
@@ -384,6 +420,9 @@ export function useLearningSession() {
           finalTemperatureC: result.finalTemperatureC,
           energyInputJ: result.energyInputJ,
           deltaTemperatureC: result.deltaTemperatureC,
+          powerW: current.physicsState.powerW,
+          heatingTimeSec: current.physicsState.heatingTimeSec,
+          initialTemperatureC: current.physicsState.currentTemperatureC,
         }),
       ],
     }));
@@ -419,6 +458,7 @@ export function useLearningSession() {
     saveObservation,
     saveDescription,
     savePrediction,
+    saveExperimentEvidence,
     saveExplanation,
     saveModelAttempt,
     saveTransferAttempt,

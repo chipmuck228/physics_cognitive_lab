@@ -47,12 +47,31 @@ export interface DescriptionEvidence {
   object?: string;
   quantity?: string;
   change?: string;
+  sufficient?: boolean;
   timestamp: string;
 }
 
 export interface PredictionEvidence {
   prediction: string;
   reasoning: string;
+  timestamp: string;
+}
+
+export interface ExperimentEvidence {
+  prediction: string;
+  predictionReason: string;
+  actualResult: {
+    finalTemperatureC: number;
+    energyInputJ: number;
+    deltaTemperatureC: number;
+  };
+  predictionComparison: string;
+  reflection: string;
+  parameters: {
+    powerW: number;
+    heatingTimeSec: number;
+    initialTemperatureC: number;
+  };
   timestamp: string;
 }
 
@@ -83,9 +102,11 @@ export interface ExamAttempt {
   questionId: string;
   representation?: string[];
   modelFocus?: string;
+  modelRecognition?: string;
   selectedAnswer?: string;
   reasoning?: string;
   correct?: boolean;
+  correctness?: boolean;
   reasoningQuality?: "weak" | "adequate" | "strong";
   timestamp: string;
 }
@@ -137,6 +158,7 @@ export interface LearningSession {
   observations: ObservationEvidence[];
   descriptions: DescriptionEvidence[];
   predictions: PredictionEvidence[];
+  experimentEvidence: ExperimentEvidence[];
   explanations: ExplanationEvidence[];
   modelAttempts: ModelAttempt[];
   transferAttempts: TransferAttempt[];

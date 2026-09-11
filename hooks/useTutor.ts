@@ -4,7 +4,11 @@ import { useCallback, useState } from "react";
 
 import { createLearningEvent } from "@/lib/learning/events";
 import { updateSession } from "@/lib/learning/session-store";
-import { canCallTutor, STAGE_TUTOR_POLICY } from "@/lib/learning/stage-policy";
+import {
+  canCallTutor,
+  isTutorHardBlocked,
+  STAGE_TUTOR_POLICY,
+} from "@/lib/learning/stage-policy";
 import { SAFE_TUTOR_FALLBACK, type TutorResponseParsed } from "@/lib/ai/tutor-schema";
 import { detectMisconceptionSignals } from "@/lib/content/misconceptions";
 import { LearningStage, type LearningSession } from "@/types/learning";
@@ -23,11 +27,20 @@ const STAGE_GOALS: Partial<Record<LearningStage, string>> = {
 export function useTutor(session: LearningSession | null) {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const allowed = Boolean(session && canCallTutor(session.stage));
+  const blocked = Boolean(session && isTutorHardBlocked(session.stage));
+  const allowed = Boolean(
+    session && canCallTutor(session.stage) && !blocked,
+  );
+  const visibleMessage = blocked ? null : message;
+  const visibleLoading = blocked ? false : loading;
 
   const askTutor = useCallback(
     async (studentResponse: string) => {
-      if (!session || !canCallTutor(session.stage)) {
+      if (
+        !session ||
+        isTutorHardBlocked(session.stage) ||
+        !canCallTutor(session.stage)
+      ) {
         return;
       }
 
@@ -68,8 +81,8 @@ export function useTutor(session: LearningSession | null) {
 
   return {
     allowed,
-    message,
-    loading,
+    message: visibleMessage,
+    loading: visibleLoading,
     askTutor,
   };
 }

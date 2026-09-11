@@ -3,7 +3,7 @@ import {
   SAFE_TUTOR_FALLBACK,
   tutorRequestSchema,
 } from "@/lib/ai/tutor-schema";
-import { canCallTutor } from "@/lib/learning/stage-policy";
+import { canCallTutor, isTutorHardBlocked } from "@/lib/learning/stage-policy";
 
 export async function POST(request: Request) {
   try {
@@ -13,8 +13,12 @@ export async function POST(request: Request) {
       return Response.json(SAFE_TUTOR_FALLBACK);
     }
 
+    if (isTutorHardBlocked(parsed.data.stage)) {
+      return Response.json({ error: "tutor_disabled" }, { status: 403 });
+    }
+
     if (!canCallTutor(parsed.data.stage)) {
-      return Response.json(SAFE_TUTOR_FALLBACK, { status: 409 });
+      return Response.json({ error: "tutor_disabled" }, { status: 403 });
     }
 
     const response = await generateTutorResponse(parsed.data);

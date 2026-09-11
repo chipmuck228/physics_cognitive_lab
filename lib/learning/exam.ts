@@ -25,8 +25,23 @@ export function evaluateExamAttempt(input: {
 }
 
 export function hasCompletedExamSet(attempts: ExamAttempt[]): boolean {
-  const answered = new Set(attempts.map((attempt) => attempt.questionId));
-  return REQUIRED_EXAM_QUESTION_IDS.every((id) => answered.has(id));
+  return REQUIRED_EXAM_QUESTION_IDS.every((id) => {
+    const attempt = attempts.find((item) => item.questionId === id);
+    if (!attempt) {
+      return false;
+    }
+
+    const representation = attempt.representation ?? [];
+    const modelRecognition = attempt.modelRecognition ?? attempt.modelFocus ?? "";
+    const reasoning = attempt.reasoning?.trim() ?? "";
+
+    return (
+      representation.length > 0 &&
+      modelRecognition.length > 0 &&
+      Boolean(attempt.selectedAnswer) &&
+      reasoning.length >= 8
+    );
+  });
 }
 
 export function summarizeExamAttempt(

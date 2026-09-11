@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  canCallTutor,
   isActionAllowed,
   isRevealProtected,
   isTutorAllowed,
+  isTutorHardBlocked,
 } from "@/lib/learning/stage-policy";
 import { TutorAction } from "@/types/ai";
 import { LearningStage } from "@/types/learning";
@@ -23,6 +25,10 @@ describe("stage tutor policy", () => {
   it("silences the tutor during EXPERIMENT and AI_OFF", () => {
     expect(isTutorAllowed(LearningStage.EXPERIMENT)).toBe(false);
     expect(isTutorAllowed(LearningStage.AI_OFF)).toBe(false);
+    expect(canCallTutor(LearningStage.AI_OFF)).toBe(false);
+    expect(isTutorHardBlocked(LearningStage.AI_OFF)).toBe(true);
+    expect(isTutorHardBlocked(LearningStage.COMPLETE)).toBe(true);
+    expect(isTutorHardBlocked(LearningStage.EXPLAIN)).toBe(false);
   });
 
   it("protects answer-revealing stages", () => {

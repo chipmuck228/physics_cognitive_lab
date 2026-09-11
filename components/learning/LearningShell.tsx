@@ -27,8 +27,11 @@ export function LearningShell({
   canGoBack = false,
 }: LearningShellProps) {
   const isEntry = stage === LearningStage.ENTRY;
+  const isExamWorld = stage === LearningStage.EXAM;
   const isAssessment =
-    stage === LearningStage.AI_OFF || stage === LearningStage.COMPLETE;
+    isExamWorld ||
+    stage === LearningStage.AI_OFF ||
+    stage === LearningStage.COMPLETE;
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--background)] text-[var(--ink)]">
@@ -54,6 +57,11 @@ export function LearningShell({
       {!isEntry ? (
         <div className="border-b border-[var(--line)] px-4 py-4 sm:px-6">
           <StageHeader stage={stage} />
+          {isExamWorld ? (
+            <p className="mt-2 text-sm text-[var(--ink-muted)]">
+              Exam World is separate from the microwave lab. Work from the question, not the experiment UI.
+            </p>
+          ) : null}
         </div>
       ) : null}
 

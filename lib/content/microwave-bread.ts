@@ -14,6 +14,8 @@ export const SCENE_COPY = {
     "Now describe the change using physics language instead of everyday wording.",
   describeQuestion: "How would you describe the change in the bread?",
   describeSubmit: "Save description",
+  describeNeedsPhysics:
+    "That is a useful everyday observation. Now name the physical quantity and how it changed.",
   predictInstruction:
     "Before changing the conditions again, make a prediction and explain why.",
   predictQuestion:
@@ -21,6 +23,11 @@ export const SCENE_COPY = {
   predictSubmit: "Save prediction",
   experimentInstruction:
     "Change the heating conditions and test your prediction with the deterministic lab.",
+  experimentCompareQuestion: "How does the actual result compare with your prediction?",
+  experimentReflectionQuestion: "What did this experiment show you?",
+  experimentSubmit: "Save comparison",
+  experimentNeedNewRun:
+    "Run a new experiment after your prediction. The first observation run does not count here.",
   explainInstruction:
     "Now explain why the bread's temperature increased. Focus on what changed physically.",
   explainQuestion: "Why did the bread's temperature increase?",
@@ -29,7 +36,10 @@ export const SCENE_COPY = {
     "Build the physical relationship. Choose what belongs between energy entering and temperature increasing.",
   modelSubmit: "Submit model",
   examInstruction:
-    "Now switch into exam mode. Represent the problem, choose the model, answer, and give a short reason.",
+    "You are now in Exam World. The microwave lab is hidden. First say what the question is about, then choose a model. Answer choices appear only after that.",
+  examWorldLabel: "Exam World",
+  examContinueToModel: "Continue to the model",
+  examRevealChoices: "Reveal answer choices",
   aiOffBanner: "AI is now turned off.",
   aiOffInstruction:
     "Solve this one yourself. There are no hints, chat, or previous tutor messages on this page.",

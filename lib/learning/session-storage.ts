@@ -38,6 +38,7 @@ const sessionSchema = z
     observations: z.array(z.unknown()).default([]),
     descriptions: z.array(z.unknown()).default([]),
     predictions: z.array(z.unknown()).default([]),
+    experimentEvidence: z.array(z.unknown()).default([]),
     explanations: z.array(z.unknown()).default([]),
     modelAttempts: z.array(z.unknown()).default([]),
     transferAttempts: z.array(z.unknown()).default([]),

@@ -44,14 +44,97 @@ describe("progression gates", () => {
           ...session,
           descriptions: [
             {
-              text: "The temperature of the bread increased.",
-              quantity: "temperature",
-              change: "increase",
+              text: "The bread became hot.",
+              object: "bread",
               timestamp: "t",
             },
           ],
         },
         LearningStage.PREDICT,
+      ),
+    ).toBe(false);
+    expect(
+      canLeaveStage(
+        {
+          ...session,
+          descriptions: [
+            {
+              text: "The temperature of the bread increased.",
+              object: "bread",
+              quantity: "temperature",
+              change: "increase",
+              sufficient: true,
+              timestamp: "t",
+            },
+          ],
+        },
+        LearningStage.PREDICT,
+      ),
+    ).toBe(true);
+  });
+
+  it("blocks EXPERIMENT → EXPLAIN until a post-prediction run and comparison exist", () => {
+    const session = {
+      ...createSession(),
+      stage: LearningStage.EXPERIMENT,
+      predictions: [
+        {
+          prediction: "temperature increases",
+          reasoning: "More heating time adds more energy.",
+          timestamp: "2026-09-11T00:01:00.000Z",
+        },
+      ],
+      experimentHistory: [
+        {
+          finalTemperatureC: 35,
+          energyInputJ: 15000,
+          deltaTemperatureC: 15,
+        },
+      ],
+    };
+
+    expect(canLeaveStage(session, LearningStage.EXPLAIN)).toBe(false);
+    expect(
+      canLeaveStage(
+        {
+          ...session,
+          events: [
+            ...session.events,
+            {
+              type: "experiment_run",
+              stage: LearningStage.EXPERIMENT,
+              timestamp: "2026-09-11T00:02:00.000Z",
+              metadata: {
+                finalTemperatureC: 50,
+                energyInputJ: 30000,
+                deltaTemperatureC: 15,
+                powerW: 500,
+                heatingTimeSec: 60,
+                initialTemperatureC: 35,
+              },
+            },
+          ],
+          experimentEvidence: [
+            {
+              prediction: "temperature increases",
+              predictionReason: "More heating time adds more energy.",
+              actualResult: {
+                finalTemperatureC: 50,
+                energyInputJ: 30000,
+                deltaTemperatureC: 15,
+              },
+              predictionComparison: "The temperature rose further, matching my prediction.",
+              reflection: "A longer run added more energy and the bread got hotter.",
+              parameters: {
+                powerW: 500,
+                heatingTimeSec: 60,
+                initialTemperatureC: 35,
+              },
+              timestamp: "2026-09-11T00:03:00.000Z",
+            },
+          ],
+        },
+        LearningStage.EXPLAIN,
       ),
     ).toBe(true);
   });
@@ -173,11 +256,11 @@ describe("progression gates", () => {
         {
           ...session,
           examAttempts: [
-            { questionId: "exam-q1", selectedAnswer: "a", reasoning: "r", timestamp: "t" },
-            { questionId: "exam-q2", selectedAnswer: "a", reasoning: "r", timestamp: "t" },
-            { questionId: "exam-q3", selectedAnswer: "a", reasoning: "r", timestamp: "t" },
-            { questionId: "exam-q4", selectedAnswer: "a", reasoning: "r", timestamp: "t" },
-            { questionId: "exam-q5", selectedAnswer: "a", reasoning: "r", timestamp: "t" },
+            completeExamAttempt("exam-q1"),
+            completeExamAttempt("exam-q2"),
+            completeExamAttempt("exam-q3"),
+            completeExamAttempt("exam-q4"),
+            completeExamAttempt("exam-q5"),
           ],
         },
         LearningStage.AI_OFF,
@@ -185,3 +268,17 @@ describe("progression gates", () => {
     ).toBe(true);
   });
 });
+
+function completeExamAttempt(questionId: string) {
+  return {
+    questionId,
+    representation: ["temperature"],
+    modelFocus: "energy enters -> internal energy changes -> temperature increases",
+    modelRecognition: "energy enters -> internal energy changes -> temperature increases",
+    selectedAnswer: "a",
+    reasoning: "The model connects energy, internal energy, and temperature.",
+    correct: true,
+    correctness: true,
+    timestamp: "t",
+  };
+}

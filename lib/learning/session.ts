@@ -19,6 +19,7 @@ export function createSession(
     observations: [],
     descriptions: [],
     predictions: [],
+    experimentEvidence: [],
     explanations: [],
     modelAttempts: [],
     transferAttempts: [],

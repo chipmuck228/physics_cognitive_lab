@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { ExamQuestion } from "@/components/learning/ExamQuestion";
+import { ExperimentEvidencePanel } from "@/components/learning/ExperimentEvidencePanel";
 import { ExplanationPanel } from "@/components/learning/ExplanationPanel";
 import { IndependentChallenge } from "@/components/learning/IndependentChallenge";
 import { LearningShell } from "@/components/learning/LearningShell";
@@ -36,7 +37,12 @@ import {
   TRANSFER_SCENARIOS,
 } from "@/lib/content/transfer-scenarios";
 import { INDEPENDENT_EXAM_QUESTION } from "@/lib/content/independent-challenge";
+import { isSufficientPhysicsDescription } from "@/lib/learning/describe";
 import { evaluateExamAttempt, summarizeExamAttempt } from "@/lib/learning/exam";
+import {
+  hasCompletedExperimentEvidence,
+  hasPostPredictionExperiment,
+} from "@/lib/learning/experiment-evidence";
 import { summarizeExplanationLevel } from "@/lib/learning/explanation";
 import { summarizeModelAttempt } from "@/lib/learning/model-evaluation";
 import { buildCognitiveProfile } from "@/lib/learning/reflection";
@@ -60,6 +66,7 @@ export function MicrowaveBreadLab() {
     saveObservation,
     saveDescription,
     savePrediction,
+    saveExperimentEvidence,
     saveExplanation,
     saveModelAttempt,
     saveTransferAttempt,
@@ -80,6 +87,8 @@ export function MicrowaveBreadLab() {
   const [descriptionText, setDescriptionText] = useState("");
   const [predictionChoice, setPredictionChoice] = useState("");
   const [predictionReasoning, setPredictionReasoning] = useState("");
+  const [predictionComparison, setPredictionComparison] = useState("");
+  const [experimentReflection, setExperimentReflection] = useState("");
   const [explanationText, setExplanationText] = useState("");
   const [modelMiddleNode, setModelMiddleNode] = useState("");
   const [connectSourceToMiddle, setConnectSourceToMiddle] = useState(false);
@@ -147,8 +156,14 @@ export function MicrowaveBreadLab() {
     !isHeating && activePhysics.currentTemperatureC !== activePhysics.initialTemperatureC;
   const isEntry = activeSession.stage === LearningStage.ENTRY;
   const latestObservation = activeSession.observations.at(-1)?.text ?? "";
-  const latestDescription = activeSession.descriptions.at(-1)?.text ?? "";
+  const latestDescriptionRecord = activeSession.descriptions.at(-1) ?? null;
+  const latestDescription = latestDescriptionRecord?.text ?? "";
+  const describeNeedsPhysics =
+    Boolean(latestDescriptionRecord) &&
+    !isSufficientPhysicsDescription(latestDescription);
   const latestPrediction = activeSession.predictions.at(-1) ?? null;
+  const ranPostPredictionExperiment = hasPostPredictionExperiment(activeSession);
+  const experimentEvidenceComplete = hasCompletedExperimentEvidence(activeSession);
   const latestExplanation = activeSession.explanations.at(-1) ?? null;
   const latestModelAttempt = activeSession.modelAttempts.at(-1) ?? null;
   const explanationFeedback = latestExplanation
@@ -212,6 +227,12 @@ export function MicrowaveBreadLab() {
     savePrediction(predictionChoice, predictionReasoning);
     setPredictionChoice("");
     setPredictionReasoning("");
+  }
+
+  function handleSaveExperimentEvidence() {
+    saveExperimentEvidence(predictionComparison, experimentReflection);
+    setPredictionComparison("");
+    setExperimentReflection("");
   }
 
   function handleSaveExplanation() {
@@ -363,6 +384,14 @@ export function MicrowaveBreadLab() {
         <p className="text-sm font-medium text-[var(--ink)]">Your observation</p>
         <p className="text-sm leading-relaxed text-[var(--ink-muted)]">{latestObservation}</p>
       </Card>
+      {describeNeedsPhysics ? (
+        <Card className="space-y-2 p-4">
+          <p className="text-sm font-medium text-[var(--ink)]">Try again in physics language</p>
+          <p className="text-sm leading-relaxed text-[var(--ink-muted)]">
+            {SCENE_COPY.describeNeedsPhysics}
+          </p>
+        </Card>
+      ) : null}
       <StudentInput
         label={SCENE_COPY.describeQuestion}
         prompt={SCENE_COPY.describeInstruction}
@@ -424,7 +453,14 @@ export function MicrowaveBreadLab() {
         onStartHeating={handleStartHeating}
         onResetBread={handleResetBread}
       />
-      {lastResult && !isHeating ? (
+      {!ranPostPredictionExperiment && !isHeating ? (
+        <Card className="p-4">
+          <p className="text-sm leading-relaxed text-[var(--ink-muted)]">
+            {SCENE_COPY.experimentNeedNewRun}
+          </p>
+        </Card>
+      ) : null}
+      {ranPostPredictionExperiment && lastResult && !isHeating ? (
         <Card className="space-y-3 p-4">
           <p className="text-sm font-medium text-[var(--ink)]">
             {breadIsReset ? SCENE_COPY.lastRun : SCENE_COPY.heatingComplete}
@@ -432,17 +468,27 @@ export function MicrowaveBreadLab() {
           <ExperimentResult physicsState={activePhysics} result={lastResult} />
         </Card>
       ) : null}
-      <Card className="space-y-3 p-4">
-        <p className="text-sm font-medium text-[var(--ink)]">Compare the result with your prediction.</p>
-        <p className="text-sm leading-relaxed text-[var(--ink-muted)]">
-          When you are ready, move on to explaining what changed physically inside the bread.
-        </p>
-        <div className="flex justify-end">
-          <Button onClick={() => goToStage(LearningStage.EXPLAIN)}>
-            Continue to explanation
-          </Button>
-        </div>
-      </Card>
+      {ranPostPredictionExperiment && !isHeating && !experimentEvidenceComplete ? (
+        <ExperimentEvidencePanel
+          comparison={predictionComparison}
+          reflection={experimentReflection}
+          onComparisonChange={setPredictionComparison}
+          onReflectionChange={setExperimentReflection}
+          onSubmit={handleSaveExperimentEvidence}
+        />
+      ) : null}
+      {experimentEvidenceComplete ? (
+        <Card className="space-y-3 p-4">
+          <p className="text-sm font-medium text-[var(--ink)]">
+            You compared the result with your prediction.
+          </p>
+          <div className="flex justify-end">
+            <Button onClick={() => goToStage(LearningStage.EXPLAIN)}>
+              Continue to explanation
+            </Button>
+          </div>
+        </Card>
+      ) : null}
     </div>
   ) : activeSession.stage === LearningStage.EXPLAIN ? (
     <div className="space-y-6">
@@ -532,6 +578,7 @@ export function MicrowaveBreadLab() {
       </Card>
       {nextExamQuestion ? (
         <ExamQuestion
+          key={nextExamQuestion.id}
           question={nextExamQuestion}
           representation={examRepresentation}
           modelFocus={examModelFocus}
@@ -611,6 +658,7 @@ export function MicrowaveBreadLab() {
     <LearningShell
       stage={activeSession.stage}
       scene={
+        activeSession.stage === LearningStage.EXAM ||
         activeSession.stage === LearningStage.AI_OFF ||
         activeSession.stage === LearningStage.COMPLETE
           ? undefined
@@ -618,7 +666,9 @@ export function MicrowaveBreadLab() {
       }
       task={task}
       tutor={
-        tutor.allowed ? (
+        tutor.allowed &&
+        activeSession.stage !== LearningStage.AI_OFF &&
+        activeSession.stage !== LearningStage.COMPLETE ? (
           <TutorPanel
             message={tutor.message}
             loading={tutor.loading}

@@ -55,7 +55,11 @@ export function isTutorAllowed(stage: LearningStageType): boolean {
 }
 
 export function canCallTutor(stage: LearningStageType): boolean {
-  return isTutorAllowed(stage);
+  return isTutorAllowed(stage) && !isTutorHardBlocked(stage);
+}
+
+export function isTutorHardBlocked(stage: LearningStageType): boolean {
+  return stage === LearningStage.AI_OFF || stage === LearningStage.COMPLETE;
 }
 
 export function isActionAllowed(

@@ -1,4 +1,6 @@
+import { hasSufficientDescription } from "@/lib/learning/describe";
 import { hasCompletedExamSet } from "@/lib/learning/exam";
+import { hasCompletedExperimentEvidence } from "@/lib/learning/experiment-evidence";
 import { hasCompletedTransferScenarios } from "@/lib/learning/transfer";
 import { canTransition, stageIndex } from "@/lib/learning/state-machine";
 import { LearningStage, type LearningSession } from "@/types/learning";
@@ -37,11 +39,11 @@ export function hasCompletedCognitiveStep(
     case LearningStage.OBSERVE:
       return session.observations.length > 0;
     case LearningStage.DESCRIBE:
-      return session.descriptions.length > 0;
+      return hasSufficientDescription(session.descriptions);
     case LearningStage.PREDICT:
       return session.predictions.length > 0;
     case LearningStage.EXPERIMENT:
-      return session.experimentHistory.length > 0;
+      return hasCompletedExperimentEvidence(session);
     case LearningStage.EXPLAIN:
       return session.explanations.length > 0;
     case LearningStage.MODEL:
