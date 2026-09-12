@@ -2,6 +2,7 @@ import { useId } from "react";
 
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
+import { SCENE_COPY } from "@/lib/content/microwave-bread";
 
 interface StudentInputProps {
   label: string;
@@ -45,7 +46,7 @@ export function StudentInput({
       </div>
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-[var(--ink-muted)]">
-          {canSubmit ? "Your response will be saved to this learning session." : "Write a short response to continue."}
+          {canSubmit ? SCENE_COPY.inputReady : SCENE_COPY.inputNeedMore}
         </p>
         <Button onClick={onSubmit} disabled={!canSubmit}>
           {submitLabel}

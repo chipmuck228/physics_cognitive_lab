@@ -1,8 +1,21 @@
 # Exam Mapping — Energy, Internal Energy, Temperature
 
-> Version: 0.1
+> Version: 0.2 — Aligned
 > Source: the Grade 9 review sheet supplied during product design discussion.
 > Purpose: Map exam questions to cognitive actions, physical models, misconceptions, and environment training.
+
+## Architecture Contract & Cross-References
+
+This document is an exam-representation mapping layer. It does **not** define Physics Models.
+
+- Canonical Physics Model IDs come only from [`physics-model-library.md`](./physics-model-library.md).
+- Model structure and `ExamPattern` fields come from [`physics-model-schema.md`](./physics-model-schema.md).
+- EXAM stage semantics, evidence flow, tutor permissions, and AI_OFF boundaries come from [`universal-physics-learning-protocol.md`](./universal-physics-learning-protocol.md).
+- Every `primaryModelId` in this document MUST resolve to a canonical Library ID. Natural-language descriptions may be retained as explanatory labels, but they are not model identifiers.
+
+### Cognitive Action Taxonomy ownership
+
+C1–C14 are defined exclusively in [`cognitive-action-taxonomy.md`](./cognitive-action-taxonomy.md). This document references those IDs but does not redefine them.
 
 ## 1. Core Principle
 
@@ -38,61 +51,7 @@ Useful cognitive dimensions:
 
 ## 2. Cognitive Action Taxonomy
 
-### C1 — Identify Phenomenon
-
-Recognize what physical process is happening.
-
-### C2 — Translate to Physics Language
-
-Convert everyday wording into physical quantities and relationships.
-
-### C3 — Identify Physical Quantities
-
-Identify temperature, heat/energy transfer, internal energy, mass, specific heat capacity, etc.
-
-### C4 — Distinguish Related Concepts
-
-Separate concepts that are easy to confuse.
-
-### C5 — Identify Causal Relationship
-
-Determine what changes what.
-
-### C6 — Identify Energy Transfer Mechanism
-
-Determine how energy enters, leaves, or moves between systems.
-
-### C7 — Identify Conditions / Constraints
-
-Determine whether a conclusion is justified under the given conditions.
-
-### C8 — Compare Variables
-
-Reason about controlled variables and proportional relationships.
-
-### C9 — Select / Construct Model
-
-Choose the physical model that explains the problem.
-
-### C10 — Apply Model
-
-Use the selected model in the specific context.
-
-### C11 — Qualitative Prediction
-
-Predict what will happen if a relevant condition changes.
-
-### C12 — Quantitative Reasoning
-
-Translate a physical relationship into mathematics and calculate.
-
-### C13 — Check Sufficiency
-
-Ask whether the given information is sufficient to justify a claim.
-
-### C14 — Transfer
-
-Apply the same model to a different surface context.
+This mapping uses the canonical `C1`–`C14` IDs from [`cognitive-action-taxonomy.md`](./cognitive-action-taxonomy.md).
 
 ## 3. Supplied Exam Questions
 
@@ -101,8 +60,9 @@ Apply the same model to a different surface context.
 **Surface:**
 A heat-treatment process occurs at 900–950°C and carbon atoms enter the surface of steel.
 
-**Primary model:**
-Temperature and microscopic random motion.
+**Primary model ID:** `temperature-microscopic-motion`
+
+**Model label:** Temperature and microscopic random motion.
 
 **Cognitive actions:**
 - C1
@@ -124,8 +84,9 @@ Secondary extension.
 **Surface:**
 A compound statement asks which claims follow when an object's temperature increases.
 
-**Primary model:**
-Distinguish temperature, heat/energy transfer, internal energy, and microscopic motion.
+**Primary model ID:** `energy-internal-energy-temperature`
+
+**Model label:** Distinguish temperature, heat/energy transfer, internal energy, and microscopic motion.
 
 **Cognitive actions:**
 - C3
@@ -147,8 +108,9 @@ Core.
 **Surface:**
 Compare the heating requirement of materials with different specific heat capacities.
 
-**Primary model:**
-Q = cmΔT.
+**Primary model ID:** `specific-heat-capacity`
+
+**Model label:** Q = cmΔT.
 
 **Cognitive actions:**
 - C3
@@ -170,8 +132,9 @@ Secondary quantitative extension.
 **Surface:**
 Determine which statement about internal energy and mechanical energy is correct.
 
-**Primary model:**
-Distinguish energy forms / system descriptions.
+**Primary model ID:** `energy-form-system-description`
+
+**Model label:** Distinguish energy forms / system descriptions.
 
 **Cognitive actions:**
 - C4
@@ -197,8 +160,9 @@ Examples include:
 - bending wire repeatedly;
 - grinding with a wheel.
 
-**Primary model:**
-Energy transfer mechanism.
+**Primary model ID:** `internal-energy-change-mechanisms`
+
+**Model label:** Energy transfer mechanism.
 
 **Cognitive actions:**
 - C1
@@ -224,8 +188,9 @@ Judge statements such as:
 - absorbing heat must always increase temperature;
 - temperature increase must mean internal energy increases.
 
-**Primary model:**
-Conditions and distinctions among physical quantities.
+**Primary model ID:** `energy-internal-energy-temperature`
+
+**Model label:** Conditions and distinctions among physical quantities.
 
 **Cognitive actions:**
 - C3
@@ -247,8 +212,9 @@ Core.
 **Surface:**
 Determine the natural direction of heat transfer.
 
-**Primary model:**
-Thermal energy transfer in relation to temperature difference.
+**Primary model ID:** `heat-transfer-direction`
+
+**Model label:** Thermal energy transfer in relation to temperature difference.
 
 **Cognitive actions:**
 - C3

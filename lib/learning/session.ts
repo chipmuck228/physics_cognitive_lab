@@ -1,21 +1,31 @@
 import { createLearningEvent } from "@/lib/learning/events";
-import { createDefaultPhysicsState } from "@/lib/physics/microwave";
-import { LearningStage, type LearningSession } from "@/types/learning";
+import { registerProductionSceneAdapters } from "@/lib/runtime/register-production-adapters";
+import { getSceneAdapter } from "@/lib/runtime/registry";
+import {
+  LearningStage,
+  MICROWAVE_SCENE_ID,
+  type LearningSession,
+  type SceneId,
+} from "@/types/learning";
+
+registerProductionSceneAdapters();
 
 export function createSession(
   now: () => string = () => new Date().toISOString(),
   createId: () => string = () => crypto.randomUUID(),
+  sceneId: SceneId = MICROWAVE_SCENE_ID,
 ): LearningSession {
   const startedAt = now();
+  const adapter = getSceneAdapter(sceneId);
 
   return {
     version: 1,
     sessionId: createId(),
-    sceneId: "microwave-bread",
+    sceneId: adapter.sceneId,
     stage: LearningStage.ENTRY,
     startedAt,
-    physicsState: createDefaultPhysicsState(),
-    experimentHistory: [],
+    physicsState: adapter.getInitialPhysicsState(),
+    sceneData: adapter.getInitialSceneData?.() ?? {},
     observations: [],
     descriptions: [],
     predictions: [],

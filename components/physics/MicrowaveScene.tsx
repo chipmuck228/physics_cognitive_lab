@@ -1,5 +1,6 @@
 import { Bread } from "@/components/physics/Bread";
 import { TemperatureDisplay } from "@/components/physics/TemperatureDisplay";
+import { SCENE_COPY } from "@/lib/content/microwave-bread";
 import { formatClock } from "@/lib/physics/visual";
 
 interface MicrowaveSceneProps {
@@ -18,7 +19,7 @@ export function MicrowaveScene({
   return (
     <section
       className="w-full max-w-xl"
-      aria-label="Microwave oven with a slice of bread"
+      aria-label={SCENE_COPY.microwaveAria}
     >
       <div className="relative overflow-hidden rounded-[2rem] bg-[var(--scene)] px-5 py-8 shadow-[0_24px_80px_rgba(28,22,16,0.28)] sm:px-8 sm:py-10">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,196,140,0.08),transparent_55%)]" />

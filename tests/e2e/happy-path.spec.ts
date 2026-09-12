@@ -13,6 +13,8 @@ import {
   openLab,
   startLesson,
 } from "./helpers";
+import { SCENE_COPY } from "../../lib/content/microwave-bread";
+import { STUDENT_CHROME } from "../../lib/content/student-language";
 
 test.describe("happy path", () => {
   test("walks ENTRY through COMPLETE without skipping stages", async ({
@@ -37,15 +39,15 @@ test.describe("happy path", () => {
     await completeTransfer(page);
     await completeExam(page);
 
-    await expect(page.getByText("AI is now turned off.")).toBeVisible();
-    await expect(page.getByText("Coach")).toHaveCount(0);
+    await expect(page.getByText(SCENE_COPY.aiOffBanner)).toBeVisible();
+    await expect(page.getByText(STUDENT_CHROME.tutorName)).toHaveCount(0);
     await expect(
-      page.getByRole("button", { name: "Ask the coach one question" }),
+      page.getByRole("button", { name: STUDENT_CHROME.tutorAskAria }),
     ).toHaveCount(0);
     expect(tutorRequests).toEqual([]);
 
     await completeIndependentAssessment(page);
-    await expect(page.getByRole("heading", { name: "Physics Thinking" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: SCENE_COPY.completeTitle })).toBeVisible();
     expect(tutorRequests).toEqual([]);
   });
 });

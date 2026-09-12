@@ -1,6 +1,6 @@
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
-import { PREDICTION_OPTIONS } from "@/lib/content/microwave-bread";
+import { PREDICTION_OPTIONS, SCENE_COPY } from "@/lib/content/microwave-bread";
 
 interface PredictionPanelProps {
   selected: string;
@@ -23,7 +23,7 @@ export function PredictionPanel({
     <Card className="space-y-5 p-4">
       <fieldset className="space-y-3">
         <legend className="text-sm font-medium text-[var(--ink)]">
-          Choose one prediction.
+          {SCENE_COPY.chooseGuess}
         </legend>
         <div className="space-y-2">
           {PREDICTION_OPTIONS.map((option) => (
@@ -51,23 +51,23 @@ export function PredictionPanel({
 
       <div className="space-y-2">
         <label htmlFor="prediction-reasoning" className="text-sm font-medium text-[var(--ink)]">
-          Why do you think that will happen?
+          {SCENE_COPY.whyGuess}
         </label>
         <textarea
           id="prediction-reasoning"
           value={reasoning}
           onChange={(event) => onReasoningChange(event.target.value)}
-          placeholder="Explain your thinking in one or two sentences."
+          placeholder={SCENE_COPY.whyGuessPlaceholder}
           className="min-h-28 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm leading-relaxed text-[var(--ink)] outline-none transition focus:border-[var(--heat)] focus:ring-2 focus:ring-[var(--heat)]/20"
         />
       </div>
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-[var(--ink-muted)]">
-          Make your prediction before the next experiment runs.
+          {SCENE_COPY.guessBeforeTest}
         </p>
         <Button onClick={onSubmit} disabled={!canSubmit}>
-          Save prediction
+          {SCENE_COPY.predictSubmit}
         </Button>
       </div>
     </Card>

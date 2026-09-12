@@ -1,7 +1,9 @@
 # Physics Cognitive Lab — Experiment Log
 
-> Version: 0.1
+> Version: 0.2 — Governance aligned; historical experiment entries preserved
 > Purpose: Record evidence from prototypes and real students. This file must never be used to manufacture certainty.
+
+> Authority: Research/evidence log only. This file does not define product architecture, stage semantics, Physics Model IDs, or AI policy. Architectural conflicts are resolved by the UPLP / Physics Model Schema / Physics Model Library contract.
 
 ## Experiment Template
 

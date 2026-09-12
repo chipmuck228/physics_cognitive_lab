@@ -1,5 +1,9 @@
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
+import { SCENE_COPY } from "@/lib/content/microwave-bread";
+import {
+  studentModelLabel,
+} from "@/lib/content/student-language";
 import {
   MODEL_ANCHORS,
   MODEL_NODE_OPTIONS,
@@ -35,7 +39,7 @@ export function ModelCanvas({
     <div className="space-y-4">
       <Card className="space-y-5 p-4">
         <div className="space-y-3">
-          <p className="text-sm font-medium text-[var(--ink)]">Choose the middle part of the model.</p>
+          <p className="text-sm font-medium text-[var(--ink)]">{SCENE_COPY.chooseMiddle}</p>
           <div className="grid gap-2">
             {MODEL_NODE_OPTIONS.map((node) => {
               const selected = selectedMiddleNode === node;
@@ -51,7 +55,7 @@ export function ModelCanvas({
                   }`}
                   aria-pressed={selected}
                 >
-                  {node}
+                  {studentModelLabel(node)}
                 </button>
               );
             })}
@@ -59,10 +63,12 @@ export function ModelCanvas({
         </div>
 
         <div className="space-y-3 rounded-2xl border border-[var(--line)] bg-white/70 p-4">
-          <p className="text-sm font-medium text-[var(--ink)]">Connect the relationship.</p>
+          <p className="text-sm font-medium text-[var(--ink)]">
+            {SCENE_COPY.connectRelationship}
+          </p>
           <div className="space-y-4 text-sm">
             <div className="rounded-xl border border-[var(--line)] p-3 text-[var(--ink)]">
-              {MODEL_ANCHORS.source}
+              {studentModelLabel(MODEL_ANCHORS.source)}
             </div>
             <button
               type="button"
@@ -74,10 +80,12 @@ export function ModelCanvas({
               }`}
               aria-pressed={connectSourceToMiddle}
             >
-              {connectSourceToMiddle ? "Connected" : "Connect top to middle"}
+              {connectSourceToMiddle ? SCENE_COPY.connected : SCENE_COPY.connectTop}
             </button>
             <div className="rounded-xl border border-dashed border-[var(--line)] p-3 text-[var(--ink)]">
-              {selectedMiddleNode || "Choose a middle card first"}
+              {selectedMiddleNode
+                ? studentModelLabel(selectedMiddleNode)
+                : SCENE_COPY.chooseMiddleFirst}
             </div>
             <button
               type="button"
@@ -89,20 +97,18 @@ export function ModelCanvas({
               }`}
               aria-pressed={connectMiddleToTarget}
             >
-              {connectMiddleToTarget ? "Connected" : "Connect middle to bottom"}
+              {connectMiddleToTarget ? SCENE_COPY.connected : SCENE_COPY.connectBottom}
             </button>
             <div className="rounded-xl border border-[var(--line)] p-3 text-[var(--ink)]">
-              {MODEL_ANCHORS.target}
+              {studentModelLabel(MODEL_ANCHORS.target)}
             </div>
           </div>
         </div>
 
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-[var(--ink-muted)]">
-            Build the relationship yourself before moving on.
-          </p>
+          <p className="text-xs text-[var(--ink-muted)]">{SCENE_COPY.buildYourself}</p>
           <Button onClick={onSubmit} disabled={!canSubmit}>
-            Submit model
+            {SCENE_COPY.modelSubmit}
           </Button>
         </div>
       </Card>

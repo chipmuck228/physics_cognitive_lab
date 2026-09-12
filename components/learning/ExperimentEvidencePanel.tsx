@@ -33,7 +33,7 @@ export function ExperimentEvidencePanel({
           id="prediction-comparison"
           value={comparison}
           onChange={(event) => onComparisonChange(event.target.value)}
-          placeholder="Say whether the result matched your prediction, and what was different."
+          placeholder={SCENE_COPY.comparePlaceholder}
           className="min-h-24 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm leading-relaxed text-[var(--ink)] outline-none transition focus:border-[var(--heat)] focus:ring-2 focus:ring-[var(--heat)]/20"
         />
       </div>
@@ -49,14 +49,14 @@ export function ExperimentEvidencePanel({
           id="experiment-reflection"
           value={reflection}
           onChange={(event) => onReflectionChange(event.target.value)}
-          placeholder="Write a short reflection on what the experiment showed."
+          placeholder={SCENE_COPY.reflectionPlaceholder}
           className="min-h-24 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm leading-relaxed text-[var(--ink)] outline-none transition focus:border-[var(--heat)] focus:ring-2 focus:ring-[var(--heat)]/20"
         />
       </div>
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-[var(--ink-muted)]">
-          Compare the actual result with your prediction before explaining.
+          {SCENE_COPY.compareHint}
         </p>
         <Button onClick={onSubmit} disabled={!canSubmit}>
           {SCENE_COPY.experimentSubmit}

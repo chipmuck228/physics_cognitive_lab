@@ -4,7 +4,7 @@ import {
   loadSession,
   saveSession,
 } from "@/lib/learning/session-storage";
-import type { LearningSession } from "@/types/learning";
+import type { LearningSession, SceneId } from "@/types/learning";
 
 let current: LearningSession | null = null;
 const listeners = new Set<() => void>();
@@ -22,9 +22,15 @@ export function subscribeSession(listener: () => void): () => void {
   };
 }
 
-export function getSessionSnapshot(): LearningSession {
-  if (!current) {
-    current = loadSession() ?? createSession();
+export function getSessionSnapshot(
+  sceneId: SceneId = "microwave-bread",
+): LearningSession {
+  if (!current || current.sceneId !== sceneId) {
+    current = loadSession(sceneId) ?? createSession(
+      () => new Date().toISOString(),
+      () => crypto.randomUUID(),
+      sceneId,
+    );
   }
   return current;
 }
@@ -41,8 +47,9 @@ export function replaceSession(next: LearningSession): void {
 
 export function updateSession(
   updater: (session: LearningSession) => LearningSession,
+  sceneId?: SceneId,
 ): void {
-  const next = updater(getSessionSnapshot());
+  const next = updater(getSessionSnapshot(sceneId ?? current?.sceneId));
   if (next === current) {
     return;
   }
@@ -53,9 +60,15 @@ export function resetSessionMemory(): void {
   current = null;
 }
 
-export function resetStoredSession(): void {
-  clearSession();
-  current = createSession();
+export function resetStoredSession(
+  sceneId: SceneId = "microwave-bread",
+): void {
+  clearSession(sceneId);
+  current = createSession(
+    () => new Date().toISOString(),
+    () => crypto.randomUUID(),
+    sceneId,
+  );
   saveSession(current);
   notify();
 }

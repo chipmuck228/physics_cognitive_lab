@@ -1,8 +1,25 @@
 # Microwave Bread — Learning Specification
 
-> Version: 0.1
+> Version: 0.2 — Aligned with UPLP / Physics Model Architecture
 > Target: Grade 9
 > Experience length: approximately 10–15 minutes
+
+## Architecture Alignment
+
+This is a **Scene-specific learning specification** for Microwave Bread. It is not a source of truth for the universal learning protocol or the Physics Model contract.
+
+- `primaryModel`: `energy-internal-energy-temperature`
+- Canonical model definition: `content/physics-models/energy-internal-energy-temperature/`
+- PRE review: `spec/reviews/pre/energy-internal-energy-temperature.md`
+- Evidence Claim Design (implemented by the focused legacy migration): `spec/scenes/microwave-bread/evidence-claim-design.md`
+- The production Scene now implements those contracts. POST is `LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS`. `metadata.status` is `prototype`. Quality-reviewed prototype. Not learner-validated. Do not treat leftover `explanationLevel` 0–4 as official evidence.
+- Universal stage sequence, stage semantics, evidence flow, and AI permissions: `[universal-physics-learning-protocol.md](./universal-physics-learning-protocol.md)`
+- Canonical model structure and completeness rules: `[physics-model-schema.md](./physics-model-schema.md)`
+- Canonical model IDs and model graph: `[physics-model-library.md](./physics-model-library.md)`
+- Scene-specific interaction details: `[interaction-script.md](./interaction-script.md)`
+- Scene-specific evidence gates/configuration: `[state-machine.md](./state-machine.md)`
+
+If this file conflicts with one of the three architecture-contract documents, the designated source-of-truth document wins.
 
 ## 1. Learning Driving Question
 
@@ -34,17 +51,9 @@ The student can use the same general reasoning structure in new situations.
 
 ## 3. Learning Actions
 
-The environment trains:
+This Scene follows the canonical learning loop defined by UPLP. This document does not redefine the global stage sequence.
 
-1. Observe
-2. Describe
-3. Predict
-4. Manipulate
-5. Explain
-6. Model
-7. Transfer
-8. Represent an exam problem
-9. Solve independently
+For Microwave Bread, the student-specific actions include observation, physical description, prediction, controlled manipulation, explanation, model construction, transfer, exam representation, and independent problem solving.
 
 ## 4. Core Conceptual Boundary
 
@@ -114,3 +123,4 @@ The MVP should allow us to investigate whether students can:
 4. apply it to another situation;
 5. recognize related exam tasks;
 6. solve an independent final task.
+

@@ -33,8 +33,8 @@ export function IndependentChallenge({
   return (
     <div className="space-y-6">
       <Card className="space-y-3 border-[var(--ink)]/10 bg-white p-5">
-        <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--ink-muted)]">
-          Independent assessment
+        <p className="text-xs font-medium tracking-[0.16em] text-[var(--ink-muted)]">
+          {SCENE_COPY.independentKicker}
         </p>
         <h2 className="font-serif text-2xl text-[var(--ink)]">
           {SCENE_COPY.aiOffBanner}
@@ -45,7 +45,7 @@ export function IndependentChallenge({
       </Card>
 
       <Card className="space-y-3 p-5">
-        <p className="text-sm font-medium text-[var(--ink)]">Situation</p>
+        <p className="text-sm font-medium text-[var(--ink)]">{SCENE_COPY.lookAtThis}</p>
         <p className="text-sm leading-relaxed text-[var(--ink)]">
           {INDEPENDENT_EXPLANATION.situation}
         </p>
@@ -53,7 +53,7 @@ export function IndependentChallenge({
 
       {explanationSaved ? (
         <Card className="space-y-2 p-4">
-          <p className="text-sm font-medium text-[var(--ink)]">Your explanation</p>
+          <p className="text-sm font-medium text-[var(--ink)]">{SCENE_COPY.yourIndependentWhy}</p>
           <p className="text-sm leading-relaxed text-[var(--ink-muted)]">
             {savedExplanation}
           </p>
@@ -61,8 +61,8 @@ export function IndependentChallenge({
       ) : (
         <StudentInput
           label={INDEPENDENT_EXPLANATION.prompt}
-          prompt="Write your own explanation. This page will not hint or correct you."
-          placeholder="Explain the temperature change using the model you built."
+          prompt={SCENE_COPY.independentPrompt}
+          placeholder={SCENE_COPY.independentPlaceholder}
           value={explanation}
           onChange={onExplanationChange}
           onSubmit={onSubmitExplanation}
@@ -109,7 +109,7 @@ export function IndependentChallenge({
               <Button
                 onClick={onSubmitExam}
                 disabled={selectedAnswer.length === 0}
-                aria-label="Submit independent exam answer"
+                aria-label={SCENE_COPY.independentExamSubmit}
               >
                 {SCENE_COPY.independentExamSubmit}
               </Button>

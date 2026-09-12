@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { STAGE_PROMPTS } from "../../lib/content/microwave-bread";
+import { LearningStage } from "../../types/learning";
 import {
   completeObserve,
   openLab,
@@ -12,15 +14,15 @@ test.describe("persistence", () => {
     await startLesson(page);
     await completeObserve(page);
 
-    await expect(page.getByText("The bread got hotter.")).toBeVisible();
+    await expect(page.getByText("面包摸起来更热了。")).toBeVisible();
 
     await page.reload();
 
     await expect(
       page.getByRole("heading", {
-        name: "Describe the change in physics language.",
+        name: STAGE_PROMPTS[LearningStage.DESCRIBE],
       }),
     ).toBeVisible();
-    await expect(page.getByText("The bread got hotter.")).toBeVisible();
+    await expect(page.getByText("面包摸起来更热了。")).toBeVisible();
   });
 });

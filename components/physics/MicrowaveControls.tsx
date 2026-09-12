@@ -43,7 +43,7 @@ export function MicrowaveControls({
         <div className="grid gap-4 rounded-2xl border border-[var(--line)] bg-white/60 p-4">
           <label className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium text-[var(--ink)]">Power</span>
+              <span className="text-sm font-medium text-[var(--ink)]">{SCENE_COPY.power}</span>
               <span className="text-sm text-[var(--ink-muted)]">{powerW} W</span>
             </div>
             <input
@@ -60,7 +60,7 @@ export function MicrowaveControls({
 
           <label className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium text-[var(--ink)]">Heating time</span>
+              <span className="text-sm font-medium text-[var(--ink)]">{SCENE_COPY.heatingTime}</span>
               <span className="text-sm text-[var(--ink-muted)]">{heatingTimeSec} s</span>
             </div>
             <input
@@ -87,7 +87,7 @@ export function MicrowaveControls({
           variant="secondary"
           onClick={onResetBread}
           disabled={isHeating || !canReset}
-          aria-label="Reset the bread to its starting temperature"
+          aria-label={SCENE_COPY.resetBreadAria}
         >
           {SCENE_COPY.resetBreadCta}
         </Button>

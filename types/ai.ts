@@ -20,15 +20,13 @@ export interface TutorInteraction {
 
 export interface TutorRequest {
   sessionId: string;
+  sceneId?: string;
   stage: LearningStage;
   learningGoal: string;
   studentResponse: string;
-  currentPhysicsState: {
-    initialTemperatureC: number;
-    currentTemperatureC: number;
-    powerW: number;
-    heatingTimeSec: number;
-  };
+  currentPhysicsState: Record<string, unknown>;
+  physicsSummary?: string;
+  promptConstraint?: string;
   knownMisconceptions: string[];
   allowedActions: TutorAction[];
 }

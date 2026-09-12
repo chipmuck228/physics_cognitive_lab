@@ -87,7 +87,7 @@ export function isExperimentEvidenceComplete(
     evidence.predictionReason.trim().length > 0 &&
     evidence.predictionComparison.trim().length >= 8 &&
     evidence.reflection.trim().length >= 8 &&
-    Number.isFinite(evidence.actualResult.finalTemperatureC)
+    Number.isFinite(evidence.actualResult?.finalTemperatureC)
   );
 }
 

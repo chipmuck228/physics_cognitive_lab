@@ -2,20 +2,19 @@ export const INDEPENDENT_EXPLANATION_ID = "metal-spoon";
 
 export const INDEPENDENT_EXPLANATION = {
   id: INDEPENDENT_EXPLANATION_ID,
-  situation:
-    "A metal spoon is placed in hot water. After some time, the temperature of the spoon increases.",
-  prompt: "Explain why.",
+  situation: "一把金属勺放进热水里。过一会儿，勺子的温度升高了。",
+  prompt: "为什么会这样？",
 } as const;
 
 export const INDEPENDENT_EXAM_QUESTION = {
   id: "independent-q1",
-  text: "An iron nail becomes warmer in two situations: it is placed in hot water, and it is hammered many times. Which statement is most accurate?",
+  text: "一枚铁钉在两种情况下都会变热：放进热水里，以及被反复敲打。下面哪一句最准确？",
   options: [
-    "Both situations must be the same kind of heat transfer.",
-    "Both can raise temperature, but energy can enter the nail in different ways.",
-    "Only the hot water can change the nail's internal energy.",
-    "Hammering cannot change temperature because no heat is added.",
+    "这两种情况一定是同一种热传递。",
+    "两种情况都能让温度升高，但能量进入铁钉的方式可以不同。",
+    "只有热水才能改变铁钉的内能。",
+    "敲打不会改变温度，因为没有加入热量。",
   ],
   correctAnswer:
-    "Both can raise temperature, but energy can enter the nail in different ways.",
+    "两种情况都能让温度升高，但能量进入铁钉的方式可以不同。",
 } as const;

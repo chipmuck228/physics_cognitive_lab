@@ -13,7 +13,8 @@ describe("transfer evaluation", () => {
         "Energy moves into the hand, so its temperature becomes warmer.",
       ),
     ).toBe(true);
-    expect(classifyTransferAttempt("The hand gets warm.")).toBe(false);
+    expect(classifyTransferAttempt("能量传到手上，所以手会变暖。")).toBe(true);
+    expect(classifyTransferAttempt("手变暖了。")).toBe(false);
   });
 
   it("requires all transfer scenarios before the stage is complete", () => {
@@ -60,6 +61,6 @@ describe("transfer evaluation", () => {
         identifiedSharedModel: true,
         timestamp: "t",
       }),
-    ).toContain("same energy-and-temperature model");
+    ).toContain("能量和温度");
   });
 });

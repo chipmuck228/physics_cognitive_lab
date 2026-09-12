@@ -1,22 +1,28 @@
 import { STAGE_LABELS } from "@/lib/content/microwave-bread";
-import { stageIndex } from "@/lib/learning/state-machine";
+import { STUDENT_CHROME } from "@/lib/content/student-language";
 import { LEARNING_STAGE_ORDER, type LearningStage } from "@/types/learning";
 
 interface StageProgressProps {
   stage: LearningStage;
+  labels?: Record<LearningStage, string>;
+  stages?: readonly LearningStage[];
 }
 
-export function StageProgress({ stage }: StageProgressProps) {
-  const currentIndex = stageIndex(stage);
+export function StageProgress({
+  stage,
+  labels = STAGE_LABELS,
+  stages = LEARNING_STAGE_ORDER,
+}: StageProgressProps) {
+  const currentIndex = stages.indexOf(stage);
 
   return (
     <ol
       className="flex flex-wrap items-center gap-1.5"
-      aria-label="Learning progress"
+      aria-label={STUDENT_CHROME.progressAria}
     >
-      {LEARNING_STAGE_ORDER.map((item, index) => {
+      {stages.map((item, index) => {
         const isCurrent = item === stage;
-        const isPast = index < currentIndex;
+        const isPast = currentIndex >= 0 && index < currentIndex;
         const state = isCurrent ? "current" : isPast ? "complete" : "upcoming";
 
         return (
@@ -30,11 +36,11 @@ export function StageProgress({ stage }: StageProgressProps) {
                     : "bg-[var(--line)]"
               }`}
               aria-current={isCurrent ? "step" : undefined}
-              aria-label={`${STAGE_LABELS[item]}, ${state}`}
+              aria-label={`${labels[item]}，${state === "current" ? "当前" : state === "complete" ? "已完成" : "还没到"}`}
             />
             {isCurrent ? (
               <span className="text-xs font-medium tracking-wide text-[var(--ink)]">
-                {STAGE_LABELS[item]}
+                {labels[item]}
               </span>
             ) : null}
           </li>

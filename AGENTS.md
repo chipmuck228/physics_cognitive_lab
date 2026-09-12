@@ -2,15 +2,66 @@
 
 > This file contains project-level engineering instructions for Cursor and other coding agents.
 
-## 1. Source of Truth
+## 1. Source of Truth and Required Reading Order
 
-Before making a meaningful architecture or learning change, read:
+Before making any meaningful architecture, learning, Physics Model,
+Scene, AI tutor, assessment, or exam-mapping change, read:
 
-- `PROJECT_BRAIN.md`
-- relevant files in `spec/`
-- `DECISION_LOG.md`
+1. `PROJECT_BRAIN.md`
+2. `spec/SPEC_ALIGNMENT_MANIFEST.md`
+3. `spec/physics-model-quality-review.md` when Physics Model quality,
+   pedagogy, or learning-evidence claims are involved
+4. `spec/evidence-design-contract.md` when designing or reviewing
+   evaluators, evidence flags, transfer, AI_OFF provenance, or L4–L6
+   justification
+5. `spec/universal-physics-learning-protocol.md`
+6. `spec/physics-model-schema.md`
+7. `spec/physics-model-library.md`
+8. `spec/cognitive-action-taxonomy.md` when cognitive actions or assessment are involved
+9. `spec/physics-model-implementation-protocol.md` when implementing a Physics Model or Scene
+10. the relevant model-specific or scene-specific specification
+11. `DECISION_LOG.md`
 
-Do not infer the product strategy from UI code alone.
+These documents form an architecture contract.
+
+Canonical ownership:
+
+- `universal-physics-learning-protocol.md`
+  owns HOW students learn:
+  universal stages, stage semantics, universal evidence flow,
+  tutor permissions, hint progression, AI_OFF semantics.
+
+- `physics-model-schema.md`
+  owns WHAT a valid Physics Model contains:
+  fields, types, model-specific configuration and completeness requirements.
+
+- `physics-model-library.md`
+  owns WHICH Physics Models exist:
+  canonical model IDs, model families, model graph,
+  curriculum coverage and model lifecycle.
+
+- `cognitive-action-taxonomy.md`
+  owns canonical cognitive action IDs such as C1–C14.
+
+- `physics-model-quality-review.md`
+  owns WHETHER physics, pedagogy, and learning-evidence claims
+  are justified. Gate A is PRE-implementation model quality.
+  Gate B is POST-implementation learning-evidence review.
+  Quality review is not optional for a new production model.
+
+- `evidence-design-contract.md`
+  owns HOW implementation evidence must justify a cognitive claim:
+  provenance, relation-over-token, target-specific transfer evidence,
+  transfer-mode evidence semantics, weakest-pass design, and
+  Evidence Claim Design. It does not own stage meanings or L-level
+  meanings.
+
+- Scene-specific specs instantiate the canonical protocol and models.
+  They must not redefine universal stages, hint semantics,
+  model contracts or canonical model IDs.
+
+When documents disagree, follow the designated source-of-truth owner.
+Do not infer product strategy or educational architecture from UI code alone.
 
 ## 2. Never Change Educational Principles Silently
 
@@ -197,3 +248,48 @@ Prefer the smallest implementation consistent with the existing specification.
 If ambiguity affects educational behavior, do not invent a new learning principle.
 
 Document the ambiguity and identify it as an open question.
+
+## 19. Physics Model Implementation Rule
+
+Never begin a new learning unit by building a page.
+
+How a ready Physics Model becomes a production Scene is owned by
+`spec/physics-model-implementation-protocol.md`.
+The default Cursor request is `spec/prompts/implement-physics-model.md`
+(one pass: ENTRY → COMPLETE). Do not write a custom prompt per UPLP
+stage unless that protocol's stop/fallback conditions apply.
+
+The implementation order is:
+
+canonical model design
+→ PRE Model Quality Review
+→ fix quality blockers
+→ readiness validation
+→ Evidence Claim Design
+→ one-pass implementation
+→ adversarial evaluator tests
+→ engineering gates
+→ POST Learning Evidence Review
+→ quality-reviewed prototype
+→ metadata.status = prototype
+→ future learner validation
+→ VALIDATED
+
+Default quality-review request: `spec/prompts/review-physics-model-quality.md`.
+
+`IMPLEMENTATION_READY` does not mean `MODEL_QUALITY_PASS`.
+A quality-reviewed prototype does not mean learner-validated.
+Engineering tests do not confer `validated`.
+`metadata.status` semantics are owned by `spec/physics-model-schema.md`.
+Engineering PASS stays `draft`. POST `PASS` / `PASS_WITH_REFINEMENTS` may promote to `prototype`.
+
+Every Scene MUST declare exactly one `primaryModel`.
+It MAY declare `secondaryModels`.
+
+A secondary model does not automatically become a learning target.
+
+Never create a new model ID inside a Scene.
+Canonical model IDs must exist in `spec/physics-model-library.md`.
+
+MODEL UI is model-owned. Do not copy Scene 02's energy chain or
+Scene 03's relation board onto a model whose structure differs.

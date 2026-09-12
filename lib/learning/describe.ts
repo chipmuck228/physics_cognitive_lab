@@ -2,13 +2,20 @@ export const SCENE_OBJECT = "bread";
 export const PHYSICS_QUANTITY = "temperature";
 export const PHYSICS_CHANGE = "increase";
 
-const OBJECT_PATTERNS = [/\bbread\b/i, /\btoast\b/i, /\bloaf\b/i, /\bslice\b/i];
+const OBJECT_PATTERNS = [
+  /\bbread\b/i,
+  /\btoast\b/i,
+  /\bloaf\b/i,
+  /\bslice\b/i,
+  /面包/,
+];
 
 const QUANTITY_PATTERNS = [
   /\btemperatures?\b/i,
   /\btemp\b/i,
   /°\s*c\b/i,
   /\bdegrees?\b/i,
+  /温度/,
 ];
 
 const INCREASE_PATTERNS = [
@@ -21,6 +28,10 @@ const INCREASE_PATTERNS = [
   /\bgot\s+higher\b/i,
   /\bbecame\s+higher\b/i,
   /\braised\b/i,
+  /升高/,
+  /增加/,
+  /上升/,
+  /变高/,
 ];
 
 export interface DescriptionEvaluation {

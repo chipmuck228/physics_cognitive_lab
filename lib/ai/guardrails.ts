@@ -1,20 +1,22 @@
-import {
-  SAFE_TUTOR_FALLBACK,
-  type TutorResponseParsed,
-} from "@/lib/ai/tutor-schema";
+import { SAFE_TUTOR_FALLBACK, type TutorResponseParsed } from "@/lib/ai/tutor-schema";
 import {
   isActionAllowed,
   isRevealProtected,
   isTutorAllowed,
 } from "@/lib/learning/stage-policy";
-import { LearningStage, type LearningStage as LearningStageType } from "@/types/learning";
+import { registerProductionSceneAdapters } from "@/lib/runtime/register-production-adapters";
+import { getSceneAdapter, hasSceneAdapter } from "@/lib/runtime/registry";
+import { type LearningStage as LearningStageType, type SceneId } from "@/types/learning";
 import { TutorAction, type TutorAction as TutorActionType } from "@/types/ai";
+
+registerProductionSceneAdapters();
 
 const MAX_MESSAGE_LENGTH = 280;
 
 export function applyTutorGuardrails(
   response: TutorResponseParsed,
   stage: LearningStageType,
+  sceneId?: SceneId,
 ): TutorResponseParsed {
   if (!isTutorAllowed(stage)) {
     return { ...SAFE_TUTOR_FALLBACK };
@@ -27,7 +29,7 @@ export function applyTutorGuardrails(
   const sanitizedMessage = sanitizeTutorMessage(response.message);
   const leaked =
     response.revealsAnswer ||
-    looksLikeAnswerLeak(stage, sanitizedMessage);
+    looksLikeAnswerLeak(stage, sanitizedMessage, sceneId);
 
   if (isRevealProtected(stage) && leaked) {
     return {
@@ -63,32 +65,14 @@ export function sanitizeTutorMessage(message: string): string {
 export function looksLikeAnswerLeak(
   stage: LearningStageType,
   message: string,
+  sceneId?: SceneId,
 ): boolean {
-  const normalized = message.toLowerCase();
-
-  if (stage === LearningStage.PREDICT) {
-    return /the temperature will (increase|decrease)|correct prediction|the result will be/.test(
-      normalized,
-    );
+  if (!sceneId || !hasSceneAdapter(sceneId)) {
+    return false;
   }
-
-  if (stage === LearningStage.MODEL) {
-    return /put (the )?internal energy|place internal energy|the middle (card|box) is|belongs between these two: internal/.test(
-      normalized,
-    );
-  }
-
-  if (stage === LearningStage.TRANSFER) {
-    return /this is the same as the microwave|use the bread model|the shared model is/.test(
-      normalized,
-    );
-  }
-
-  if (stage === LearningStage.OBSERVE || stage === LearningStage.DESCRIBE) {
-    return /the temperature increased because energy entered/.test(normalized);
-  }
-
-  return false;
+  return (
+    getSceneAdapter(sceneId).looksLikeTutorLeak?.(stage, message) ?? false
+  );
 }
 
 function firstAllowedAction(stage: LearningStageType): TutorActionType {

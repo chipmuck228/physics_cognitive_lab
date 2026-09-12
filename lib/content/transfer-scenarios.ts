@@ -9,24 +9,25 @@ export interface TransferScenarioDefinition {
 export const TRANSFER_SCENARIOS: TransferScenarioDefinition[] = [
   {
     id: "hot-water-bag",
-    title: "Hot-water bag",
-    situation: "A hot-water bag is placed against a person's hand. After a while, the hand becomes warmer.",
-    prompt: "Can the model you just built help explain why the hand becomes warmer?",
-    focus: "Notice the shared structure even though the energy reaches the object in a different way.",
+    title: "热水袋",
+    situation:
+      "刚才我们研究了微波炉里的面包。如果现在变成一个热水袋贴在手上，过一会儿手会变暖。",
+    prompt: "你还能用刚才的想法解释吗？",
+    focus: "先想：能量怎样到手上，手为什么会变暖。",
   },
   {
     id: "rubbing-hands",
-    title: "Rubbing hands",
-    situation: "Two hands are rubbed together and then feel warm.",
-    prompt: "Why can the hands become warm in this situation?",
-    focus: "Separate the common result from the mechanism that caused it.",
+    title: "搓手",
+    situation: "两只手来回搓，搓完会觉得暖和。",
+    prompt: "手为什么也会变暖？和刚才的面包，有没有一样的地方？",
+    focus: "变暖这个结果可能一样，但能量进来的方式不一定一样。",
   },
   {
     id: "electric-kettle",
-    title: "Electric kettle",
-    situation: "An electric kettle heats water and the water temperature rises.",
-    prompt: "What is similar between this situation and the microwave bread?",
-    focus: "Look for the abstract model, not just the surface story.",
+    title: "电热水壶",
+    situation: "电热水壶给水加热，水的温度升高。",
+    prompt: "这件事和微波炉加热面包，有什么一样的地方？",
+    focus: "先找相同的关系，不要只看表面故事。",
   },
 ] as const;
 

@@ -64,17 +64,17 @@ export function isCorrectModelStructure(
 
 export function summarizeModelAttempt(attempt: ModelAttempt): string {
   if (attempt.correctStructure) {
-    return "You built the core relationship: energy enters, internal energy changes, then temperature increases.";
+    return "你把关系连起来了：能量进入 → 内能变化 → 温度升高。";
   }
 
   const middleNode = attempt.nodes[1];
   if (middleNode !== "internal energy changes") {
-    return "The start and end match the phenomenon. Reconsider what kind of change inside the bread links energy entering to temperature increasing.";
+    return "开头和结尾对上了。再想想：能量进入之后，面包里面是哪种变化，才会让温度升高？";
   }
 
   if (attempt.connections.length < 2) {
-    return "You chose a promising middle idea. Now connect each step so the cause-and-effect chain is complete.";
+    return "中间这一步选得不错。再把前后都连上，因果才完整。";
   }
 
-  return "The model is not complete yet. Try linking the physical changes in order.";
+  return "还差一点。试着按发生的顺序把变化连起来。";
 }

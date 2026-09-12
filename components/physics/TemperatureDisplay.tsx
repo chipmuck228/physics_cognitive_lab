@@ -1,4 +1,5 @@
 import { formatTemperature } from "@/lib/physics/visual";
+import { SCENE_COPY } from "@/lib/content/microwave-bread";
 
 interface TemperatureDisplayProps {
   temperatureC: number;
@@ -7,7 +8,7 @@ interface TemperatureDisplayProps {
 
 export function TemperatureDisplay({
   temperatureC,
-  label = "Bread temperature",
+  label = SCENE_COPY.breadTemperature,
 }: TemperatureDisplayProps) {
   return (
     <div className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-center">

@@ -36,7 +36,7 @@ describe("exam evaluation", () => {
 
     expect(result.correct).toBe(false);
     expect(result.reasoningQuality).toBe("weak");
-    expect(summarizeExamAttempt(result)).toContain("does not match");
+    expect(summarizeExamAttempt(result)).toContain("值得再想");
   });
 
   it("requires the whole curated set before EXAM is complete", () => {

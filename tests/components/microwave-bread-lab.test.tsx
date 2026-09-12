@@ -1,9 +1,33 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { MicrowaveBreadLab } from "@/components/learning/MicrowaveBreadLab";
+import { energyInternalEnergyTemperatureAssessmentOverlay } from "@/content/physics-models/energy-internal-energy-temperature/assessment-overlay";
+import { examPatterns } from "@/content/physics-models/energy-internal-energy-temperature/exam";
+import { independentChallenges } from "@/content/physics-models/energy-internal-energy-temperature/independent-challenges";
+import { PRODUCTION_EXAM_PATTERN_IDS } from "@/content/physics-models/energy-internal-energy-temperature/implementation-contract";
+import {
+  MICROWAVE_CHANGE_OPTIONS,
+  MICROWAVE_EXPLAIN_ENERGY_OPTIONS,
+  MICROWAVE_EXPLAIN_LINK_OPTIONS,
+  MICROWAVE_MODEL_CONDITION_OPTIONS,
+  MICROWAVE_MODEL_DISTINCTION_OPTIONS,
+  MICROWAVE_MODEL_ENERGY_OPTIONS,
+  MICROWAVE_MODEL_INTERNAL_OPTIONS,
+  MICROWAVE_MODEL_SYSTEM_OPTIONS,
+  MICROWAVE_MODEL_TEMPERATURE_OPTIONS,
+  MICROWAVE_OBJECT_OPTIONS,
+  MICROWAVE_OBSERVE_OPTIONS,
+  MICROWAVE_QUANTITY_OPTIONS,
+  MICROWAVE_TASK_COPY,
+  MICROWAVE_TRANSFER_RELATIONS,
+  SCENE_COPY,
+  STAGE_PROMPTS,
+} from "@/lib/content/microwave-bread";
+import { STUDENT_CHROME } from "@/lib/content/student-language";
 import { resetSessionMemory } from "@/lib/learning/session-store";
+import { LearningStage } from "@/types/learning";
 
 function mockReducedMotion() {
   Object.defineProperty(window, "matchMedia", {
@@ -21,6 +45,93 @@ function mockReducedMotion() {
   });
 }
 
+async function completeObserve(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: SCENE_COPY.heatingCta }));
+  await screen.findByText(SCENE_COPY.observeQuestion);
+  await user.click(
+    screen.getByRole("radio", { name: MICROWAVE_OBSERVE_OPTIONS[0].label }),
+  );
+  await user.type(
+    screen.getByLabelText(SCENE_COPY.observePrompt),
+    "面包摸起来更热了。",
+  );
+  await user.click(screen.getByRole("button", { name: SCENE_COPY.observeSubmit }));
+  expect(
+    await screen.findByRole("heading", { name: STAGE_PROMPTS[LearningStage.DESCRIBE] }),
+  ).toBeInTheDocument();
+}
+
+async function completeDescribe(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("radio", { name: MICROWAVE_OBJECT_OPTIONS[0].label }));
+  await user.click(screen.getByRole("radio", { name: MICROWAVE_QUANTITY_OPTIONS[0].label }));
+  await user.click(screen.getByRole("radio", { name: MICROWAVE_CHANGE_OPTIONS[0].label }));
+  await user.type(
+    screen.getByLabelText(SCENE_COPY.describeQuestion),
+    "面包的温度升高了。",
+  );
+  await user.click(screen.getByRole("button", { name: SCENE_COPY.describeSubmit }));
+  expect(
+    await screen.findByRole("heading", { name: STAGE_PROMPTS[LearningStage.PREDICT] }),
+  ).toBeInTheDocument();
+}
+
+async function completePredict(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("radio", { name: "温度会升高。" }));
+  await user.type(
+    screen.getByLabelText(SCENE_COPY.whyGuess),
+    "加热更久，进入面包的能量会更多。",
+  );
+  await user.click(screen.getByRole("button", { name: SCENE_COPY.predictSubmit }));
+  expect(
+    await screen.findByRole("heading", { name: STAGE_PROMPTS[LearningStage.EXPERIMENT] }),
+  ).toBeInTheDocument();
+}
+
+async function completeExperiment(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: SCENE_COPY.heatAgainCta }));
+  await screen.findByText(SCENE_COPY.experimentReflectionQuestion);
+  await user.click(screen.getByRole("radio", { name: "和我猜的一样。" }));
+  await user.type(
+    screen.getByLabelText(SCENE_COPY.experimentReflectionQuestion),
+    "再做一次后，能量更多，面包更热。",
+  );
+  await user.click(screen.getByRole("button", { name: SCENE_COPY.experimentSubmit }));
+  expect(
+    await screen.findByRole("heading", { name: STAGE_PROMPTS[LearningStage.EXPLAIN] }),
+  ).toBeInTheDocument();
+}
+
+async function judgeTransfer(
+  user: ReturnType<typeof userEvent.setup>,
+  relationIndex: number,
+  judgment: "applies" | "not-necessarily",
+) {
+  const relation = MICROWAVE_TRANSFER_RELATIONS[relationIndex];
+  const suffix = judgment === "applies" ? "在这里还能用" : "不能原样搬过来";
+  await user.click(screen.getByRole("radio", { name: `${relation.label}：${suffix}` }));
+}
+
+async function answerExamQuestion(
+  user: ReturnType<typeof userEvent.setup>,
+  input: {
+    representation: string;
+    model: string;
+    answer: string;
+    reasoning: string;
+    reasoningPrompt: string;
+  },
+) {
+  expect(screen.queryByText(SCENE_COPY.examChoose)).not.toBeInTheDocument();
+  await user.click(screen.getByRole("radio", { name: input.representation }));
+  await user.click(screen.getByRole("button", { name: SCENE_COPY.examContinueToModel }));
+  await user.click(screen.getByRole("radio", { name: input.model }));
+  expect(screen.queryByText(SCENE_COPY.examChoose)).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: SCENE_COPY.examRevealChoices }));
+  await user.click(screen.getByRole("radio", { name: input.answer }));
+  await user.type(screen.getByLabelText(input.reasoningPrompt), input.reasoning);
+  await user.click(screen.getByRole("button", { name: SCENE_COPY.examSave }));
+}
+
 describe("MicrowaveBreadLab", () => {
   it("starts the investigation and runs the deterministic heating", async () => {
     mockReducedMotion();
@@ -29,24 +140,20 @@ describe("MicrowaveBreadLab", () => {
     render(<MicrowaveBreadLab />);
 
     expect(
-      await screen.findByRole("heading", {
-        name: "Why does bread become hot in a microwave?",
-      }),
+      await screen.findByRole("heading", { name: SCENE_COPY.headline }),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Start the investigation" }));
+    await user.click(screen.getByRole("button", { name: STUDENT_CHROME.startAria }));
 
     expect(
-      screen.getByRole("heading", {
-        name: "What changes when the bread is heated?",
-      }),
+      screen.getByRole("heading", { name: STAGE_PROMPTS[LearningStage.OBSERVE] }),
     ).toBeInTheDocument();
     expect(screen.getByText("20.0 °C")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Start heating" }));
+    await user.click(screen.getByRole("button", { name: SCENE_COPY.heatingCta }));
 
     await waitFor(() => {
-      expect(screen.getByText("What did you observe?")).toBeInTheDocument();
+      expect(screen.getByText(SCENE_COPY.observeQuestion)).toBeInTheDocument();
       expect(screen.getAllByText("35.0 °C").length).toBeGreaterThanOrEqual(1);
     });
 
@@ -54,272 +161,224 @@ describe("MicrowaveBreadLab", () => {
     expect(screen.getByText("30 s")).toBeInTheDocument();
   });
 
-  it("moves from observe to describe to predict to experiment", async () => {
+  it("rejects everyday heat-only describe text and then advances with the L2 triple", async () => {
     mockReducedMotion();
     const user = userEvent.setup();
 
     render(<MicrowaveBreadLab />);
 
     await user.click(
-      await screen.findByRole("button", { name: "Start the investigation" }),
+      await screen.findByRole("button", { name: STUDENT_CHROME.startAria }),
     );
-    await user.click(screen.getByRole("button", { name: "Start heating" }));
+    await completeObserve(user);
 
-    await screen.findByText("What did you observe?");
+    await user.type(screen.getByLabelText(SCENE_COPY.describeQuestion), "变热了");
+    await user.click(screen.getByRole("button", { name: SCENE_COPY.describeSubmit }));
+
+    expect(await screen.findByText(MICROWAVE_TASK_COPY.describeNeedStructure)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: STAGE_PROMPTS[LearningStage.DESCRIBE] }),
+    ).toBeInTheDocument();
+
+    await completeDescribe(user);
+
+    await user.click(screen.getByRole("radio", { name: "温度会升高。" }));
     await user.type(
-      screen.getByLabelText("What did you observe?"),
-      "The bread got hotter.",
+      screen.getByLabelText(SCENE_COPY.whyGuess),
+      "加热更久，进入面包的能量会更多。",
     );
-    await user.click(screen.getByRole("button", { name: "Save observation" }));
+    await user.click(screen.getByRole("button", { name: SCENE_COPY.predictSubmit }));
 
     expect(
-      await screen.findByRole("heading", {
-        name: "Describe the change in physics language.",
-      }),
+      await screen.findByRole("heading", { name: STAGE_PROMPTS[LearningStage.EXPERIMENT] }),
     ).toBeInTheDocument();
-
-    await user.type(
-      screen.getByLabelText("How would you describe the change in the bread?"),
-      "The bread became hot.",
-    );
-    await user.click(screen.getByRole("button", { name: "Save description" }));
-
-    expect(
-      await screen.findByText("Try again in physics language"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", {
-        name: "Describe the change in physics language.",
-      }),
-    ).toBeInTheDocument();
-
-    await user.type(
-      screen.getByLabelText("How would you describe the change in the bread?"),
-      "The temperature of the bread increased.",
-    );
-    await user.click(screen.getByRole("button", { name: "Save description" }));
-
-    expect(
-      await screen.findByRole("heading", {
-        name: "Make a prediction before the next experiment.",
-      }),
-    ).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole("radio", { name: "The temperature increases." }),
-    );
-    await user.type(
-      screen.getByLabelText("Why do you think that will happen?"),
-      "Longer heating should put more energy into the bread.",
-    );
-    await user.click(screen.getByRole("button", { name: "Save prediction" }));
-
-    expect(
-      await screen.findByRole("heading", {
-        name: "Test your prediction by changing the conditions.",
-      }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Your prediction")).toBeInTheDocument();
+    expect(screen.getByText(SCENE_COPY.yourGuess)).toBeInTheDocument();
     expect(screen.getAllByRole("slider")).toHaveLength(2);
   });
 
-  it("continues through explanation, model building, transfer, and exam", async () => {
+  it("continues through explanation, model building, kettle-ice transfer, exam, and AI_OFF", async () => {
     mockReducedMotion();
     const user = userEvent.setup();
 
     render(<MicrowaveBreadLab />);
 
     await user.click(
-      await screen.findByRole("button", { name: "Start the investigation" }),
+      await screen.findByRole("button", { name: STUDENT_CHROME.startAria }),
     );
-    await user.click(screen.getByRole("button", { name: "Start heating" }));
-    await screen.findByText("What did you observe?");
-
-    await user.type(
-      screen.getByLabelText("What did you observe?"),
-      "The bread got hotter.",
-    );
-    await user.click(screen.getByRole("button", { name: "Save observation" }));
-
-    await user.type(
-      screen.getByLabelText("How would you describe the change in the bread?"),
-      "The temperature of the bread increased.",
-    );
-    await user.click(screen.getByRole("button", { name: "Save description" }));
-
-    await user.click(
-      screen.getByRole("radio", { name: "The temperature increases." }),
-    );
-    await user.type(
-      screen.getByLabelText("Why do you think that will happen?"),
-      "Longer heating should put more energy into the bread.",
-    );
-    await user.click(screen.getByRole("button", { name: "Save prediction" }));
+    await completeObserve(user);
+    await completeDescribe(user);
+    await completePredict(user);
 
     expect(
-      screen.getByText(/The first observation run does not count here/),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Continue to explanation" }),
+      screen.queryByRole("button", { name: SCENE_COPY.continueToWhy }),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Heat again" }));
-    await screen.findByLabelText("How does the actual result compare with your prediction?");
-    await user.type(
-      screen.getByLabelText("How does the actual result compare with your prediction?"),
-      "The temperature rose again, matching my prediction.",
-    );
-    await user.type(
-      screen.getByLabelText("What did this experiment show you?"),
-      "A longer or repeated run added more energy and the bread got hotter.",
-    );
-    await user.click(screen.getByRole("button", { name: "Save comparison" }));
-
-    expect(
-      await screen.findByRole("heading", {
-        name: "Explain why the temperature increased.",
-      }),
-    ).toBeInTheDocument();
-
-    await user.type(
-      screen.getByLabelText("Why did the bread's temperature increase?"),
-      "Energy entered the bread, so its internal energy changed and its temperature increased.",
-    );
-    await user.click(screen.getByRole("button", { name: "Save explanation" }));
-
-    expect(
-      await screen.findByRole("heading", {
-        name: "Build the physical model.",
-      }),
-    ).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "internal energy changes" }));
-    await user.click(screen.getByRole("button", { name: "Connect top to middle" }));
-    await user.click(screen.getByRole("button", { name: "Connect middle to bottom" }));
-    await user.click(screen.getByRole("button", { name: "Submit model" }));
-
-    expect(
-      await screen.findByRole("heading", {
-        name: "Transfer the model to a new situation.",
-      }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Hot-water bag")).toBeInTheDocument();
-
-    await user.type(
-      screen.getByLabelText("Your explanation"),
-      "Energy moves into the hand, so the hand becomes warmer.",
-    );
-    await user.click(screen.getByRole("button", { name: "Save transfer response" }));
-
-    expect(await screen.findByText("Rubbing hands")).toBeInTheDocument();
-    await user.type(
-      screen.getByLabelText("Your explanation"),
-      "Energy is transferred during the rubbing, so the hands become warm.",
-    );
-    await user.click(screen.getByRole("button", { name: "Save transfer response" }));
-
-    expect(await screen.findByText("Electric kettle")).toBeInTheDocument();
-    await user.type(
-      screen.getByLabelText("Your explanation"),
-      "Energy enters the water and its temperature increases.",
-    );
-    await user.click(screen.getByRole("button", { name: "Save transfer response" }));
-
-    expect(
-      await screen.findByRole("heading", {
-        name: "Connect the model to an exam-style question.",
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByLabelText("Microwave oven with a slice of bread"),
-    ).not.toBeInTheDocument();
-    expect(screen.getByText(/Exam World is separate/)).toBeInTheDocument();
-
-    await answerExamQuestion(user, {
-      representation: "internal energy",
-      model:
-        "energy enters -> internal energy changes -> temperature increases",
-      answer: "Its internal energy increased.",
-      reasoning:
-        "Energy entered the bread, so its internal energy increased and the temperature rose.",
-    });
-
-    expect(await screen.findByText(/Which statement is always correct/)).toBeInTheDocument();
-    expect(screen.queryByText("Choose your answer.")).not.toBeInTheDocument();
-
-    await answerExamQuestion(user, {
-      representation: "conditions of a claim",
-      model: "check which claims are always justified by the model",
-      answer: "A temperature increase can be evidence that internal energy changed.",
-      reasoning:
-        "That statement is cautious because it connects temperature and internal energy without claiming too much.",
-    });
-
-    await answerExamQuestion(user, {
-      representation: "energy transfer",
-      model: "compare the mechanism that moves energy into the object",
-      answer: "A hand becomes warmer while touching a hot-water bag.",
-      reasoning:
-        "Energy enters the hand from the hot-water bag through heat transfer.",
-    });
-
-    await answerExamQuestion(user, {
-      representation: "temperature difference",
-      model:
-        "energy tends to move from higher temperature to lower temperature",
-      answer: "Energy transfers from the spoon to the water.",
-      reasoning:
-        "The spoon starts hotter, so energy transfers toward the cooler water.",
-    });
-
-    await answerExamQuestion(user, {
-      representation: "specific heat capacity",
-      model:
-        "compare the variables while keeping mass and temperature change fixed",
-      answer: "Material A needs more energy.",
-      reasoning:
-        "With the same mass and the same temperature rise, the larger specific heat capacity needs more energy.",
-    });
-
-    expect(
-      await screen.findByRole("heading", {
-        name: "AI is now turned off for the independent task.",
-      }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("AI is now turned off.")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Ask the coach one question" }),
-    ).not.toBeInTheDocument();
-
-    await user.type(
-      screen.getByLabelText("Explain why."),
-      "Energy entered the spoon from the hot water, so the spoon's temperature increased.",
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Save independent explanation" }),
-    );
+    await completeExperiment(user);
 
     await user.click(
-      screen.getByRole("radio", {
-        name: "Both can raise temperature, but energy can enter the nail in different ways.",
-      }),
+      screen.getByRole("radio", { name: MICROWAVE_EXPLAIN_ENERGY_OPTIONS[0].label }),
     );
     await user.click(
-      screen.getByRole("button", { name: "Submit independent exam answer" }),
+      screen.getByRole("radio", { name: MICROWAVE_EXPLAIN_LINK_OPTIONS[1].label }),
     );
+    await user.type(
+      screen.getByLabelText(SCENE_COPY.explainQuestion),
+      "能量进入面包后，面包的内能发生了变化，温度升高。",
+    );
+    await user.click(screen.getByRole("button", { name: SCENE_COPY.explainSubmit }));
 
     expect(
-      await screen.findByRole("heading", {
-        name: "Look back at the thinking you did.",
-      }),
+      await screen.findByRole("heading", { name: STAGE_PROMPTS[LearningStage.MODEL] }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Physics Thinking")).toBeInTheDocument();
-    expect(screen.getByText(/not a score/i)).toBeInTheDocument();
-    expect(screen.getByText(/do not mean you have mastered physics/i)).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("radio", { name: MICROWAVE_MODEL_SYSTEM_OPTIONS[0].label }),
+    );
+    await user.click(
+      screen.getByRole("radio", { name: MICROWAVE_MODEL_ENERGY_OPTIONS[0].label }),
+    );
+    await user.click(
+      screen.getByRole("radio", { name: MICROWAVE_MODEL_INTERNAL_OPTIONS[0].label }),
+    );
+    await user.click(
+      screen.getByRole("radio", { name: MICROWAVE_MODEL_TEMPERATURE_OPTIONS[0].label }),
+    );
+    await user.click(
+      screen.getByRole("radio", { name: MICROWAVE_MODEL_DISTINCTION_OPTIONS[0].label }),
+    );
+    await user.click(
+      screen.getByRole("checkbox", { name: MICROWAVE_MODEL_CONDITION_OPTIONS[0].label }),
+    );
+    await user.type(
+      screen.getByLabelText(MICROWAVE_TASK_COPY.modelAuthoredLabel),
+      "温度不是内能。",
+    );
+    await user.click(screen.getByRole("button", { name: SCENE_COPY.modelSubmit }));
+
     expect(
-      screen.queryByRole("button", { name: "Ask the coach one question" }),
+      await screen.findByRole("heading", { name: STAGE_PROMPTS[LearningStage.TRANSFER] }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(MICROWAVE_TASK_COPY.kettleQuestion)).toBeInTheDocument();
+    expect(screen.queryByText("搓手")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("radio", { name: "壶里的水" }));
+    await user.click(
+      screen.getByRole("radio", { name: "可以。这是普通加热，没有物态变化。" }),
+    );
+    await judgeTransfer(user, 0, "applies");
+    await judgeTransfer(user, 1, "applies");
+    await judgeTransfer(user, 2, "not-necessarily");
+    await judgeTransfer(user, 3, "applies");
+    await user.type(
+      screen.getByLabelText(SCENE_COPY.yourTake),
+      "能量进入壶里的水，水的内能增加，没有物态变化，所以温度升高。",
+    );
+    await user.click(screen.getByRole("button", { name: SCENE_COPY.saveSituation }));
+
+    expect(await screen.findByText(MICROWAVE_TASK_COPY.iceQuestion)).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "可以有能量进入。" }));
+    await user.click(screen.getByRole("radio", { name: "内能或状态仍可以改变。" }));
+    await user.click(
+      screen.getByRole("radio", { name: "不能原样搬过来，因为条件不一样。" }),
+    );
+    await judgeTransfer(user, 0, "applies");
+    await judgeTransfer(user, 1, "not-necessarily");
+    await judgeTransfer(user, 2, "applies");
+    await judgeTransfer(user, 3, "applies");
+    await user.type(
+      screen.getByLabelText(SCENE_COPY.yourTake),
+      "能量还可以进入冰块，内能或状态可以变，但温度不一定升高。",
+    );
+    await user.click(screen.getByRole("button", { name: SCENE_COPY.saveSituation }));
+
+    expect(
+      await screen.findByRole("heading", { name: STAGE_PROMPTS[LearningStage.EXAM] }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(SCENE_COPY.microwaveAria)).not.toBeInTheDocument();
+    expect(screen.getByText(SCENE_COPY.examNotice)).toBeInTheDocument();
+
+    for (const id of PRODUCTION_EXAM_PATTERN_IDS) {
+      const pattern = examPatterns.find((item) => item.id === id);
+      const overlay = energyInternalEnergyTemperatureAssessmentOverlay.exam?.[id];
+      if (!pattern || !overlay) {
+        throw new Error(`Missing exam pattern ${id}`);
+      }
+      await answerExamQuestion(user, {
+        representation: overlay.intendedRepresentation,
+        model: overlay.intendedModel,
+        answer: pattern.correctAnswer,
+        reasoning: `${pattern.requiredReasoning.join("，")}。`,
+        reasoningPrompt: pattern.reasoningPrompt,
+      });
+    }
+
+    expect(
+      await screen.findByRole("heading", { name: STAGE_PROMPTS[LearningStage.AI_OFF] }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(SCENE_COPY.aiOffBanner)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: STUDENT_CHROME.tutorAskAria }),
     ).not.toBeInTheDocument();
-  });
+
+    for (const challenge of independentChallenges) {
+      expect(screen.getByText(challenge.question)).toBeInTheDocument();
+      const overlay =
+        energyInternalEnergyTemperatureAssessmentOverlay.independent?.[challenge.id];
+      const correct = overlay?.judgments.find((item) => item.correct);
+      if (!correct || !overlay) {
+        throw new Error(`Missing overlay for ${challenge.id}`);
+      }
+      await user.click(screen.getByRole("radio", { name: correct.label }));
+      if (challenge.id === "ai-off-unfamiliar-metal-spoon") {
+        await user.click(screen.getByRole("radio", { name: "有能量进入勺子。" }));
+        await user.click(screen.getByRole("radio", { name: "勺子的内能发生了变化。" }));
+        await user.click(
+          screen.getByRole("radio", {
+            name: "温度升高是可以观察的结果，不是内能的另一个名字。",
+          }),
+        );
+        await user.click(screen.getByRole("radio", { name: "热不是装在勺子里的东西。" }));
+        await user.type(
+          screen.getByLabelText(SCENE_COPY.yourIndependentWhy),
+          "能量进入勺子，勺子的内能改变，温度升高。温度不是内能，热不是装在勺子里的东西。",
+        );
+      } else {
+        await user.click(screen.getByRole("radio", { name: "仍然可以有能量进入。" }));
+        await user.click(screen.getByRole("radio", { name: "能量进入，温度不一定升高。" }));
+        await user.click(
+          screen.getByRole("radio", {
+            name: "不能。温度几乎不变，不能直接写成内能一定不变。",
+          }),
+        );
+        await user.type(
+          screen.getByLabelText(SCENE_COPY.yourIndependentWhy),
+          "能量还可以进入冰块，内能或状态可以变，但温度不一定升高。",
+        );
+      }
+      await user.click(
+        screen.getByRole("button", { name: SCENE_COPY.independentExplainSubmit }),
+      );
+      const postCheck = await screen.findByTestId("microwave-ai-off-post-check");
+      for (const option of overlay.postCheck) {
+        if (option.required && !option.distractor) {
+          await user.click(within(postCheck).getByText(option.label));
+        }
+      }
+      await user.click(
+        screen.getByRole("button", { name: SCENE_COPY.independentExamSubmit }),
+      );
+    }
+
+    expect(
+      await screen.findByRole("heading", { name: STAGE_PROMPTS[LearningStage.COMPLETE] }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(SCENE_COPY.completeTitle)).toBeInTheDocument();
+    expect(screen.getByText(/不是分数/)).toBeInTheDocument();
+    expect(screen.getByText(/不表示你已经学会了物理/)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: STUDENT_CHROME.tutorAskAria }),
+    ).not.toBeInTheDocument();
+  }, 15_000);
 
   it("restores the current stage after a refresh", async () => {
     mockReducedMotion();
@@ -327,12 +386,10 @@ describe("MicrowaveBreadLab", () => {
 
     const first = render(<MicrowaveBreadLab />);
     await user.click(
-      await screen.findByRole("button", { name: "Start the investigation" }),
+      await screen.findByRole("button", { name: STUDENT_CHROME.startAria }),
     );
     expect(
-      screen.getByRole("heading", {
-        name: "What changes when the bread is heated?",
-      }),
+      screen.getByRole("heading", { name: STAGE_PROMPTS[LearningStage.OBSERVE] }),
     ).toBeInTheDocument();
     first.unmount();
     resetSessionMemory();
@@ -340,9 +397,7 @@ describe("MicrowaveBreadLab", () => {
     render(<MicrowaveBreadLab />);
 
     expect(
-      await screen.findByRole("heading", {
-        name: "What changes when the bread is heated?",
-      }),
+      await screen.findByRole("heading", { name: STAGE_PROMPTS[LearningStage.OBSERVE] }),
     ).toBeInTheDocument();
   });
 
@@ -352,29 +407,10 @@ describe("MicrowaveBreadLab", () => {
 
     render(<MicrowaveBreadLab />);
     await user.click(
-      await screen.findByRole("button", { name: "Start the investigation" }),
+      await screen.findByRole("button", { name: STUDENT_CHROME.startAria }),
     );
 
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
 });
-
-async function answerExamQuestion(
-  user: ReturnType<typeof userEvent.setup>,
-  input: {
-    representation: string;
-    model: string;
-    answer: string;
-    reasoning: string;
-  },
-) {
-  await user.click(screen.getByRole("radio", { name: input.representation }));
-  await user.click(screen.getByRole("button", { name: "Continue to the model" }));
-  await user.click(screen.getByRole("radio", { name: input.model }));
-  expect(screen.queryByText("Choose your answer.")).not.toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "Reveal answer choices" }));
-  await user.click(screen.getByRole("radio", { name: input.answer }));
-  await user.type(screen.getByLabelText(/4\./), input.reasoning);
-  await user.click(screen.getByRole("button", { name: "Save exam response" }));
-}

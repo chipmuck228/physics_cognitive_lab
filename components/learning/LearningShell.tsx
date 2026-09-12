@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/common/Button";
 import { StageHeader } from "@/components/learning/StageHeader";
 import { StageProgress } from "@/components/learning/StageProgress";
+import { STUDENT_CHROME } from "@/lib/content/student-language";
 import { LearningStage, type LearningStage as LearningStageType } from "@/types/learning";
 
 interface LearningShellProps {
@@ -14,6 +15,10 @@ interface LearningShellProps {
   onStartOver: () => void;
   onGoBack?: () => void;
   canGoBack?: boolean;
+  stageLabels?: Record<LearningStageType, string>;
+  stagePrompts?: Partial<Record<LearningStageType, string>>;
+  progressStages?: readonly LearningStageType[];
+  examNotice?: string;
 }
 
 export function LearningShell({
@@ -25,6 +30,10 @@ export function LearningShell({
   onStartOver,
   onGoBack,
   canGoBack = false,
+  stageLabels,
+  stagePrompts,
+  progressStages,
+  examNotice,
 }: LearningShellProps) {
   const isEntry = stage === LearningStage.ENTRY;
   const isExamWorld = stage === LearningStage.EXAM;
@@ -38,28 +47,34 @@ export function LearningShell({
       <header className="flex items-center justify-between gap-4 border-b border-[var(--line)] px-4 py-3 sm:px-6">
         <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
           <p className="shrink-0 text-sm font-medium tracking-wide text-[var(--ink-muted)]">
-            Physics Thinking Lab
+            {STUDENT_CHROME.productName}
           </p>
-          {!isEntry ? <StageProgress stage={stage} /> : null}
+          {!isEntry ? (
+            <StageProgress
+              stage={stage}
+              labels={stageLabels}
+              stages={progressStages}
+            />
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           {canGoBack && onGoBack ? (
-            <Button variant="ghost" onClick={onGoBack} aria-label="Go back to the previous stage">
-              Back
+            <Button variant="ghost" onClick={onGoBack} aria-label={STUDENT_CHROME.backAria}>
+              {STUDENT_CHROME.back}
             </Button>
           ) : null}
-          <Button variant="ghost" onClick={onStartOver} aria-label="Start the investigation over">
-            Start over
+          <Button variant="ghost" onClick={onStartOver} aria-label={STUDENT_CHROME.startOverAria}>
+            {STUDENT_CHROME.startOver}
           </Button>
         </div>
       </header>
 
       {!isEntry ? (
         <div className="border-b border-[var(--line)] px-4 py-4 sm:px-6">
-          <StageHeader stage={stage} />
+          <StageHeader stage={stage} labels={stageLabels} prompts={stagePrompts} />
           {isExamWorld ? (
             <p className="mt-2 text-sm text-[var(--ink-muted)]">
-              Exam World is separate from the microwave lab. Work from the question, not the experiment UI.
+              {examNotice ?? STUDENT_CHROME.examSeparate}
             </p>
           ) : null}
         </div>

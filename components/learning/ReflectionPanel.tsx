@@ -16,8 +16,8 @@ export function ReflectionPanel({ profile }: ReflectionPanelProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--ink-muted)]">
-          Learning reflection
+        <p className="text-xs font-medium tracking-[0.16em] text-[var(--ink-muted)]">
+          {SCENE_COPY.learningLookback}
         </p>
         <h2 className="font-serif text-3xl text-[var(--ink)]">
           {SCENE_COPY.completeTitle}
@@ -36,7 +36,7 @@ export function ReflectionPanel({ profile }: ReflectionPanelProps) {
             <p className="text-sm text-[var(--ink)]">{dimension.label}</p>
             <p
               className="font-mono text-sm tracking-[0.2em] text-[var(--ink)]"
-              aria-label={`${dimension.label}: ${dimension.value} out of 4`}
+              aria-label={`${dimension.label}：${dimension.value} / 4`}
             >
               {renderMarks(dimension.value)}
             </p>

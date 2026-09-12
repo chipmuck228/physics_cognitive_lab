@@ -3,6 +3,12 @@ import {
   isIndependentAssessmentReady,
   markIndependentAssessmentComplete,
 } from "@/lib/learning/independent";
+import {
+  buildMicrowaveAiOffAssessment,
+  completeMicrowaveAiOffAttempt,
+  MICROWAVE_AI_OFF_ICE_ID,
+  MICROWAVE_AI_OFF_SPOON_ID,
+} from "@/lib/learning/microwave-ai-off";
 import { canLeaveStage } from "@/lib/learning/progression";
 import { createSession } from "@/lib/learning/session";
 import { LearningStage } from "@/types/learning";
@@ -45,6 +51,21 @@ describe("independent assessment", () => {
             examResponses: { [INDEPENDENT_EXAM_QUESTION.id]: "answer" },
             completedWithoutAI: true,
           },
+        },
+        LearningStage.COMPLETE,
+      ),
+    ).toBe(false);
+    expect(
+      canLeaveStage(
+        {
+          ...session,
+          independentAssessment: buildMicrowaveAiOffAssessment(
+            [
+              completeMicrowaveAiOffAttempt(MICROWAVE_AI_OFF_SPOON_ID, "t1"),
+              completeMicrowaveAiOffAttempt(MICROWAVE_AI_OFF_ICE_ID, "t2"),
+            ],
+            false,
+          ),
         },
         LearningStage.COMPLETE,
       ),

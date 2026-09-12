@@ -1,150 +1,129 @@
-# Microwave Bread — Learning State Machine
+# Microwave Bread — Scene State & Evidence Configuration
 
-> Version: 0.1
+> Version: 0.2 — Scene-specific configuration
+> Primary model: `energy-internal-energy-temperature`
 
-## 1. States
+## 1. Ownership Boundary
+
+This file is **not** the canonical learning state machine.
+
+The universal stage sequence, legal stage semantics, AI permissions, universal evidence flow, and AI_OFF rules are owned exclusively by [`universal-physics-learning-protocol.md`](./universal-physics-learning-protocol.md).
+
+This file only defines **Microwave Bread-specific evidence requirements and progression configuration** for those canonical stages.
+
+Related sources:
+
+- Physics Model contract: [`physics-model-schema.md`](./physics-model-schema.md)
+- Canonical model ID/inventory: [`physics-model-library.md`](./physics-model-library.md)
+- Scene interaction copy and UX: [`interaction-script.md`](./interaction-script.md)
+- Learning goals: [`learning-spec.md`](./learning-spec.md)
+
+If any stage or AI rule here appears to conflict with UPLP, UPLP wins.
+
+## 2. Scene Identity
 
 ```ts
-enum LearningStage {
-  ENTRY = "ENTRY",
-  OBSERVE = "OBSERVE",
-  DESCRIBE = "DESCRIBE",
-  PREDICT = "PREDICT",
-  EXPERIMENT = "EXPERIMENT",
-  EXPLAIN = "EXPLAIN",
-  MODEL = "MODEL",
-  TRANSFER = "TRANSFER",
-  EXAM = "EXAM",
-  AI_OFF = "AI_OFF",
-  COMPLETE = "COMPLETE",
-}
+const microwaveBreadScene = {
+  id: "microwave-bread",
+  primaryModel: "energy-internal-energy-temperature",
+  secondaryModels: [
+    "internal-energy-change-mechanisms",
+    "heat-transfer-direction"
+  ]
+} as const;
 ```
 
-## 2. Canonical Transition Graph
+Secondary models are supporting/transfer connections. The Scene's required newly constructed model is the `primaryModel`.
 
-```text
-ENTRY
-  ↓
-OBSERVE
-  ↓
-DESCRIBE
-  ↓
-PREDICT
-  ↓
-EXPERIMENT
-  ↓
-EXPLAIN
-  ↓
-MODEL
-  ↓
-TRANSFER
-  ↓
-EXAM
-  ↓
-AI_OFF
-  ↓
-COMPLETE
-```
+## 3. Stage-specific Evidence Configuration
 
-## 3. Stage Definitions
+The keys below refer to canonical UPLP stages; this file does not redefine their order.
 
 ### ENTRY
 
-**Purpose:** Create curiosity and orient the student.
-
-**Student action:** Start the investigation.
-
-**AI:** Not required.
-
-**Exit condition:** Student starts.
-
----
+Scene evidence: student explicitly starts the investigation.
 
 ### OBSERVE
 
-**Purpose:** Notice a physical change before receiving explanation.
+Required evidence:
 
-**Student action:** Run the first heating event and describe what was observed.
+```ts
+{
+  rawDescription: string;
+  observedChanges: string[];
+}
+```
 
-**Key evidence:** Raw observation.
-
-**AI:** May ask the student to separate observation from explanation.
-
-**Exit condition:** Student records an observation.
-
----
+Minimum gate: observation must refer to the current bread-heating event. The first deterministic demonstration may create observation evidence, but it MUST NOT count as the later controlled EXPERIMENT run.
 
 ### DESCRIBE
 
-**Purpose:** Translate everyday language into physics language.
+Required semantic evidence:
 
-**Student action:** Identify object, relevant physical quantity, and direction of change.
-
-**Key evidence:** e.g.
-
-```text
-object = bread
-quantity = temperature
-change = increase
+```ts
+{
+  object: "bread";
+  quantity: "temperature";
+  change: "increase";
+}
 ```
 
-**AI:** May prompt attention toward a physical quantity.
-
-**Exit condition:** Minimum valid physical description.
-
----
+The student's wording need not match these strings verbatim. The application evaluator must verify the semantic elements rather than accept any non-empty description.
 
 ### PREDICT
 
-**Purpose:** Make an explicit prediction before experimentation.
+Required evidence:
 
-**Student action:** Choose or state a prediction and explain why.
+```ts
+{
+  changedVariable: "heatingTimeSec" | "powerW";
+  prediction: string;
+  reason: string;
+}
+```
 
-**AI:** May challenge the student's reason but cannot reveal the result.
-
-**Exit condition:** Prediction recorded.
-
----
+Gate requires both a prediction and student-authored reason recorded **before** the controlled experiment.
 
 ### EXPERIMENT
 
-**Purpose:** Manipulate the physical environment and compare prediction with evidence.
+Microwave-specific evidence must satisfy the canonical UPLP EXPERIMENT contract. At minimum record:
 
-**Student action:** Change time/power, run experiment, inspect result.
+```ts
+{
+  predictionId: string;
+  intervention: { powerW: number; heatingTimeSec: number };
+  result: {
+    initialTemperatureC: number;
+    finalTemperatureC: number;
+    deltaTemperatureC: number;
+    energyInputJ: number;
+  };
+  predictionMatch: "matched" | "partly-matched" | "did-not-match";
+  reflection: string;
+}
+```
 
-**AI:** Mostly silent.
-
-**Exit condition:** Experiment completed and result recorded.
-
----
+Critical rule: the OBSERVE demonstration/auto-play cannot satisfy this gate. A distinct post-prediction run is required.
 
 ### EXPLAIN
 
-**Purpose:** Build a causal explanation.
+Required evidence: a student explanation that attempts a causal account.
 
-**Student action:** Explain why temperature changed.
+Recommended deterministic progression tags for analytics/evaluation only:
 
-**Target progression:**
+```text
+E0 — result description only
+E1 — names heating/process only
+E2 — identifies energy entering/transferred
+E3 — connects energy → internal state/internal energy → temperature
+E4 — expresses a reusable/transferable model
+```
 
-E0: result description
-E1: “microwave heated it”
-E2: energy enters
-E3: causal energy/state/temperature relationship
-E4: transferable model
-
-**AI:** Ask, hint, challenge, encourage, or explain only when appropriate.
-
-**Exit condition:** Explanation evidence exists.
-
----
+These tags do not authorize the LLM to advance the stage.
 
 ### MODEL
 
-**Purpose:** Explicitly construct the physical relationship.
-
-**Student action:** Arrange/connect model components.
-
-**Target model:**
+Target structural evidence:
 
 ```text
 energy enters
@@ -154,99 +133,72 @@ internal energy/state changes
 temperature increases
 ```
 
-**AI:** May guide attention but should not build the model.
-
-**Exit condition:** Model submitted.
-
----
+Gate should be deterministic/structural. Semantic LLM similarity alone must not mark the model correct.
 
 ### TRANSFER
 
-**Purpose:** Determine whether the model can survive a change in surface context.
+Required Scene transfer attempts should include more than one surface context, such as:
 
-**Student action:** Explain new scenarios.
-
-Suggested scenarios:
 - hot-water bag warming a hand;
 - rubbing hands;
 - electric kettle heating water.
 
-**AI:** May ask for shared structure but should not reveal it prematurely.
-
-**Exit condition:** Transfer responses recorded.
-
----
+Evidence stores the student's explanation/model selection for each required target. Transfer level and canonical target model IDs should conform to `physics-model-schema.md`.
 
 ### EXAM
 
-**Purpose:** Translate model into school-exam representation.
+Required evidence stores **answer and reasoning separately**. The Scene's exam representation is specified in [`exam-mapping.md`](./exam-mapping.md).
 
-**Student action:** Identify the model, reason, and answer curated exam questions.
+At minimum:
 
-**AI:** Limited scaffolding before final answer.
-
-**Exit condition:** Required exam tasks completed.
-
----
+```ts
+{
+  questionId: string;
+  selectedAnswer?: string;
+  reasoning: string;
+  identifiedModelId?: string;
+}
+```
 
 ### AI_OFF
 
-**Purpose:** Test independent performance.
+Required evidence:
 
-**Student action:** Solve a new situation and an exam-style question without AI.
+```ts
+{
+  completedWithoutAI: true;
+  independentExplanation: string;
+  independentExamResponse: string;
+}
+```
 
-**AI:** Completely disabled.
-
-**Exit condition:** Independent tasks completed.
-
----
+Enforcement is application-level: no tutor component, no tutor request, no hidden AI hint, and no LLM-based progression decision. Universal AI_OFF semantics remain owned by UPLP.
 
 ### COMPLETE
 
-**Purpose:** Reflection and qualitative feedback.
+Scene completion may occur only when UPLP completion requirements and the required Microwave Bread evidence are satisfied. Completion must not be presented as proof of durable mastery.
 
-**AI:** Optional only for future versions; MVP can remain deterministic.
+## 4. Navigation / Persistence Configuration
 
-## 4. Guardrails
+- Forward progression must satisfy UPLP plus the Scene-specific evidence gate above.
+- Review/back navigation may preserve existing evidence.
+- Refresh must restore the active session and evidence.
+- Reset must be explicit.
+- Developer/test-only stage jumps must never be enabled in production learning flow.
 
-### Illegal transitions
+## 5. Implementation Contract
 
-The application must prevent direct jumps such as:
+The implementation should expose one universal progression engine and pass Scene-specific evidence/evaluator configuration into it. Do not hard-code a second Microwave-only global state machine.
 
-OBSERVE → EXAM
-
-PREDICT → MODEL
-
-EXPLAIN → AI_OFF
-
-unless an explicit test/developer mode is enabled.
-
-### Back navigation
-
-Back navigation may be supported for review, but returning backward must not erase evidence unless the user explicitly resets the session.
-
-## 5. AI Permission Matrix
-
-| Stage | ASK | HINT | CHALLENGE | ENCOURAGE | EXPLAIN |
-|---|---:|---:|---:|---:|---:|
-| OBSERVE | yes | limited | no | yes | no |
-| DESCRIBE | yes | yes | limited | yes | no |
-| PREDICT | yes | yes | yes | yes | no |
-| EXPERIMENT | limited | no | no | yes | no |
-| EXPLAIN | yes | yes | yes | yes | limited |
-| MODEL | yes | yes | yes | yes | no |
-| TRANSFER | yes | yes | yes | yes | limited |
-| EXAM | yes | limited | yes | yes | limited |
-| AI_OFF | no | no | no | no | no |
-
-## 6. Completion Rule
-
-The application reaches `COMPLETE` only after `AI_OFF` requirements are satisfied.
-
-Suggested internal rule:
+Conceptually:
 
 ```ts
-canComplete =
-  hasIndependentExplanation &&
-  hasIndependentExamResponse
+canAdvance({
+  stage,
+  universalPolicy,     // UPLP-derived
+  sceneEvidencePolicy, // this file / concrete model definition
+  session
+})
 ```
+
+The application, not the LLM, owns the final `canAdvance` decision.

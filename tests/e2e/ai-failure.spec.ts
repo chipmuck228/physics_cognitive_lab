@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+import { SCENE_COPY, STAGE_PROMPTS } from "../../lib/content/microwave-bread";
+import { STUDENT_CHROME } from "../../lib/content/student-language";
+import { LearningStage } from "../../types/learning";
 import {
   completeObserve,
   openLab,
@@ -25,21 +28,22 @@ test.describe("AI failure", () => {
     await startLesson(page);
     await completeObserve(page);
 
-    await page.getByRole("button", { name: "Ask the coach one question" }).click();
+    await page.getByRole("button", { name: STUDENT_CHROME.tutorAskAria }).click();
     await expect(
       page.getByText("先别急着找答案。请告诉我，你刚才观察到了什么变化？"),
     ).toBeVisible();
     await expect(page.getByText("Internal Server Error")).toHaveCount(0);
     await expect(page.getByText("simulated tutor failure")).toHaveCount(0);
 
-    await page
-      .getByLabel("How would you describe the change in the bread?")
-      .fill("The temperature of the bread increased.");
-    await page.getByRole("button", { name: "Save description" }).click();
+    await page.getByRole("radio", { name: "面包" }).click();
+    await page.getByRole("radio", { name: "温度" }).click();
+    await page.getByRole("radio", { name: "升高了" }).click();
+    await page.getByLabel(SCENE_COPY.describeQuestion).fill("面包的温度升高了。");
+    await page.getByRole("button", { name: SCENE_COPY.describeSubmit }).click();
 
     await expect(
       page.getByRole("heading", {
-        name: "Make a prediction before the next experiment.",
+        name: STAGE_PROMPTS[LearningStage.PREDICT],
       }),
     ).toBeVisible();
   });

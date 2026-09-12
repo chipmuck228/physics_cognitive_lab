@@ -1,7 +1,20 @@
 # Microwave Bread — Interaction Script
 
-> Version: 0.1
+> Version: 0.2 — Scene-specific interaction script
 > Target session duration: approximately 10–15 minutes
+
+
+## Architecture Alignment
+
+This file instantiates the canonical UPLP for the Microwave Bread Scene. It does **not** own stage order, stage semantics, universal hint progression, or AI permission policy.
+
+- `primaryModel`: `energy-internal-energy-temperature`
+- Canonical stage semantics and hint ladder: [`universal-physics-learning-protocol.md`](./universal-physics-learning-protocol.md)
+- Model contract: [`physics-model-schema.md`](./physics-model-schema.md)
+- Canonical model ID: [`physics-model-library.md`](./physics-model-library.md)
+- Scene evidence gates: [`state-machine.md`](./state-machine.md)
+
+The `S00`–`S12` labels below are Scene-script labels mapped onto UPLP stages. They are not a second global state machine.
 
 ## Interaction Philosophy
 
@@ -407,27 +420,9 @@ Example:
 
 Do not claim mastery.
 
-## Hint Ladder
+## Hint Policy Reference
 
-### H1 — Reframe
-
-Repeat the task in simpler language.
-
-### H2 — Focus
-
-Point attention toward a relevant physical quantity.
-
-### H3 — Counterexample
-
-Ask whether the student's current claim always holds.
-
-### H4 — Partial relationship
-
-Expose one part of the physical relationship.
-
-### H5 — Explanation
-
-Only if explicitly permitted by the current stage/policy.
+The canonical H1–H5 hint ladder and escalation semantics are defined only in [`universal-physics-learning-protocol.md`](./universal-physics-learning-protocol.md). This Scene may provide model-specific wording, but it MUST NOT redefine hint levels.
 
 ## Timing Guidance
 

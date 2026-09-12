@@ -10,19 +10,33 @@ export const MISCONCEPTIONS: MisconceptionDefinition[] = [
     id: "M01",
     description: "Heat is a substance stored inside an object.",
     targetUnderstanding: "Talk about energy transfer and temperature change, not heat as stuff.",
-    diagnosticSignals: ["more heat inside", "stored heat", "filled with heat"],
+    diagnosticSignals: [
+      "more heat inside",
+      "stored heat",
+      "filled with heat",
+      "热量储存在",
+      "里面装满了热",
+    ],
   },
   {
     id: "M02",
     description: "If an object absorbs energy, its temperature must always increase.",
     targetUnderstanding: "Energy can change a system without an immediate temperature rise.",
-    diagnosticSignals: ["absorbs energy so temperature must", "energy in always hotter"],
+    diagnosticSignals: [
+      "absorbs energy so temperature must",
+      "energy in always hotter",
+      "吸收能量温度就一定升",
+    ],
   },
   {
     id: "M03",
     description: "Higher temperature always means greater internal energy.",
     targetUnderstanding: "Internal energy also depends on mass, material, and the system.",
-    diagnosticSignals: ["hotter always more internal energy", "higher temperature means more energy"],
+    diagnosticSignals: [
+      "hotter always more internal energy",
+      "higher temperature means more energy",
+      "越热内能一定越大",
+    ],
   },
   {
     id: "M04",

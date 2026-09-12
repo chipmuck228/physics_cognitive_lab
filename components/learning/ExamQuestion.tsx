@@ -49,19 +49,18 @@ export function ExamQuestion({
   return (
     <div className="space-y-4">
       <Card className="space-y-3 p-4">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--ink-muted)]">
-          {SCENE_COPY.examWorldLabel} · {completedCount + 1} of {totalCount}
+        <p className="text-xs font-medium tracking-[0.14em] text-[var(--ink-muted)]">
+          {SCENE_COPY.examProgress
+            .replace("{n}", String(completedCount + 1))
+            .replace("{total}", String(totalCount))}
         </p>
         <h2 className="font-serif text-xl text-[var(--ink)]">{question.text}</h2>
-        <p className="text-sm text-[var(--ink-muted)]">
-          Difficulty: {question.difficulty}
-        </p>
       </Card>
 
       <Card className="space-y-5 p-4">
         <fieldset className="space-y-3">
           <legend className="text-sm font-medium text-[var(--ink)]">
-            1. What is this question mainly about?
+            {SCENE_COPY.examAbout}
           </legend>
           <div className="grid gap-2">
             {question.representationOptions.map((option) => (
@@ -101,7 +100,7 @@ export function ExamQuestion({
         {phase === "model" || phase === "choices" ? (
           <fieldset className="space-y-3">
             <legend className="text-sm font-medium text-[var(--ink)]">
-              2. What physical relationship or model should you think about?
+              {SCENE_COPY.examRelationship}
             </legend>
             <div className="grid gap-2">
               {question.modelOptions.map((option) => (
@@ -143,7 +142,7 @@ export function ExamQuestion({
           <>
             <fieldset className="space-y-3">
               <legend className="text-sm font-medium text-[var(--ink)]">
-                3. Choose your answer.
+                {SCENE_COPY.examChoose}
               </legend>
               <div className="grid gap-2">
                 {question.options.map((option) => (
@@ -174,23 +173,23 @@ export function ExamQuestion({
                 htmlFor={`${question.id}-reasoning`}
                 className="text-sm font-medium text-[var(--ink)]"
               >
-                4. {question.reasoningPrompt}
+                {SCENE_COPY.examReasonStep} {question.reasoningPrompt}
               </label>
               <textarea
                 id={`${question.id}-reasoning`}
                 value={reasoning}
                 onChange={(event) => onReasoningChange(event.target.value)}
-                placeholder="Write a short reason using the physics relationship."
+                placeholder={SCENE_COPY.examReasonPlaceholder}
                 className="min-h-28 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm leading-relaxed text-[var(--ink)] outline-none transition focus:border-[var(--heat)] focus:ring-2 focus:ring-[var(--heat)]/20"
               />
             </div>
 
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs text-[var(--ink-muted)]">
-                The exam stores the representation, model, answer, and reason separately.
+                {SCENE_COPY.examStores}
               </p>
               <Button onClick={onSubmit} disabled={!canSubmit}>
-                Save exam response
+                {SCENE_COPY.examSave}
               </Button>
             </div>
           </>

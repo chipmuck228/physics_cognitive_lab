@@ -24,6 +24,7 @@ describe("stage tutor policy", () => {
 
   it("silences the tutor during EXPERIMENT and AI_OFF", () => {
     expect(isTutorAllowed(LearningStage.EXPERIMENT)).toBe(false);
+    expect(canCallTutor(LearningStage.EXPERIMENT)).toBe(false);
     expect(isTutorAllowed(LearningStage.AI_OFF)).toBe(false);
     expect(canCallTutor(LearningStage.AI_OFF)).toBe(false);
     expect(isTutorHardBlocked(LearningStage.AI_OFF)).toBe(true);
@@ -34,6 +35,6 @@ describe("stage tutor policy", () => {
   it("protects answer-revealing stages", () => {
     expect(isRevealProtected(LearningStage.PREDICT)).toBe(true);
     expect(isRevealProtected(LearningStage.MODEL)).toBe(true);
-    expect(isRevealProtected(LearningStage.EXPLAIN)).toBe(false);
+    expect(isRevealProtected(LearningStage.EXPLAIN)).toBe(true);
   });
 });

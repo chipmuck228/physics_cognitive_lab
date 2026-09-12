@@ -1,5 +1,6 @@
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
+import { SCENE_COPY } from "@/lib/content/microwave-bread";
 import type { TransferScenarioDefinition } from "@/lib/content/transfer-scenarios";
 
 interface TransferScenarioProps {
@@ -26,8 +27,10 @@ export function TransferScenario({
   return (
     <div className="space-y-4">
       <Card className="space-y-3 p-4">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--ink-muted)]">
-          Transfer {completedCount + 1} of {totalCount}
+        <p className="text-xs font-medium tracking-[0.14em] text-[var(--ink-muted)]">
+          {SCENE_COPY.situationN
+            .replace("{n}", String(completedCount + 1))
+            .replace("{total}", String(totalCount))}
         </p>
         <h2 className="font-serif text-xl text-[var(--ink)]">{scenario.title}</h2>
         <p className="text-sm leading-relaxed text-[var(--ink-muted)]">
@@ -41,21 +44,19 @@ export function TransferScenario({
 
       <Card className="space-y-4 p-4">
         <label htmlFor={`transfer-${scenario.id}`} className="text-sm font-medium text-[var(--ink)]">
-          Your explanation
+          {SCENE_COPY.yourTake}
         </label>
         <textarea
           id={`transfer-${scenario.id}`}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          placeholder="Explain the situation using the model you built."
+          placeholder={SCENE_COPY.transferPlaceholder}
           className="min-h-32 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm leading-relaxed text-[var(--ink)] outline-none transition focus:border-[var(--heat)] focus:ring-2 focus:ring-[var(--heat)]/20"
         />
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-[var(--ink-muted)]">
-            Keep the focus on what energy does and what changes.
-          </p>
+          <p className="text-xs text-[var(--ink-muted)]">{SCENE_COPY.transferHint}</p>
           <Button onClick={onSubmit} disabled={!canSubmit}>
-            Save transfer response
+            {SCENE_COPY.saveSituation}
           </Button>
         </div>
       </Card>

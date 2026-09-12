@@ -19,13 +19,15 @@ function experimentSession() {
         timestamp: "2026-09-11T00:01:00.000Z",
       },
     ],
-    experimentHistory: [
-      {
-        finalTemperatureC: 35,
-        energyInputJ: 15000,
-        deltaTemperatureC: 15,
-      },
-    ],
+    sceneData: {
+      experimentHistory: [
+        {
+          finalTemperatureC: 35,
+          energyInputJ: 15000,
+          deltaTemperatureC: 15,
+        },
+      ],
+    },
     events: [
       {
         type: "experiment_run" as const,

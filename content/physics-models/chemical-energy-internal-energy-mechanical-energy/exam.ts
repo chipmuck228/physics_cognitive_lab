@@ -1,0 +1,180 @@
+import { MODEL_ID } from "./model";
+import type { ExamPattern } from "@/types/physics-model";
+
+export const examPatterns: ExamPattern[] = [
+  {
+    id: "exam-power-stroke-energy-conversion",
+    format: "multiple-choice",
+    representation: "文字情境：做功过程中的主要能量转化",
+    testedModel: MODEL_ID,
+    difficulty: "basic",
+    requiredCognitiveActions: ["C4", "C5", "C6", "C9"],
+    stem: "内燃机做功过程中，下面哪一句最能说明主要的能量转化？",
+    representationOptions: [
+      "四个冲程的名字",
+      "主要能量转化关系",
+      "活塞看起来快不快",
+      "燃料闻起来的味道",
+    ],
+    modelOptions: [
+      "化学能 → 内能/状态变化 → 做功 → 机械能",
+      "做功冲程自己产生了能量",
+      "四个冲程都会把内能变成机械能",
+    ],
+    options: [
+      "燃料的化学能转化，使工作气体内能变化，再通过做功变为机械能。",
+      "做功冲程制造出了新的能量。",
+      "吸气、压缩、做功、排气都会把内能变成机械能。",
+      "曲轴转动说明能量是凭空出现的。",
+    ],
+    correctAnswer:
+      "燃料的化学能转化，使工作气体内能变化，再通过做功变为机械能。",
+    commonDistractors: [
+      "做功冲程制造出了新的能量。",
+      "吸气、压缩、做功、排气都会把内能变成机械能。",
+    ],
+    requiredReasoning: [
+      "指出起始能量是燃料的化学能",
+      "指出中间有内能/状态变化",
+      "指出通过做功才到机械能",
+    ],
+    reasoningPrompt: "用你想到的关系，写一句理由。不要只重复选项。",
+  },
+  {
+    id: "exam-distinguish-power-stroke",
+    format: "multiple-choice",
+    representation: "冲程比较：哪一步主要对外输出机械能",
+    testedModel: MODEL_ID,
+    difficulty: "basic",
+    requiredCognitiveActions: ["C4", "C5", "C7", "C10"],
+    stem: "关于四冲程内燃机，下面哪一句更合适？",
+    representationOptions: [
+      "冲程名称的记忆",
+      "哪一步真正完成气体做功",
+      "发动机外观",
+      "燃料种类",
+    ],
+    modelOptions: [
+      "只有完成气体做功的那一步，才是对外输出机械能的主要过程",
+      "压缩冲程就是对外做功的主要冲程",
+      "每个冲程都同样在输出机械能",
+    ],
+    options: [
+      "对外输出机械能，主要发生在气体对活塞做功的那一步。",
+      "压缩冲程就是发动机对外做功的主要冲程。",
+      "四个冲程都会把内能转化为机械能。",
+      "只要活塞在动，每一步都在对外输出同样的机械能。",
+    ],
+    correctAnswer: "对外输出机械能，主要发生在气体对活塞做功的那一步。",
+    commonDistractors: ["压缩冲程就是发动机对外做功的主要冲程。"],
+    requiredReasoning: [
+      "区分准备条件和对外做功",
+      "不把压缩当成主要动力输出",
+    ],
+    reasoningPrompt: "为什么你选的这句话，比其他几句更站得住？",
+  },
+  {
+    id: "exam-why-power-stroke-works",
+    format: "short-answer",
+    representation: "因果短答：为什么这一步能输出机械能",
+    testedModel: MODEL_ID,
+    difficulty: "medium",
+    requiredCognitiveActions: ["C5", "C6", "C7", "C10"],
+    stem: "为什么燃料燃烧后的那一次膨胀，能够给机械系统提供动力？请按发生顺序说明。",
+    representationOptions: [
+      "能量从哪里来、经过什么、到哪里去",
+      "冲程口诀",
+      "零件清单",
+      "声音大小",
+    ],
+    modelOptions: [
+      "化学能转化 → 气体内能/状态变化 → 气体做功 → 机械能",
+      "燃烧直接变成曲轴转动",
+      "温度升高就一定输出机械能",
+    ],
+    options: [
+      "燃烧使工作气体内能和状态变化，气体对可运动部件做功，才表现为机械能。",
+      "因为这一步名字叫“做功冲程”，所以一定输出机械能。",
+      "燃烧会直接让曲轴转起来，中间不需要气体做功。",
+      "只要温度升高，就一定能输出机械能。",
+    ],
+    correctAnswer:
+      "燃烧使工作气体内能和状态变化，气体对可运动部件做功，才表现为机械能。",
+    requiredReasoning: [
+      "不能跳过气体做功",
+      "不能把冲程名称当成原因",
+      "需要可运动的机械系统",
+    ],
+    reasoningPrompt: "把顺序写清楚：先发生什么，再怎样到机械能。",
+  },
+  {
+    id: "exam-stroke-diagram-energy-flow",
+    format: "diagram",
+    representation: "冲程示意图：判断能量流动",
+    testedModel: MODEL_ID,
+    difficulty: "medium",
+    requiredCognitiveActions: ["C1", "C5", "C6", "C9", "C14"],
+    stem: "示意图标出了吸气、压缩、燃烧膨胀、排气。根据图，机械能主要是在哪一步、通过什么过程得到的？",
+    representationOptions: [
+      "示意图上的能量流动",
+      "四个汉字口诀",
+      "气缸画得像不像",
+      "箭头颜色",
+    ],
+    modelOptions: [
+      "燃烧后气体膨胀并对活塞做功",
+      "排气把能量排出去所以获得机械能",
+      "吸气把空气吸进来就获得了机械能",
+    ],
+    options: [
+      "主要在燃烧后的膨胀过程中，气体对活塞做功，机械系统获得机械能。",
+      "主要在排气过程中，废气离开气缸时产生了机械能。",
+      "主要在吸气过程中，空气进入气缸就带来了机械能。",
+      "从图上四个字就能看出，每一步都同样在输出机械能。",
+    ],
+    correctAnswer:
+      "主要在燃烧后的膨胀过程中，气体对活塞做功，机械系统获得机械能。",
+    requiredReasoning: [
+      "读图时追踪能量，而不是只念冲程名",
+      "指出做功发生在膨胀/气体推动活塞时",
+    ],
+    reasoningPrompt: "结合图上的哪一步，说明能量是怎样到机械系统的。",
+  },
+  {
+    id: "exam-engine-does-not-create-energy",
+    format: "multiple-choice",
+    representation: "判断错误说法：燃烧制造能量",
+    testedModel: MODEL_ID,
+    difficulty: "medium",
+    requiredCognitiveActions: ["C4", "C6", "C7", "C13"],
+    stem: "有同学说：“发动机在燃烧时制造出了能量。”这句话错在哪里？",
+    representationOptions: [
+      "这句话是否符合能量关系",
+      "发动机响不响",
+      "燃烧好不好看",
+      "冲程好不好记",
+    ],
+    modelOptions: [
+      "能量转化/转移，不是凭空产生",
+      "燃烧会创造出新的能量",
+      "只要燃烧，机械能一定全部得到",
+    ],
+    options: [
+      "燃烧时燃料的化学能发生转化，能量不是被制造出来的。",
+      "这句话对，因为做功冲程就是在产生能量。",
+      "这句话对，因为所有化学能都变成了机械能。",
+      "这句话错在没把四个冲程的名字写全。",
+    ],
+    correctAnswer: "燃烧时燃料的化学能发生转化，能量不是被制造出来的。",
+    commonDistractors: [
+      "这句话对，因为做功冲程就是在产生能量。",
+      "这句话对，因为所有化学能都变成了机械能。",
+    ],
+    requiredReasoning: [
+      "否定“制造能量”",
+      "指出化学能转化",
+      "不要求学生声称没有损耗或全部转化",
+    ],
+    reasoningPrompt: "指出这句话错在哪个关系上。",
+  },
+];

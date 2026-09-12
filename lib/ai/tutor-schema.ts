@@ -34,17 +34,18 @@ const tutorActionSchema = z.enum([
   TutorAction.EXPLAIN,
 ]);
 
+export const DEFAULT_TUTOR_CONSTRAINT =
+  "用简体中文只问一个有用的问题，或给出一步小提示。不要说出目标答案。不要使用教育学术语。";
+
 export const tutorRequestSchema = z.object({
   sessionId: z.string().min(1),
+  sceneId: z.string().min(1).optional(),
   stage: learningStageSchema,
   learningGoal: z.string().min(1),
   studentResponse: z.string(),
-  currentPhysicsState: z.object({
-    initialTemperatureC: z.number().finite(),
-    currentTemperatureC: z.number().finite(),
-    powerW: z.number().finite(),
-    heatingTimeSec: z.number().finite(),
-  }),
+  currentPhysicsState: z.record(z.string(), z.unknown()),
+  physicsSummary: z.string().min(1).optional(),
+  promptConstraint: z.string().min(1).optional(),
   knownMisconceptions: z.array(z.string()),
   allowedActions: z.array(tutorActionSchema),
 });

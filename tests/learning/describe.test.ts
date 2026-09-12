@@ -23,11 +23,13 @@ describe("describe evaluator", () => {
     expect(isSufficientPhysicsDescription("The bread's temperature went up.")).toBe(
       true,
     );
+    expect(isSufficientPhysicsDescription("面包的温度升高了。")).toBe(true);
+    expect(isSufficientPhysicsDescription("温度升高了。")).toBe(true);
   });
 
   it("rejects everyday heat language as final DESCRIBE evidence", () => {
     expect(isSufficientPhysicsDescription("The bread became hot.")).toBe(false);
-    expect(isSufficientPhysicsDescription("The bread got hotter.")).toBe(false);
+    expect(isSufficientPhysicsDescription("面包变热了。")).toBe(false);
 
     const everyday = evaluateDescription("The bread became hot.");
     expect(everyday.object).toBe("bread");

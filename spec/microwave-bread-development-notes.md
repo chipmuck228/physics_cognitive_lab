@@ -1,6 +1,21 @@
 # Microwave Bread — Development Notes
 
+> Version: 0.2 alignment wrapper; implementation status remains a dated snapshot
+
 This optional file collects implementation-level notes that do not belong in the learning philosophy.
+
+## Authority / Freshness Notice
+
+This file is a **non-authoritative historical implementation snapshot**. It may become stale as code changes. Do not use it as the source of truth for architecture, current repository status, stage semantics, model IDs, or AI policy.
+
+Authoritative design sources are:
+
+1. [`universal-physics-learning-protocol.md`](./universal-physics-learning-protocol.md) — universal learning protocol / AI stage policy.
+2. [`physics-model-schema.md`](./physics-model-schema.md) — Physics Model contract.
+3. [`physics-model-library.md`](./physics-model-library.md) — canonical model inventory.
+
+Current implementation claims in this file must be re-verified against the repository before being used for planning or completion decisions.
+
 
 ## Current Checkpoint
 

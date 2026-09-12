@@ -8,6 +8,7 @@ import {
 describe("explanation classification", () => {
   it("keeps simple result descriptions at E0", () => {
     expect(classifyExplanationLevel("The bread got hotter.")).toBe(0);
+    expect(classifyExplanationLevel("面包变热了。")).toBe(0);
   });
 
   it("recognizes process naming at E1", () => {
@@ -30,10 +31,16 @@ describe("explanation classification", () => {
         "When energy enters a system, its internal energy can change, which makes the temperature increase.",
       ),
     ).toBe(4);
+    expect(
+      classifyExplanationLevel("能量进入面包后，内能发生了变化，所以温度升高。"),
+    ).toBe(3);
+    expect(
+      classifyExplanationLevel("能量进入面包后，面包的内能发生了变化，温度升高。"),
+    ).toBe(3);
   });
 
   it("returns stage-appropriate feedback", () => {
-    expect(summarizeExplanationLevel(2)).toContain("energy enters");
-    expect(summarizeExplanationLevel(4)).toContain("reusable");
+    expect(summarizeExplanationLevel(2)).toContain("能量进入");
+    expect(summarizeExplanationLevel(4)).toContain("换个情况");
   });
 });

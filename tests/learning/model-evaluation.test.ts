@@ -24,7 +24,7 @@ describe("model evaluation", () => {
 
     expect(attempt.correctStructure).toBe(true);
     expect(attempt.connections).toHaveLength(2);
-    expect(summarizeModelAttempt(attempt)).toContain("core relationship");
+    expect(summarizeModelAttempt(attempt)).toContain("能量进入");
   });
 
   it("keeps incorrect attempts for revision", () => {
@@ -36,6 +36,6 @@ describe("model evaluation", () => {
     });
 
     expect(attempt.correctStructure).toBe(false);
-    expect(summarizeModelAttempt(attempt)).toContain("Reconsider");
+    expect(summarizeModelAttempt(attempt)).toContain("再想想");
   });
 });

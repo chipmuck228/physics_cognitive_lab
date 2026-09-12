@@ -1,4 +1,5 @@
 import { formatTemperature } from "@/lib/physics/visual";
+import { SCENE_COPY } from "@/lib/content/microwave-bread";
 import type { MicrowaveExperimentResult } from "@/types/physics";
 import type { MicrowavePhysicsState } from "@/types/physics";
 
@@ -10,12 +11,12 @@ interface ExperimentResultProps {
 export function ExperimentResult({ physicsState, result }: ExperimentResultProps) {
   const rows = [
     {
-      label: "Initial temperature",
+      label: SCENE_COPY.initialTemperature,
       value: formatTemperature(result.finalTemperatureC - result.deltaTemperatureC),
     },
-    { label: "Final temperature", value: formatTemperature(result.finalTemperatureC) },
-    { label: "Heating time", value: `${physicsState.heatingTimeSec} s` },
-    { label: "Power", value: `${physicsState.powerW} W` },
+    { label: SCENE_COPY.finalTemperature, value: formatTemperature(result.finalTemperatureC) },
+    { label: SCENE_COPY.heatingTime, value: `${physicsState.heatingTimeSec} s` },
+    { label: SCENE_COPY.power, value: `${physicsState.powerW} W` },
   ];
 
   return (

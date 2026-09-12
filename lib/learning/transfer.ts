@@ -3,7 +3,13 @@ import type { TransferAttempt } from "@/types/learning";
 
 export function classifyTransferAttempt(response: string): boolean {
   const normalized = normalize(response);
-  const mentionsEnergy = includesAny(normalized, ["energy", "heated", "heating"]);
+  const mentionsEnergy = includesAny(normalized, [
+    "energy",
+    "heated",
+    "heating",
+    "能量",
+    "加热",
+  ]);
   const mentionsChange = includesAny(normalized, [
     "temperature",
     "warmer",
@@ -11,6 +17,10 @@ export function classifyTransferAttempt(response: string): boolean {
     "hotter",
     "internal energy",
     "internal state",
+    "温度",
+    "变暖",
+    "变热",
+    "内能",
   ]);
 
   return mentionsEnergy && mentionsChange;
@@ -25,10 +35,10 @@ export function hasCompletedTransferScenarios(
 
 export function summarizeTransferAttempt(attempt: TransferAttempt): string {
   if (attempt.identifiedSharedModel) {
-    return "You linked the new situation back to the same energy-and-temperature model.";
+    return "你用能量和温度的关系，解释了这个新情况。";
   }
 
-  return "You responded to the new situation. The next step is making the shared model more explicit.";
+  return "你已经在想这个新情况了。再明确一点：能量怎样进来，什么发生了变化？";
 }
 
 function normalize(text: string): string {

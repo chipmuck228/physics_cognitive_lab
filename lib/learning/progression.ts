@@ -1,15 +1,18 @@
-import { hasSufficientDescription } from "@/lib/learning/describe";
-import { hasCompletedExamSet } from "@/lib/learning/exam";
-import { hasCompletedExperimentEvidence } from "@/lib/learning/experiment-evidence";
-import { hasCompletedTransferScenarios } from "@/lib/learning/transfer";
 import { canTransition, stageIndex } from "@/lib/learning/state-machine";
+import { registerProductionSceneAdapters } from "@/lib/runtime/register-production-adapters";
+import { getSceneAdapter } from "@/lib/runtime/registry";
 import { LearningStage, type LearningSession } from "@/types/learning";
 
-/**
- * Evidence gates sit on top of legal state-machine edges.
- * Phase A only requires the Start action to leave ENTRY.
- * Later stages gain cognitive-action requirements in Phase B+.
- */
+registerProductionSceneAdapters();
+
+/** Scene 02 production last stage. Official L6 is derived, never written by the Scene. */
+export const ENGINE_PHASE8_LAST_STAGE = LearningStage.COMPLETE;
+export const ENGINE_PHASE7_LAST_STAGE = ENGINE_PHASE8_LAST_STAGE;
+export const ENGINE_PHASE6_LAST_STAGE = ENGINE_PHASE7_LAST_STAGE;
+export const ENGINE_PHASE5_LAST_STAGE = ENGINE_PHASE6_LAST_STAGE;
+export const ENGINE_PHASE4_LAST_STAGE = ENGINE_PHASE5_LAST_STAGE;
+export const ENGINE_PHASE3_LAST_STAGE = ENGINE_PHASE4_LAST_STAGE;
+
 export function canLeaveStage(
   session: LearningSession,
   target: LearningStage,
@@ -33,32 +36,7 @@ export function hasCompletedCognitiveStep(
   session: LearningSession,
   stage: LearningStage,
 ): boolean {
-  switch (stage) {
-    case LearningStage.ENTRY:
-      return true;
-    case LearningStage.OBSERVE:
-      return session.observations.length > 0;
-    case LearningStage.DESCRIBE:
-      return hasSufficientDescription(session.descriptions);
-    case LearningStage.PREDICT:
-      return session.predictions.length > 0;
-    case LearningStage.EXPERIMENT:
-      return hasCompletedExperimentEvidence(session);
-    case LearningStage.EXPLAIN:
-      return session.explanations.length > 0;
-    case LearningStage.MODEL:
-      return session.modelAttempts.some((attempt) => attempt.correctStructure);
-    case LearningStage.TRANSFER:
-      return hasCompletedTransferScenarios(session.transferAttempts);
-    case LearningStage.EXAM:
-      return hasCompletedExamSet(session.examAttempts);
-    case LearningStage.AI_OFF:
-      return Boolean(session.independentAssessment?.completedWithoutAI);
-    case LearningStage.COMPLETE:
-      return session.completed;
-    default:
-      return false;
-  }
+  return getSceneAdapter(session.sceneId).completion[stage](session);
 }
 
 function stageIndexIsBackward(from: LearningStage, to: LearningStage): boolean {

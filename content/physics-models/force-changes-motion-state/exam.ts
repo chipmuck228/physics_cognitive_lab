@@ -1,0 +1,181 @@
+import { MODEL_ID } from "./model";
+import type { ExamPattern } from "@/types/physics-model";
+
+export const examPatterns: ExamPattern[] = [
+  {
+    id: "exam-force-does-not-mean-motion",
+    format: "multiple-choice",
+    representation: "文字判断：受到力是否等于正在运动",
+    testedModel: MODEL_ID,
+    difficulty: "basic",
+    requiredCognitiveActions: ["C4", "C5", "C9"],
+    stem: "下面哪一句更合适？",
+    representationOptions: [
+      "力和运动是不是同一件事",
+      "物体看起来重不重",
+      "轨道画得直不直",
+      "小车有没有轮子",
+    ],
+    modelOptions: [
+      "力可以改变运动状态，但有力不等于物体一定在运动",
+      "物体受到力就一定在运动",
+      "物体运动就一定受到向前的力",
+    ],
+    options: [
+      "力可以改变物体的运动状态，但有力不等于物体一定在运动。",
+      "物体只要受到力，就一定在运动。",
+      "物体在运动，就一定受到向前的力。",
+      "没有力的时候，正在运动的物体一定会立刻停住。",
+    ],
+    correctAnswer: "力可以改变物体的运动状态，但有力不等于物体一定在运动。",
+    commonDistractors: [
+      "物体只要受到力，就一定在运动。",
+      "物体在运动，就一定受到向前的力。",
+    ],
+    requiredReasoning: [
+      "区分力和运动",
+      "不把“受力”直接写成“正在运动”",
+    ],
+    reasoningPrompt: "用你想到的关系，写一句理由。不要只重复选项。",
+  },
+  {
+    id: "exam-zero-net-force-not-must-stop",
+    format: "multiple-choice",
+    representation: "文字情境：撤去推力后的运动状态",
+    testedModel: MODEL_ID,
+    difficulty: "basic",
+    requiredCognitiveActions: ["C4", "C7", "C10", "C13"],
+    stem: "光滑水平面上，小车已经在向右运动。这时水平方向的合力变为零。下面哪一句更合适？",
+    representationOptions: [
+      "合力为零时运动状态怎样",
+      "小车颜色",
+      "轮子个数",
+      "是否还叫小车",
+    ],
+    modelOptions: [
+      "合力为零，运动状态保持不变",
+      "没有向前的力，物体一定会停下",
+      "合力为零就是一个力都没有，所以一定静止",
+    ],
+    options: [
+      "小车可以继续向右运动，运动状态保持不变。",
+      "没有向前的力，小车一定会立刻停下来。",
+      "合力为零就是没有力，所以小车一定静止。",
+      "小车一定会立刻掉头向左。",
+    ],
+    correctAnswer: "小车可以继续向右运动，运动状态保持不变。",
+    commonDistractors: [
+      "没有向前的力，小车一定会立刻停下来。",
+      "合力为零就是没有力，所以小车一定静止。",
+    ],
+    requiredReasoning: [
+      "合力为零时运动状态不变",
+      "不等于一定静止",
+      "不等于平衡力就是没有力",
+    ],
+    reasoningPrompt: "为什么你选的这句话，比其他几句更站得住？",
+  },
+  {
+    id: "exam-opposite-force-slows-down",
+    format: "short-answer",
+    representation: "因果短答：反向力与运动状态",
+    testedModel: MODEL_ID,
+    difficulty: "medium",
+    requiredCognitiveActions: ["C4", "C5", "C10", "C11"],
+    stem: "小车向右运动时，又受到一个向左的力。请说明它的运动状态可能怎样变化，并指出力和运动方向是不是必须相同。",
+    representationOptions: [
+      "力的方向和运动方向的关系",
+      "小车零件清单",
+      "轨道长度",
+      "颜色变化",
+    ],
+    modelOptions: [
+      "反向合力使速度变小，力的方向不必与运动方向相同",
+      "力只能顺着运动方向",
+      "速度变小就是方向已经改变",
+    ],
+    options: [
+      "运动可能变慢；力的方向可以和运动方向相反。快慢变化和方向变化不是同一件事。",
+      "力必须和运动方向相同，否则小车不会运动。",
+      "只要变慢，就说明运动方向已经改变了。",
+      "有力就一定越来越快。",
+    ],
+    correctAnswer:
+      "运动可能变慢；力的方向可以和运动方向相反。快慢变化和方向变化不是同一件事。",
+    requiredReasoning: [
+      "指出反向力可以减小速度",
+      "力的方向不必等于运动方向",
+      "区分速度变化和方向变化",
+    ],
+    reasoningPrompt: "先分开说：力朝哪边，车朝哪边，快慢怎么变。",
+  },
+  {
+    id: "exam-force-motion-arrow-diagram",
+    format: "diagram",
+    representation: "示意图：水平力箭头与运动箭头",
+    testedModel: MODEL_ID,
+    difficulty: "medium",
+    requiredCognitiveActions: ["C1", "C4", "C5", "C9", "C14"],
+    stem: "图中小车向右运动，水平力箭头向左。根据图，下面哪一句最能说明接下来的运动状态变化？",
+    representationOptions: [
+      "图上力箭头和运动箭头的关系",
+      "小车画得像不像",
+      "箭头颜色",
+      "是否还有轮子",
+    ],
+    modelOptions: [
+      "合力与运动方向相反，速度可能变小",
+      "有力就一定向力的方向立刻运动且越来越快",
+      "运动向右，所以力一定也向右，图是错的",
+    ],
+    options: [
+      "合力方向与运动方向相反，小车可能变慢；力的方向不必和运动方向相同。",
+      "图一定画错了，因为运动向右时力只能向右。",
+      "有力就一定会立刻改成向左并且越来越快。",
+      "从图上看有轮子，所以和小车课堂实验是同一件事，不用看箭头。",
+    ],
+    correctAnswer:
+      "合力方向与运动方向相反，小车可能变慢；力的方向不必和运动方向相同。",
+    requiredReasoning: [
+      "读图时分开力和运动两个箭头",
+      "指出反向合力改变运动快慢",
+    ],
+    reasoningPrompt: "结合图上的两个箭头，说明接下来可能怎样变。",
+  },
+  {
+    id: "exam-balanced-forces-not-no-forces",
+    format: "multiple-choice",
+    representation: "概念区分：平衡力与没有力",
+    testedModel: MODEL_ID,
+    difficulty: "medium",
+    requiredCognitiveActions: ["C4", "C7", "C9", "C13"],
+    stem: "有同学说：“物体受力平衡，就是没有受到力。”这句话错在哪里？",
+    representationOptions: [
+      "这句话是否把平衡力和没有力混在一起",
+      "物体重不重",
+      "是否在课堂上见过小车",
+      "题目有没有图",
+    ],
+    modelOptions: [
+      "平衡指合力为零，不是力不存在",
+      "平衡力就是没有力",
+      "合力为零就一定静止",
+    ],
+    options: [
+      "受力平衡说的是合力为零，不是一个力都没有。",
+      "这句话对，因为平衡就是没有力。",
+      "这句话对，因为合力为零的物体一定静止。",
+      "这句话错在没写出 F=ma。",
+    ],
+    correctAnswer: "受力平衡说的是合力为零，不是一个力都没有。",
+    commonDistractors: [
+      "这句话对，因为平衡就是没有力。",
+      "这句话对，因为合力为零的物体一定静止。",
+    ],
+    requiredReasoning: [
+      "否定“平衡力就是没有力”",
+      "不要求写出牛顿第二定律公式",
+    ],
+    reasoningPrompt: "指出这句话错在哪个关系上。",
+  },
+];

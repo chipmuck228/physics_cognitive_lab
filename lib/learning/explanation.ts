@@ -14,9 +14,22 @@ export function classifyExplanationLevel(text: string): 0 | 1 | 2 | 3 | 4 {
       "temperature increased",
       "hotter",
       "warmer",
+      "温度",
     ]);
-  const mentionsMicrowave = includesAny(normalized, ["microwave", "heated", "heating"]);
-  const mentionsEnergy = includesAny(normalized, ["energy", "entered", "into"]);
+  const mentionsMicrowave = includesAny(normalized, [
+    "microwave",
+    "heated",
+    "heating",
+    "微波炉",
+    "加热",
+  ]);
+  const mentionsEnergy = includesAny(normalized, [
+    "energy",
+    "entered",
+    "into",
+    "能量",
+    "进入",
+  ]);
   const mentionsInternal = includesAny(normalized, [
     "internal energy",
     "internal energy changed",
@@ -24,6 +37,7 @@ export function classifyExplanationLevel(text: string): 0 | 1 | 2 | 3 | 4 {
     "inside changed",
     "state changed",
     "internal state",
+    "内能",
   ]);
   const mentionsCause = includesAny(normalized, [
     "because",
@@ -32,12 +46,25 @@ export function classifyExplanationLevel(text: string): 0 | 1 | 2 | 3 | 4 {
     "which made",
     "which makes",
     "caused",
+    "所以",
+    "因为",
+    "因此",
+    "于是",
+    "之后",
+    "然后",
+    "使得",
+    "导致",
+    "后，",
+    "后",
   ]);
   const mentionsTransferable = includesAny(normalized, [
     "system",
     "object",
     "in general",
     "energy enters",
+    "物体",
+    "系统",
+    "一般来说",
   ]);
 
   if (mentionsEnergy && mentionsInternal && mentionsTemperature && mentionsCause) {
@@ -62,16 +89,16 @@ export function classifyExplanationLevel(text: string): 0 | 1 | 2 | 3 | 4 {
 export function summarizeExplanationLevel(level: ExplanationEvidence["explanationLevel"]): string {
   switch (level) {
     case 4:
-      return "You connected energy, internal change, and temperature in a reusable way.";
+      return "你把能量进入、内能变化和温度升高连起来了，这个想法换个情况也能用。";
     case 3:
-      return "You connected energy entering the bread to an internal change and temperature increase.";
+      return "你把能量进入面包、内能变化和温度升高连起来了。";
     case 2:
-      return "You noticed that energy enters the bread. The next step is explaining what changes inside it.";
+      return "你注意到能量进入了面包。接下来可以再想：面包里面发生了什么变化？";
     case 1:
-      return "You named the process, but not yet the physical relationship inside the bread.";
+      return "你说出了加热这件事，但还没说清里面的关系。";
     case 0:
     default:
-      return "You described the result. The next step is explaining what changed inside the bread.";
+      return "你说出了结果。接下来可以再想：面包里面发生了什么变化？";
   }
 }
 

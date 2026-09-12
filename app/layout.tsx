@@ -20,14 +20,14 @@ const newsreader = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: "Physics Thinking Lab",
-  description: "Investigate why bread becomes hot in a microwave.",
+  title: "物理思考实验室",
+  description: "探究面包放进微波炉后为什么会变热。",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="zh-CN"
       className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans">{children}</body>

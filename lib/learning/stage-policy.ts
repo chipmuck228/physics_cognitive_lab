@@ -46,8 +46,10 @@ export const PROTECTED_REVEAL_STAGES: LearningStageType[] = [
   LearningStage.OBSERVE,
   LearningStage.DESCRIBE,
   LearningStage.PREDICT,
+  LearningStage.EXPLAIN,
   LearningStage.MODEL,
   LearningStage.TRANSFER,
+  LearningStage.EXAM,
 ];
 
 export function isTutorAllowed(stage: LearningStageType): boolean {

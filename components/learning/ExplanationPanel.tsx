@@ -1,6 +1,7 @@
 import { Card } from "@/components/common/Card";
 import { StudentInput } from "@/components/learning/StudentInput";
 import { VocabularyChips } from "@/components/learning/VocabularyChips";
+import { SCENE_COPY } from "@/lib/content/microwave-bread";
 
 interface ExplanationPanelProps {
   prompt: string;
@@ -28,15 +29,15 @@ export function ExplanationPanel({
       <StudentInput
         label={question}
         prompt={prompt}
-        placeholder="For example: Energy entered the bread, so its internal energy changed and its temperature increased."
+        placeholder={SCENE_COPY.explainPlaceholder}
         value={value}
         onChange={onChange}
         onSubmit={onSubmit}
-        submitLabel="Save explanation"
+        submitLabel={SCENE_COPY.explainSubmit}
         minLength={12}
       />
       <VocabularyChips
-        label="Useful physics words"
+        label={SCENE_COPY.physicsWords}
         words={words}
         onSelect={onSelectWord}
       />

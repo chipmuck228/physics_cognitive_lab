@@ -1,0 +1,174 @@
+# Spec v0.2 Alignment Manifest
+
+> Generated: 2026-09-11
+> Purpose: Record the governance/alignment pass across the complete `/spec` bundle.
+
+## Architecture sources of truth
+
+1. `universal-physics-learning-protocol.md` — HOW: universal stages, stage semantics, universal evidence flow, AI role/permissions, hint progression, AI_OFF.
+2. `physics-model-schema.md` — WHAT: canonical `PhysicsModel` contract, field semantics, content structure, completeness rules. Owns `metadata.status` allowed values and lifecycle semantics.
+3. `physics-model-library.md` — WHICH: canonical model IDs, model families, coverage/status, Model Graph. Owns the current `metadata.status` of each listed model.
+4. `cognitive-action-taxonomy.md` — shared vocabulary: canonical C1–C14 cognitive-action IDs.
+5. `physics-model-quality-review.md` — WHETHER physics, pedagogy, and learning-evidence claims are justified. Gate A = PRE model quality. Gate B = POST learning evidence. It must not redefine UPLP stages, schema fields, or L-level meanings.
+6. `evidence-design-contract.md` — HOW implementation evidence must justify a cognitive claim. Owns provenance, relation-over-token, target-specific transfer evidence, weakest-pass design, and Evidence Claim Design. It must not redefine UPLP stages, Schema `transferMode` / L-level meanings, or Quality Review gates.
+7. `physics-model-implementation-protocol.md` — HOW a ready Physics Model becomes a production Scene. It must not redefine UPLP stage semantics.
+8. `prompts/implement-physics-model.md` — default one-pass Cursor implementation request.
+9. `prompts/review-physics-model-quality.md` — default PRE/POST quality-review request.
+
+Learner-observation prep is not an architecture owner. `learner-validation/learner-validation-prep.md` (D050) prepares one informal Grade-9 observation of Scene 03. It must not redefine UPLP stages, L1–L6, Schema lifecycle, Quality Review gates, or Evidence Design rules. It does not mark any model `validated`.
+
+## Scene 01 documents
+
+Historical Scene specification remains flat under `spec/` for compatibility:
+
+- `learning-spec.md` — Microwave Bread learning goals/boundaries; references architecture contract.
+- `interaction-script.md` — Scene-specific student experience; does not own global stage/hint policy.
+- `state-machine.md` — renamed by responsibility in content: Scene-specific state/evidence configuration; does not own universal state machine.
+- `misconceptions.md` — model/Scene-specific misconception configuration aligned to Schema fields.
+- `exam-mapping.md` — exam representation mapping using canonical model IDs and C1–C14 references.
+
+Scene 01 evidence design lives under `spec/scenes/microwave-bread/`:
+
+- `README.md` — Scene identity and pointer to historical specs.
+- `evidence-claim-design.md` — L1–L6 evidence claims, evaluator contracts, accumulator, and minimum migration scope.
+
+The running `/scenes/microwave-bread` implementation is the focused legacy migration of those contracts. POST is `LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS`. `metadata.status` is `prototype`. Quality-reviewed prototype. Not learner-validated.
+
+## Scene 02 documents
+
+Canonical location: `spec/scenes/four-stroke-engine/`
+
+Scene 01 remains flat under `spec/` for historical reasons. New Scenes should follow the Scene 02 directory pattern.
+
+- `README.md` — Scene identity and document index.
+- `scene-spec.md` — purpose, pedagogical boundaries, future UI/component plan; does not own UPLP or the Physics Model.
+- `physics-state.md` — deterministic `EngineState` and four-stroke table; LLM must not own these values.
+- `learning-flow.md` — Scene-specific mapping onto canonical UPLP stages; does not redefine stage semantics.
+- `interaction-script.md` — Grade 9 Chinese student experience.
+- `evidence-contract.md` — Scene evidence → `AccumulatedModelEvidence`; Scene never assigns L1–L6.
+- `ai-guardrails.md` — Scene-specific tutor constraints; H1–H5 remain UPLP-owned.
+- `exam-mapping.md` — Exam World uses the model's existing `examPatterns`; not a second question bank.
+- `test-plan.md` — future physics / learning / tutor / Playwright tests.
+
+Primary model: `chemical-energy-internal-energy-mechanical-energy`  
+Secondary models (supporting only): `mechanical-work-energy-transfer`, `force-changes-motion-state`
+
+## Scene 03 documents
+
+Canonical location: `spec/scenes/horizontal-force-cart/`
+
+- `README.md` — Scene identity and document index.
+- `scene-spec.md` — purpose, pedagogical boundaries, MODEL relation-board requirement; does not own UPLP or the Physics Model.
+- `physics-state.md` — deterministic qualitative `CartState`; LLM must not own these values.
+- `learning-flow.md` — Scene-specific mapping onto canonical UPLP stages; does not redefine stage semantics.
+- `interaction-script.md` — Grade 9 Chinese student experience.
+- `evidence-contract.md` — Scene evidence → `AccumulatedModelEvidence`; Scene never assigns L1–L6.
+- `ai-guardrails.md` — Scene-specific tutor constraints; H1–H5 remain UPLP-owned.
+- `exam-mapping.md` — Exam World uses the model's existing `examPatterns`; not a second question bank.
+- `test-plan.md` — future physics / learning / tutor / Playwright tests.
+
+Primary model: `force-changes-motion-state`  
+Secondary models (supporting only): `force-equilibrium`, `inertia-motion-state`
+
+The canonical model definition lives in `content/physics-models/force-changes-motion-state/`. This is not a duplicate model ID.
+
+## Scene 04 documents
+
+Canonical location: `spec/scenes/equal-volume-material-samples/`
+
+- `README.md` — Scene identity.
+- `scene-spec.md` — purpose, MODEL ratio grammar, pedagogical boundaries; production UI not implemented.
+- `physics-state.md` — deterministic contract for `m / V`; not production code.
+
+Primary model: `density-mass-volume`  
+Secondary models (supporting only): `measurement-mass`, `measurement-volume`
+
+The canonical model definition lives in `content/physics-models/density-mass-volume/`. This is not a duplicate model ID.
+
+## Scene 05 documents
+
+Canonical location: `spec/scenes/equal-mass-heated-samples/`
+
+- `README.md` — Scene identity.
+- `scene-spec.md` — purpose, MODEL product/ratio grammar, sitting, assessment contracts; production UI implemented.
+- `physics-state.md` — deterministic contract for `ΔT = Q / (c m)`; not production code.
+
+Primary model: `specific-heat-capacity`  
+Secondary models (supporting only): `measurement-mass`, `measurement-temperature`
+
+The canonical model definition lives in `content/physics-models/specific-heat-capacity/`. This is not a duplicate model ID.
+
+## Research / implementation-support documents
+
+- `EXPERIMENT_LOG.md` — evidence log; non-authoritative for architecture.
+- `OPEN_QUESTIONS.md` — research backlog; non-authoritative for settled design decisions.
+- `microwave-bread-development-notes.md` — dated implementation snapshot; must be re-verified against code.
+
+## Alignment rules applied
+
+- Removed/referenced duplicated architecture definitions instead of maintaining competing copies.
+- All Scene/model references use canonical `PhysicsModel.id` values from the Library.
+- UPLP remains sole owner of universal stage semantics and AI/hint policy.
+- Schema remains sole owner of the `PhysicsModel` and Scene/model content contracts, including `metadata.status` lifecycle semantics.
+- Library remains sole owner of model IDs/inventory, Model Graph, and the current `metadata.status` value of each model.
+- Physics Model pedagogical/learning-evidence quality is owned by `physics-model-quality-review.md`. Readiness and engineering tests do not own that question.
+- How implementation evidence must justify a cognitive claim is owned by `evidence-design-contract.md`. Quality Review uses that contract; it does not duplicate the evaluator-design rules.
+- Scene 01 and Scene 02 documents are explicitly scoped as instances/configuration, not architecture sources of truth.
+- Scene 02 four-stroke names belong to Scene representation, not to a new Physics Model.
+- Scene 02 does not invent canonical model IDs and does not duplicate model experiments, transfer targets, exam patterns, or independent challenges.
+- Scene 03 uses the existing Library ID `force-changes-motion-state`. The cart is Scene representation. MODEL must not reuse Scene 02's four-node energy chain.
+- Scene 03 does not invent canonical model IDs and does not duplicate model experiments, transfer targets, exam patterns, or independent challenges.
+- Scene 04 uses the existing Library ID `density-mass-volume`. Equal-volume samples are Scene representation. MODEL must not reuse Scene 02's energy chain or Scene 03's force board.
+- Historical experiment/open-question content was preserved and marked non-authoritative.
+- `__MACOSX` metadata is excluded from the aligned bundle.
+
+## Files in bundle
+
+- `EXPERIMENT_LOG.md`
+- `OPEN_QUESTIONS.md`
+- `cognitive-action-taxonomy.md`
+- `exam-mapping.md`
+- `evidence-design-contract.md`
+- `interaction-script.md`
+- `learner-validation/learner-validation-prep.md`
+- `learner-validation/templates/first-session-review.md`
+- `learning-spec.md`
+- `microwave-bread-development-notes.md`
+- `misconceptions.md`
+- `physics-model-implementation-protocol.md`
+- `physics-model-library.md`
+- `physics-model-quality-review.md`
+- `physics-model-schema.md`
+- `prompts/implement-physics-model.md`
+- `prompts/review-physics-model-quality.md`
+- `reviews/examples/density-mass-volume.md`
+- `reviews/pre/energy-internal-energy-temperature.md`
+- `reviews/pre/specific-heat-capacity.md`
+- `scenes/microwave-bread/README.md`
+- `scenes/microwave-bread/evidence-claim-design.md`
+- `reviews/templates/post-learning-evidence-review.md`
+- `reviews/templates/pre-model-quality-review.md`
+- `scenes/four-stroke-engine/README.md`
+- `scenes/four-stroke-engine/ai-guardrails.md`
+- `scenes/four-stroke-engine/evidence-contract.md`
+- `scenes/four-stroke-engine/exam-mapping.md`
+- `scenes/four-stroke-engine/interaction-script.md`
+- `scenes/four-stroke-engine/learning-flow.md`
+- `scenes/four-stroke-engine/physics-state.md`
+- `scenes/four-stroke-engine/scene-spec.md`
+- `scenes/four-stroke-engine/test-plan.md`
+- `scenes/horizontal-force-cart/README.md`
+- `scenes/horizontal-force-cart/ai-guardrails.md`
+- `scenes/horizontal-force-cart/evidence-contract.md`
+- `scenes/horizontal-force-cart/exam-mapping.md`
+- `scenes/horizontal-force-cart/interaction-script.md`
+- `scenes/horizontal-force-cart/learning-flow.md`
+- `scenes/horizontal-force-cart/physics-state.md`
+- `scenes/horizontal-force-cart/scene-spec.md`
+- `scenes/horizontal-force-cart/test-plan.md`
+- `scenes/equal-volume-material-samples/README.md`
+- `scenes/equal-volume-material-samples/physics-state.md`
+- `scenes/equal-volume-material-samples/scene-spec.md`
+- `state-machine.md`
+- `universal-physics-learning-protocol.md`
+
