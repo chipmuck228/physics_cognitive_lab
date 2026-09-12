@@ -1,6 +1,7 @@
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { CartEvidenceDrawer } from "@/components/learning/CartEvidenceDrawer";
+import { ValidationMessage } from "@/components/learning/ValidationMessage";
 import {
   CART_COPY,
   CART_MODEL_CASE_IDS,
@@ -11,10 +12,12 @@ import {
   type CartModelCaseId,
 } from "@/lib/content/horizontal-force-cart";
 import type { CartModelCase, CartModelDraft } from "@/lib/learning/cart-model";
+import type { StudentUiFeedback } from "@/lib/learning/student-ui-feedback";
 
 interface CartModelBoardProps {
   draft: CartModelDraft;
   feedback?: string | null;
+  gateFeedback?: StudentUiFeedback | null;
   needStructure: boolean;
   evidenceSame?: string | null;
   evidenceOpposite?: string | null;
@@ -36,6 +39,7 @@ const CASE_LABELS: Record<CartModelCaseId, string> = {
 export function CartModelBoard({
   draft,
   feedback,
+  gateFeedback,
   needStructure,
   evidenceSame,
   evidenceOpposite,
@@ -118,13 +122,19 @@ export function CartModelBoard({
         ))}
       </Card>
 
-      {feedback ? (
-        <p className="text-sm text-[var(--ink-muted)]" data-testid="cart-model-feedback">
-          {feedback}
-        </p>
-      ) : null}
       {needStructure ? (
-        <p className="text-sm text-[var(--ink-muted)]">{CART_COPY.modelNeedStructure}</p>
+        <ValidationMessage kind="info" testId="cart-model-need-structure">
+          {CART_COPY.modelNeedStructure}
+        </ValidationMessage>
+      ) : null}
+      {gateFeedback ? (
+        <ValidationMessage kind={gateFeedback.kind} testId="cart-model-feedback">
+          {gateFeedback.message}
+        </ValidationMessage>
+      ) : feedback ? (
+        <ValidationMessage kind="incorrect" testId="cart-model-feedback">
+          {feedback}
+        </ValidationMessage>
       ) : null}
 
       <div className="flex justify-end">

@@ -656,7 +656,7 @@ Maintain a living coverage matrix.
 | density-mass-volume | Equal-volume material samples | defined | defined | defined | defined | defined | prototype |
 | force-changes-motion-state | Horizontal Force Cart | defined | defined | defined | defined | defined | prototype |
 | specific-heat-capacity | Equal-mass heated samples | defined | defined | defined | defined | defined | prototype |
-| ohms-law | TBD | TBD | TBD | TBD | TBD | TBD | draft |
+| ohms-law | Simple resistor circuit | defined | defined | defined | defined | defined | prototype |
 
 The matrix should eventually be generated from model metadata rather than manually maintained.
 

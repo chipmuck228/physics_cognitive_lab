@@ -1,4 +1,7 @@
-import { SAMPLES_OBSERVE_OPTIONS } from "@/lib/content/equal-volume-material-samples";
+import {
+  SAMPLES_OBSERVE_OPTIONS,
+  SAMPLES_OBSERVE_REQUIRED_IDS,
+} from "@/lib/content/equal-volume-material-samples";
 import type { ObservationEvidence } from "@/types/learning";
 
 export interface SamplesObserveEvaluation {
@@ -12,8 +15,8 @@ export function evaluateSamplesObservation(
   selectedOptionIds: readonly string[],
 ): SamplesObserveEvaluation {
   const selected = new Set(selectedOptionIds);
-  const noticedSameSize = selected.has("same-size");
-  const noticedMassDifference = selected.has("one-heavier");
+  const noticedSameSize = selected.has(SAMPLES_OBSERVE_REQUIRED_IDS[0]);
+  const noticedMassDifference = selected.has(SAMPLES_OBSERVE_REQUIRED_IDS[1]);
 
   return {
     noticedSameSize,

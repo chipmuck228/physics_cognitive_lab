@@ -23,14 +23,17 @@ export { fourStrokeEngineAdapter } from "@/lib/runtime/adapters/four-stroke-engi
 export { horizontalForceCartAdapter } from "@/lib/runtime/adapters/horizontal-force-cart";
 export { equalVolumeMaterialSamplesAdapter } from "@/lib/runtime/adapters/equal-volume-material-samples";
 export { equalMassHeatedSamplesAdapter } from "@/lib/runtime/adapters/equal-mass-heated-samples";
+export { simpleResistorCircuitAdapter } from "@/lib/runtime/adapters/simple-resistor-circuit";
 export {
   defaultCartScenePhysics,
   defaultEngineScenePhysics,
   defaultMicrowaveScenePhysics,
   defaultHeatSamplesScenePhysics,
+  defaultOhmsScenePhysics,
   defaultSamplesScenePhysics,
   getCartPhysicsState,
   getHeatSamplesPhysicsState,
+  getOhmsPhysicsState,
   getEnginePhysicsState,
   getMicrowavePhysicsState,
   getSamplesPhysicsState,
@@ -41,6 +44,7 @@ export {
   isSamplesScenePhysics,
   wrapCartPhysicsState,
   wrapHeatSamplesPhysicsState,
+  wrapOhmsPhysicsState,
   wrapEnginePhysicsState,
   wrapMicrowavePhysicsState,
   wrapSamplesPhysicsState,

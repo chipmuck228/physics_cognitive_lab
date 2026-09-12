@@ -1,4 +1,4 @@
-import { SAMPLES_TUTOR_GOALS } from "@/lib/content/equal-volume-material-samples";
+import { samplesSceneDsl } from "@/lib/content/equal-volume-material-samples";
 import {
   isDensitySceneState,
   samplesPhysicsSnapshot,
@@ -11,7 +11,8 @@ export function getSamplesTutorContext(session: LearningSession): SceneTutorCont
   const samples = samplesSnapshot(session);
   return {
     learningGoal:
-      SAMPLES_TUTOR_GOALS[session.stage] ?? "只帮学生把看见的现象说清楚",
+      samplesSceneDsl.tutorGoals[session.stage as keyof typeof samplesSceneDsl.tutorGoals] ??
+      "只帮学生把看见的现象说清楚",
     currentPhysicsState: samples,
     physicsSummary: [
       "Physics state: equal-volume material samples snapshot",

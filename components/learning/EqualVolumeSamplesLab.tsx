@@ -75,7 +75,7 @@ import {
   emptySamplesModelDraft,
   hasCompletedSamplesModel,
   samplesModelDraftFromAttempt,
-  summarizeSamplesModelAttempt,
+  samplesModelStudentFeedback,
   type SamplesModelDraft,
 } from "@/lib/learning/samples-model";
 import { hasSufficientSamplesObservation } from "@/lib/learning/samples-observe";
@@ -527,9 +527,9 @@ export function EqualVolumeSamplesLab() {
   ) : isModel ? (
     <SamplesRatioBoard
       draft={modelDraft}
-      feedback={
+      gateFeedback={
         latestModel && !latestModel.correctStructure
-          ? summarizeSamplesModelAttempt(latestModel)
+          ? samplesModelStudentFeedback(modelDraft, latestModel)
           : null
       }
       needStructure={modelNeedStructure && !modelComplete}

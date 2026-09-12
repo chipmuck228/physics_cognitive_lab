@@ -51,10 +51,23 @@ export function EqualMassHeatedSamples({ state }: EqualMassHeatedSamplesProps) {
               <p className="text-xs text-[var(--ink-muted)]">还没加热</p>
             )}
             {state.temperaturesRevealed ? (
-              <p className="text-xs text-[var(--ink)]">
-                ΔT {temperatureChangeC(sample)} {HEAT_COPY.tempUnit} →{" "}
-                {finalTemperatureC(sample)} {HEAT_COPY.tempUnit}
-              </p>
+              <>
+                <p
+                  className="text-xs text-[var(--ink)]"
+                  data-testid={`heat-sample-${sample.slotId}-temperature-state`}
+                  data-temp-initial={sample.initialTemperatureC}
+                  data-temp-final={finalTemperatureC(sample)}
+                >
+                  {`${HEAT_COPY.temperatureStateLabel}：${sample.initialTemperatureC}${HEAT_COPY.tempUnit} → ${finalTemperatureC(sample)}${HEAT_COPY.tempUnit}`}
+                </p>
+                <p
+                  className="text-xs text-[var(--ink-muted)]"
+                  data-testid={`heat-sample-${sample.slotId}-temperature-change`}
+                  data-temp-delta={temperatureChangeC(sample)}
+                >
+                  {`${HEAT_COPY.temperatureRiseLabel}：${temperatureChangeC(sample)}${HEAT_COPY.tempUnit}`}
+                </p>
+              </>
             ) : (
               <p className="text-xs text-[var(--ink-muted)]">温度还没读出来</p>
             )}

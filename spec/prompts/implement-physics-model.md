@@ -120,6 +120,7 @@ Physics Model (already exists)
 → AssessmentOverlay (already exists if ready)  
 → SceneAdapter  
 → UPLP UI  
+→ Physical Representation Integrity check (`spec/physics-representation-integrity-contract.md`; new Scene only, do not audit Scene 01–05)  
 → evidence accumulation  
 → persistence  
 → tutor context  
@@ -143,6 +144,10 @@ Preserve:
 Typed deterministic functions only. LLM must not decide outcomes, measurements, or official correctness.
 
 Add a discriminated physics wrapper. Register the adapter. Do not add `if (sceneId === SCENE_ID)` to `lib/learning/progression.ts`, `lib/learning/tutor-request.ts`, or `hooks/useTutor.ts`.
+
+### Physical representation
+
+After the physics view exists, check student-visible quantities against `spec/physics-representation-integrity-contract.md`. Bind values to official runtime functions. Do not put ΔT and T (or this Scene's analogous pair) on opposite ends of one arrow. Scene 05 PRI-05-01 is the worked example. Do not open a full PRI audit of older Scenes.
 
 ### MODEL UI
 

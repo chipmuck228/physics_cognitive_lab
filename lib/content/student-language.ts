@@ -46,11 +46,11 @@ export const STUDENT_CHROME = {
   startOverAria: "从头再来一次",
   startAria: "开始探究",
   progressAria: "当前进度",
-  tutorName: "问一句",
-  tutorAsk: "问我一句",
-  tutorAskAria: "针对你刚写的内容问一句",
-  tutorIdle: "可选。针对你刚写的内容，可以问一句。",
-  tutorLoading: "正在想一个问题…",
+  tutorName: "卡住了？",
+  tutorAsk: "给我一点提示",
+  tutorAskAria: "给我一个不会直接告诉答案的提示",
+  tutorIdle: "卡住时可以要一个提示。提示不会直接告诉你答案。",
+  tutorLoading: "正在想一个提示…",
   examSeparate:
     "现在先不看实验场景。先把题目想清楚，再选答案。",
 } as const;

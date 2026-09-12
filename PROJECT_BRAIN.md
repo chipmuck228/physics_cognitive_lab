@@ -264,7 +264,7 @@ Scene 01 (`microwave-bread`) implements the Evidence Claim Design for `energy-in
 
 ## 17. Physics Model Implementation Protocol
 
-How a canonical Physics Model becomes a production Scene is owned by `spec/physics-model-implementation-protocol.md`. UPLP still owns how students learn. Whether physics, pedagogy, and learning-evidence claims are justified is owned by `spec/physics-model-quality-review.md`. How implementation evidence must justify a cognitive claim is owned by `spec/evidence-design-contract.md`.
+How a canonical Physics Model becomes a production Scene is owned by `spec/physics-model-implementation-protocol.md`. UPLP still owns how students learn. Whether physics, pedagogy, and learning-evidence claims are justified is owned by `spec/physics-model-quality-review.md`. How implementation evidence must justify a cognitive claim is owned by `spec/evidence-design-contract.md`. Whether student-visible physics labels preserve quantity identity is owned by `spec/physics-representation-integrity-contract.md`. Scene 05 PRI-05-01 is the worked example. Correct runtime numbers do not imply correct representation. This contract does not start a Scene 01–05 full audit.
 
 Default implementation request: `spec/prompts/implement-physics-model.md` (one pass, ENTRY → COMPLETE).  
 Default quality-review request: `spec/prompts/review-physics-model-quality.md` (`MODE=PRE` or `MODE=POST`).
@@ -309,6 +309,12 @@ The Library model `density-mass-volume` is a quality-reviewed prototype (`metada
 
 The Library model `specific-heat-capacity` is a quality-reviewed prototype (`metadata.status = prototype`) after POST `LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS`. Scene 05 (`equal-mass-heated-samples`) implements ENTRY → COMPLETE. MODEL UI is a quantitative product/ratio board (`Q = c m ΔT`), not Scene 01/02's energy chain, not Scene 03's force board, and not Scene 04's density table. Tests passing does not mark the model `validated`.
 
+The Library model `ohms-law` is a quality-reviewed prototype (`metadata.status = prototype`) after POST `LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS` and the authored-evidence adversarial probe (D057). Canonical definition lives in `content/physics-models/ohms-law/`. Production Scene id is `simple-resistor-circuit` (D056). PRE is `MODEL_QUALITY_PASS_WITH_REFINEMENTS`. Evidence Claim Design is `spec/scenes/simple-resistor-circuit/evidence-claim-design.md` (D055). L4 completeness is not construction. Not learner-validated. Secondary models: none. `series-circuit` / `parallel-circuit` must not become a second primary. MODEL must not degenerate into reciting `I = U / R` or six structured clicks.
+
+Scenes 01–06 are all quality-reviewed prototypes. New Scene development is stopped after D057. Architecture discovery is `spec/architecture/scene-01-06-abstraction-audit.md` (D058). The Scene 04 hybrid DSL pilot is `spec/architecture/scene-04-hybrid-dsl-pilot.md` (D059): `KEEP_SCENE04_ONLY`. Not a universal renderer. Not Scene 07. Not learner-validated.
+
 A model is implementation-ready only after the readiness gate. Engineering PASS is an engineering-complete implementation and stays `draft`. A POST `PASS` or `PASS_WITH_REFINEMENTS` allows a quality-reviewed prototype and inventory promotion to `prototype`. Validated requires learner evidence under a future validation protocol and is never conferred by unit tests or an AI review.
 
-The first observation protocol is `spec/learner-validation/learner-validation-prep.md` (D050). It prepares one informal Grade-9 watch of Scene 03. It is not learner validation, not a `validated` write, and not a product instrumentation change.
+The first observation protocol is `spec/learner-validation/learner-validation-prep.md` (D050). How to run that observation is `spec/learner-validation/first-learner-observation-guide.md` (D051). They prepare one informal Grade-9 watch of Scene 03. They are not learner validation, not a `validated` write, and not a product instrumentation change.
+
+Student-facing interaction quality is owned by `spec/student-ui-interaction-contract.md`. The Scene 01–05 baseline audit is `spec/student-ui/cross-scene-ui-audit.md` (D052). It does not own UPLP, L-levels, evidence semantics, or physical representation integrity (D053).

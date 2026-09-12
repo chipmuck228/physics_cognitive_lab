@@ -137,7 +137,9 @@ export function EngineModelBuilder({
                   className="flex flex-wrap gap-2"
                   data-testid={`engine-model-relation-${index}`}
                 >
-                  <span className="sr-only">{ENGINE_MODEL_COPY.relationLabel}</span>
+                  <p className="w-full text-sm font-medium text-[var(--ink)]">
+                    {ENGINE_MODEL_COPY.relationLabel}
+                  </p>
                   <RelationChip
                     label={ENGINE_MODEL_COPY.relationNone}
                     selected={!relationKinds[index]}

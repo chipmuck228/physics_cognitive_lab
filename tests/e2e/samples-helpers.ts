@@ -324,7 +324,7 @@ export async function completeSamplesAiOff(page: Page) {
 }
 
 export async function expectNoTutorChrome(page: Page) {
-  await expect(page.getByText(STUDENT_CHROME.tutorName)).toHaveCount(0);
+  await expect(page.getByText(STUDENT_CHROME.tutorName, { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: STUDENT_CHROME.tutorAskAria })).toHaveCount(
     0,
   );

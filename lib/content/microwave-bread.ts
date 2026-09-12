@@ -34,7 +34,7 @@ export const SCENE_COPY = {
   explainSubmit: "记下我的想法",
   modelInstruction:
     "把想法连起来：能量进入之后，中间发生了什么，最后温度才升高？",
-  modelSubmit: "连好了",
+  modelSubmit: "记下这条因果链",
   examInstruction:
     "现在先不看微波炉。先说这道题主要在问什么，再想想该用什么关系。选项会在那之后出现。",
   examNotice: "现在先不看微波炉。先把题目想清楚，再选答案。",

@@ -35,6 +35,7 @@ Gate B reviews **what the running implementation can actually credit**.
 | [`cognitive-action-taxonomy.md`](./cognitive-action-taxonomy.md) | Canonical C1–C14 IDs and meanings | Scene-specific evidence for those actions |
 | [`physics-model-implementation-protocol.md`](./physics-model-implementation-protocol.md) | HOW a ready model becomes software | Whether the model should be implemented yet |
 | [`evidence-design-contract.md`](./evidence-design-contract.md) | HOW implementation evidence must justify a cognitive claim | Stage meanings, L-level meanings, Gate results |
+| [`physics-representation-integrity-contract.md`](./physics-representation-integrity-contract.md) | Whether student-visible physics representations preserve quantity identity | Physics calculations, UPLP, L-levels, interaction chrome |
 | Readiness Gate (`validatePhysicsModelReadiness`) | WHETHER enough canonical implementation information exists to implement safely | Whether physics/pedagogy/evidence claims are justified |
 | **This document** | WHETHER physics, pedagogy, and learning-evidence claims are justified | UPLP stage meanings, schema fields, Library IDs, runtime architecture, evaluator-design rules |
 | Engineering tests (TypeScript, Vitest, Playwright, deterministic evaluators) | WHETHER implementation behavior matches deterministic contracts | Educational effectiveness |

@@ -2,6 +2,10 @@ import {
   CART_MODEL_CASE_IDS,
   type CartModelCaseId,
 } from "@/lib/content/horizontal-force-cart";
+import {
+  studentUiFeedback,
+  type StudentUiFeedback,
+} from "@/lib/learning/student-ui-feedback";
 import type { ModelAttempt } from "@/types/learning";
 
 export const CART_MODEL_DRAFT_KIND = "cart-model-draft";
@@ -153,6 +157,36 @@ export function completeCartModelInput(timestamp: string): CartModelInput {
     ],
     timestamp,
   };
+}
+
+export function cartModelMissingLabels(draft: CartModelDraft): string[] {
+  const missing: string[] = [];
+  for (const caseId of CART_MODEL_CASE_IDS) {
+    const item = draft.cases[caseId];
+    if (!item.currentMotionState || !item.netForceCondition || !item.resultingChange) {
+      missing.push(
+        caseId === "same"
+          ? "顺着推这一格"
+          : caseId === "opposite"
+            ? "顶着推这一格"
+            : "合力为零这一格",
+      );
+    }
+  }
+  if (draft.conditions.length === 0) {
+    missing.push("这个关系在什么条件下能用");
+  }
+  return missing;
+}
+
+export function cartModelStudentFeedback(
+  draft: CartModelDraft,
+  attempt: ModelAttempt,
+): StudentUiFeedback {
+  return studentUiFeedback(
+    cartModelMissingLabels(draft),
+    summarizeCartModelAttempt(attempt),
+  );
 }
 
 export function summarizeCartModelAttempt(attempt: ModelAttempt): string {

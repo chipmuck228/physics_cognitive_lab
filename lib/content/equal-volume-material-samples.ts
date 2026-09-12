@@ -1,3 +1,6 @@
+import { examPatterns } from "@/content/physics-models/density-mass-volume/exam";
+import { independentChallenges } from "@/content/physics-models/density-mass-volume/independent-challenges";
+import { transferTargets } from "@/content/physics-models/density-mass-volume/transfer";
 import { LEARNING_STAGE_ORDER, LearningStage } from "@/types/learning";
 import { STUDENT_STAGE_LABELS } from "@/lib/content/student-language";
 import {
@@ -6,6 +9,7 @@ import {
   SAMPLES_EXPERIMENT_C,
   type SamplesExperimentId,
 } from "@/lib/physics/equal-volume-material-samples";
+import { parseSceneDslV01 } from "@/lib/scene-dsl/v01";
 
 export const SAMPLES_PHASE_STAGES = [
   LearningStage.ENTRY,
@@ -533,3 +537,140 @@ export const SAMPLES_TRANSFER_RELATIONS = [
     label: "单靠密度不能直接说明浮沉",
   },
 ] as const;
+
+export const SAMPLES_EXAM_PATTERN_IDS = [
+  "exam-density-is-not-mass-or-size",
+  "exam-same-volume-larger-mass",
+  "exam-cut-uniform-density-unchanged",
+  "exam-calculate-density-ratio",
+  "exam-mass-volume-density-table",
+] as const;
+
+export const SAMPLES_EXAM_MAX_ATTEMPTS_PER_ITEM = 2;
+
+export const SAMPLES_AI_OFF_CHALLENGE_IDS = [
+  "ai-off-unfamiliar-sealed-packages",
+  "ai-off-condition-cut-uniform-bar",
+] as const;
+
+export const SAMPLES_TRANSFER_TARGET_IDS = {
+  cups: "near-equal-cups-of-liquids",
+  stone: "medium-irregular-stone",
+  hollow: "far-hollow-same-outer-size",
+} as const;
+
+export const SAMPLES_OBSERVE_REQUIRED_IDS = ["same-size", "one-heavier"] as const;
+
+export const SAMPLES_DESCRIBE_ACCEPTED = {
+  object: "samples",
+  sizeRelation: "same",
+  massRelation: "different",
+} as const;
+
+export const SAMPLES_EXPLAIN_ACCEPTED = {
+  densityVsMass: "not-same",
+  sameVolume: "heavier-denser",
+  sameMass: "larger-less-dense",
+  uniformCut: "density-unchanged",
+} as const;
+
+export const SAMPLES_EXPLAIN_REJECT_IDS = [
+  "density-is-mass",
+  "density-is-size",
+  "heavier-always-denser",
+  "bigger-always-denser",
+  "cut-lowers-density",
+  "mass-down-density-down",
+] as const;
+
+export const samplesSceneDsl = parseSceneDslV01(
+  {
+    identity: {
+      sceneId: "equal-volume-material-samples",
+      primaryModelId: "density-mass-volume",
+    },
+    plugins: {
+      physics: "deterministic-equal-volume-samples",
+      modelRepresentation: "ratio-quantitative",
+      evaluator: "density-mass-volume-samples",
+    },
+    stageOrder: [...SAMPLES_PHASE_STAGES],
+    stagePrompts: SAMPLES_STAGE_PROMPTS,
+    stageFooters: SAMPLES_FOOTER,
+    tutorGoals: SAMPLES_TUTOR_GOALS,
+    copy: {
+      landingKicker: SAMPLES_COPY.landingKicker,
+      landingTitle: SAMPLES_COPY.landingTitle,
+      landingBody: SAMPLES_COPY.landingBody,
+      landingCta: SAMPLES_COPY.landingCta,
+      observeInstruction: SAMPLES_COPY.observeInstruction,
+      observePrompt: SAMPLES_COPY.observePrompt,
+      observeSubmit: SAMPLES_COPY.observeSubmit,
+      observeNeedMore: SAMPLES_COPY.observeNeedMore,
+      observeSaved: SAMPLES_COPY.observeSaved,
+      playDemo: SAMPLES_COPY.playDemo,
+      pauseDemo: SAMPLES_COPY.pauseDemo,
+      predictInstruction: SAMPLES_COPY.predictInstruction,
+      reasonLabel: SAMPLES_COPY.reasonLabel,
+      reasonPlaceholder: SAMPLES_COPY.reasonPlaceholder,
+      predictSubmit: SAMPLES_COPY.predictSubmit,
+      predictNeedBoth: SAMPLES_COPY.predictNeedBoth,
+      predictLocked: SAMPLES_COPY.predictLocked,
+      completeTitle: SAMPLES_COMPLETE_COPY.title,
+      completeCaution: SAMPLES_COMPLETE_COPY.caution,
+      completeTheme: SAMPLES_COMPLETE_COPY.theme,
+      massUnit: SAMPLES_COPY.massUnit,
+      volumeUnit: SAMPLES_COPY.volumeUnit,
+      densityUnit: SAMPLES_COPY.densityUnit,
+    },
+    observe: {
+      options: SAMPLES_OBSERVE_OPTIONS.map((option) => ({ ...option })),
+      requiredIds: [...SAMPLES_OBSERVE_REQUIRED_IDS],
+    },
+    describe: {
+      accepted: { ...SAMPLES_DESCRIBE_ACCEPTED },
+    },
+    predict: {
+      outcomes: SAMPLES_PREDICT_OUTCOMES.map((option) => ({ ...option })),
+    },
+    explain: {
+      accepted: { ...SAMPLES_EXPLAIN_ACCEPTED },
+      rejectIds: [...SAMPLES_EXPLAIN_REJECT_IDS],
+    },
+    transfer: {
+      requiredFullModelIds: [
+        SAMPLES_TRANSFER_TARGET_IDS.cups,
+        SAMPLES_TRANSFER_TARGET_IDS.stone,
+      ],
+      boundaryTargetId: SAMPLES_TRANSFER_TARGET_IDS.hollow,
+      relationIds: SAMPLES_TRANSFER_RELATIONS.map((relation) => relation.id),
+    },
+    exam: {
+      patternIds: [...SAMPLES_EXAM_PATTERN_IDS],
+      maxAttemptsPerItem: SAMPLES_EXAM_MAX_ATTEMPTS_PER_ITEM,
+    },
+    aiOff: {
+      challengeIds: [...SAMPLES_AI_OFF_CHALLENGE_IDS],
+      tutorEnabled: false,
+    },
+    hintLadder: {
+      source: "physics-model",
+    },
+    evidenceBindings: {
+      observedPhenomenon: ["samples-observation", "samples-description"],
+      identifiedQuantities: ["samples-description"],
+      identifiedRelations: ["samples-explanation"],
+      constructedValidCausalModel: ["samples-model"],
+      successfulTransfer: ["samples-model", "samples-transfer"],
+      independentAiOffSuccess: ["samples-ai-off", "llm-disabled"],
+    },
+  },
+  {
+    transferTargetIds: transferTargets.map((target) => target.id),
+    examPatternIds: examPatterns.map((pattern) => pattern.id),
+    independentChallenges: independentChallenges.map((challenge) => ({
+      id: challenge.id,
+      llmAllowed: challenge.llmAllowed,
+    })),
+  },
+);

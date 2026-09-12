@@ -1,5 +1,6 @@
 import { createInitialEngineState } from "@/lib/physics/engine";
 import { isHeatSamplesSceneState } from "@/lib/physics/equal-mass-heated-samples";
+import { isOhmsSceneState } from "@/lib/physics/simple-resistor-circuit";
 import { isDensitySceneState } from "@/lib/physics/equal-volume-material-samples";
 import { isCartState } from "@/lib/physics/horizontal-force-cart";
 import { createDefaultPhysicsState } from "@/lib/physics/microwave";
@@ -13,7 +14,9 @@ import {
   wrapCartPhysicsState,
   wrapEnginePhysicsState,
   wrapMicrowavePhysicsState,
+  defaultOhmsScenePhysics,
   wrapHeatSamplesPhysicsState,
+  wrapOhmsPhysicsState,
   wrapSamplesPhysicsState,
 } from "@/lib/runtime/physics-state";
 import {
@@ -22,6 +25,7 @@ import {
   HEAT_SAMPLES_SCENE_ID,
   LearningStage,
   MICROWAVE_SCENE_ID,
+  OHMS_SCENE_ID,
   SAMPLES_SCENE_ID,
   type LearningSession,
   type ProductionSceneId,
@@ -37,6 +41,7 @@ export const SESSION_STORAGE_KEYS: Record<ProductionSceneId, string> = {
   [CART_SCENE_ID]: "physics-lab.session.horizontal-force-cart.v1",
   [SAMPLES_SCENE_ID]: "physics-lab.session.equal-volume-material-samples.v1",
   [HEAT_SAMPLES_SCENE_ID]: "physics-lab.session.equal-mass-heated-samples.v1",
+  [OHMS_SCENE_ID]: "physics-lab.session.simple-resistor-circuit.v1",
 };
 
 export const SESSION_STORAGE_KEY = SESSION_STORAGE_KEYS[MICROWAVE_SCENE_ID];
@@ -47,7 +52,8 @@ export function sessionStorageKey(sceneId: SceneId): string {
     sceneId === ENGINE_SCENE_ID ||
     sceneId === CART_SCENE_ID ||
     sceneId === SAMPLES_SCENE_ID ||
-    sceneId === HEAT_SAMPLES_SCENE_ID
+    sceneId === HEAT_SAMPLES_SCENE_ID ||
+    sceneId === OHMS_SCENE_ID
   ) {
     return SESSION_STORAGE_KEYS[sceneId];
   }
@@ -250,6 +256,13 @@ function wrapPersistedPhysicsState(
       return wrapHeatSamplesPhysicsState(physics);
     }
     return defaultHeatSamplesScenePhysics();
+  }
+
+  if (sceneId === OHMS_SCENE_ID) {
+    if (isOhmsSceneState(physics)) {
+      return wrapOhmsPhysicsState(physics);
+    }
+    return defaultOhmsScenePhysics();
   }
 
   return {

@@ -5,6 +5,7 @@ import { chemicalEnergyInternalEnergyMechanicalEnergyModel } from "@/content/phy
 import { densityMassVolumeModel } from "@/content/physics-models/density-mass-volume";
 import { energyInternalEnergyTemperatureModel } from "@/content/physics-models/energy-internal-energy-temperature";
 import { forceChangesMotionStateModel } from "@/content/physics-models/force-changes-motion-state";
+import { ohmsLawModel } from "@/content/physics-models/ohms-law";
 import { specificHeatCapacityModel } from "@/content/physics-models/specific-heat-capacity";
 
 function read(path: string): string {
@@ -82,6 +83,8 @@ describe("Physics Model lifecycle governance", () => {
     );
     expect(forceChangesMotionStateModel.metadata.status).toBe("prototype");
     expect(energyInternalEnergyTemperatureModel.metadata.status).toBe("prototype");
+    expect(ohmsLawModel.metadata.status).toBe("prototype");
+    expect(ohmsLawModel.metadata.status).not.toBe("validated");
     expect(read("spec/reviews/pre/energy-internal-energy-temperature.md")).toMatch(
       /MODEL_QUALITY_PASS_WITH_REFINEMENTS/,
     );

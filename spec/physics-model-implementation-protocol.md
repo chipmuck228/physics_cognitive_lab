@@ -23,6 +23,7 @@ It does **not** answer how students learn. That remains UPLP ownership.
 | [`cognitive-action-taxonomy.md`](./cognitive-action-taxonomy.md) | Canonical C1–C14 IDs |
 | [`physics-model-quality-review.md`](./physics-model-quality-review.md) | WHETHER physics, pedagogy, and learning-evidence claims are justified |
 | [`evidence-design-contract.md`](./evidence-design-contract.md) | HOW implementation evidence must justify a cognitive claim |
+| [`physics-representation-integrity-contract.md`](./physics-representation-integrity-contract.md) | Whether student-visible physics representations preserve quantity identity |
 | **This document** | HOW a ready model is implemented on the Universal Runtime |
 
 Scene-specific specs instantiate the protocol. They must not redefine UPLP stages, hint semantics, L-level meanings, or canonical model IDs.
@@ -84,6 +85,7 @@ Physics Model definition
   → AssessmentOverlay
   → SceneAdapter
   → UPLP UI implementation
+  → Physical Representation Integrity check (new Scene / targeted repair only)
   → evidence accumulation
   → persistence
   → tutor context
@@ -206,6 +208,8 @@ ENTRY → OBSERVE → DESCRIBE → PREDICT → EXPERIMENT
 Reuse `LearningShell`, stage chrome, and universal session persistence. Write Scene-owned copy, visuals, MODEL builder, and stage tasks.
 
 Student-facing labels stay in the student-language registry / Scene copy. Do not expose Transfer, Evidence, AI_OFF, or L-levels as student vocabulary.
+
+Bind student-visible quantitative physics to runtime state or official functions. Do not hardcode derived results in the display layer. If an arrow expresses a state change, both endpoints must be the same physical quantity. Rules: [`physics-representation-integrity-contract.md`](./physics-representation-integrity-contract.md). Worked example: Scene 05 PRI-05-01. Do not start a Scene 01–05 full PRI audit from a new-Scene implementation.
 
 ### 2.9 Evidence accumulation
 
@@ -566,6 +570,7 @@ Do not build a large testing framework yet. Copying Scene 02/03 tests is accepta
 
 - same input → same output
 - LLM is not on the physics path
+- student-visible quantitative readouts follow [`physics-representation-integrity-contract.md`](./physics-representation-integrity-contract.md) (quantity identity, units, same-quantity arrows, no UI-side physics literals). Required for new Scenes and targeted repairs. Not a mandate to re-audit Scene 01–05.
 
 **Stages**
 

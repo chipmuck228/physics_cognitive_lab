@@ -1,6 +1,8 @@
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
+import { QuestionGroup } from "@/components/learning/QuestionGroup";
 import { SamplesEvidenceDrawer } from "@/components/learning/SamplesEvidenceDrawer";
+import { ValidationMessage } from "@/components/learning/ValidationMessage";
 import {
   SAMPLES_COPY,
   SAMPLES_MODEL_CONDITION_OPTIONS,
@@ -15,11 +17,13 @@ import {
   SAMPLES_MODEL_SUFFICIENCY_OPTIONS,
 } from "@/lib/content/equal-volume-material-samples";
 import type { SamplesModelDraft } from "@/lib/learning/samples-model";
+import type { StudentUiFeedback } from "@/lib/learning/student-ui-feedback";
 
 interface SamplesRatioBoardProps {
   draft: SamplesModelDraft;
   evidence: { sameVolume: string; sameMass: string; cut: string };
   feedback?: string | null;
+  gateFeedback?: StudentUiFeedback | null;
   hints: string[];
   canRevealHint: boolean;
   needStructure: boolean;
@@ -33,6 +37,7 @@ export function SamplesRatioBoard({
   draft,
   evidence,
   feedback,
+  gateFeedback,
   hints,
   canRevealHint,
   needStructure,
@@ -141,30 +146,30 @@ export function SamplesRatioBoard({
           <p className="text-sm font-medium text-[var(--ink)]">
             {SAMPLES_COPY.modelCutCompareLabel}
           </p>
-          <ChoiceGroup
-            legend={SAMPLES_COPY.modelCutMassLabel}
-            name="samples-model-cut-mass"
+          <QuestionGroup
+            id="samples-model-cut-mass"
+            question={SAMPLES_COPY.modelCutMassLabel}
             options={SAMPLES_MODEL_CUT_MASS_OPTIONS}
             value={draft.cutMassChange}
             onChange={(cutMassChange) => onChange({ ...draft, cutMassChange })}
           />
-          <ChoiceGroup
-            legend={SAMPLES_COPY.modelCutVolumeLabel}
-            name="samples-model-cut-volume"
+          <QuestionGroup
+            id="samples-model-cut-volume"
+            question={SAMPLES_COPY.modelCutVolumeLabel}
             options={SAMPLES_MODEL_CUT_VOLUME_OPTIONS}
             value={draft.cutVolumeChange}
             onChange={(cutVolumeChange) => onChange({ ...draft, cutVolumeChange })}
           />
-          <ChoiceGroup
-            legend={SAMPLES_COPY.modelCutRatioLabel}
-            name="samples-model-cut-ratio"
+          <QuestionGroup
+            id="samples-model-cut-ratio"
+            question={SAMPLES_COPY.modelCutRatioLabel}
             options={SAMPLES_MODEL_CUT_RATIO_OPTIONS}
             value={draft.cutRatioChange}
             onChange={(cutRatioChange) => onChange({ ...draft, cutRatioChange })}
           />
-          <ChoiceGroup
-            legend={SAMPLES_COPY.modelCutWhyLabel}
-            name="samples-model-cut-why"
+          <QuestionGroup
+            id="samples-model-cut-why"
+            question={SAMPLES_COPY.modelCutWhyLabel}
             options={SAMPLES_MODEL_CUT_WHY_OPTIONS}
             value={draft.cutWhy}
             onChange={(cutWhy) => onChange({ ...draft, cutWhy })}
@@ -207,12 +212,18 @@ export function SamplesRatioBoard({
         </fieldset>
 
         {needStructure ? (
-          <p className="text-sm text-[var(--ink-muted)]">
+          <ValidationMessage kind="info" testId="samples-model-need-structure">
             {SAMPLES_COPY.modelNeedStructure}
-          </p>
+          </ValidationMessage>
         ) : null}
-        {feedback ? (
-          <p className="text-sm text-[var(--ink-muted)]">{feedback}</p>
+        {gateFeedback ? (
+          <ValidationMessage kind={gateFeedback.kind} testId="samples-model-feedback">
+            {gateFeedback.message}
+          </ValidationMessage>
+        ) : feedback ? (
+          <ValidationMessage kind="incorrect" testId="samples-model-feedback">
+            {feedback}
+          </ValidationMessage>
         ) : null}
         {hints.length > 0 ? (
           <ul className="space-y-1">

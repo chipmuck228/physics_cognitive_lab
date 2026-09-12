@@ -1,6 +1,7 @@
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { HeatEvidenceDrawer } from "@/components/learning/HeatEvidenceDrawer";
+import { ValidationMessage } from "@/components/learning/ValidationMessage";
 import {
   HEAT_COPY,
   HEAT_MODEL_CONDITIONS,
@@ -11,11 +12,13 @@ import {
   HEAT_MODEL_SUFFICIENCY,
 } from "@/lib/content/equal-mass-heated-samples";
 import type { HeatModelDraft } from "@/lib/learning/heat-model";
+import type { StudentUiFeedback } from "@/lib/learning/student-ui-feedback";
 
 interface HeatProductBoardProps {
   draft: HeatModelDraft;
   evidence: { experimentA: string; experimentB: string; experimentC: string };
   feedback?: string | null;
+  gateFeedback?: StudentUiFeedback | null;
   hints: string[];
   canRevealHint: boolean;
   needStructure: boolean;
@@ -29,6 +32,7 @@ export function HeatProductBoard({
   draft,
   evidence,
   feedback,
+  gateFeedback,
   hints,
   canRevealHint,
   needStructure,
@@ -151,10 +155,18 @@ export function HeatProductBoard({
         </fieldset>
 
         {needStructure ? (
-          <p className="text-sm text-[var(--ink-muted)]">{HEAT_COPY.modelNeedStructure}</p>
+          <ValidationMessage kind="info" testId="heat-model-need-structure">
+            {HEAT_COPY.modelNeedStructure}
+          </ValidationMessage>
         ) : null}
-        {feedback ? (
-          <p className="text-sm text-[var(--ink-muted)]">{feedback}</p>
+        {gateFeedback ? (
+          <ValidationMessage kind={gateFeedback.kind} testId="heat-model-feedback">
+            {gateFeedback.message}
+          </ValidationMessage>
+        ) : feedback ? (
+          <ValidationMessage kind="incorrect" testId="heat-model-feedback">
+            {feedback}
+          </ValidationMessage>
         ) : null}
         {hints.length > 0 ? (
           <ul className="space-y-1">

@@ -142,6 +142,8 @@ export const HEAT_COPY = {
   massUnit: "kg",
   tempUnit: "℃",
   energyUnit: "J",
+  temperatureStateLabel: "温度",
+  temperatureRiseLabel: "升温",
 } as const;
 
 export const HEAT_FORBIDDEN_REVEAL_TERMS = [

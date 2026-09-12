@@ -601,3 +601,115 @@ Quality Review continues to own WHETHER claims are justified. Schema continues t
 
 ---
 
+## D051 — First learner observation execution guide
+
+**Date:** 2026-09-12
+
+**Decision:** Record `spec/learner-validation/first-learner-observation-guide.md` as the operational HOW for the first real Grade-9 observation of Scene 03. Prep remains WHY/WHAT. The session-review template remains HOW to record one session. No Scene, evaluator, UI, runtime, UPLP, L1–L6, Evidence Design Contract, or `metadata.status` change. No analytics. No identity collection. No `validated` claim.
+
+**Why:** D050 prepared the protocol. A parent / observer still needs a repeatable sequence: reset, opening script, classify stuck moments, save raw notes and JSON first, then review product evidence against observed thinking before any product change.
+
+**Consequence:** The first observation may be executed from this Guide. Scene 03 remains a quality-reviewed prototype. One completed or stopped session is evidence discovery, not learner validation.
+
+---
+
+## D052 — Cross-Scene student UI contract audit
+
+**Date:** 2026-09-12
+
+**Decision:** Audit Scene 01–05 against `spec/student-ui-interaction-contract.md`. Repair presentation and interaction (visible questions, missing-vs-incorrect feedback, Tutor CTA “给我一点提示”) without changing evaluators, UPLP, L1–L6, or AI_OFF provenance. Dual hint systems (Tutor panel + stage hint ladder) stay separate. Recorded in `spec/student-ui/cross-scene-ui-audit.md`.
+
+**Why:** Students were inferring questions from unlabeled option groups and treating silent blocked MODEL submits as broken buttons.
+
+**Consequence:** Level A/B UI regression only. No PRE/POST rewrite. No `validated` claim. Dual-hint provenance left unchanged (U9 report only).
+
+Evidence completion (same date, no product change): `spec/student-ui/cross-scene-ui-audit-evidence.md`. U9 targeted review = `NO_EVIDENCE_REGRESSION`. Formal POST rerun = NO.
+
+---
+
+## D053 — Physical Representation Integrity contract
+
+**Date:** 2026-09-12
+
+**Decision:** Create `spec/physics-representation-integrity-contract.md` as the owner of whether student-visible physics representations preserve quantity identity, units, relations, and provenance. Scene 05 (`equal-mass-heated-samples`) PRI-05-01 is the worked example. Wire the contract into the implementation protocol and the default implement-physics-model request for **new** Scenes and targeted repairs. Do not open a Scene 01–05 full PRI audit. Do not change Scene 01–05 runtime as part of establishing the contract.
+
+**Why:** Scene 05 showed that Physics Truth can PASS while `ΔT 10℃ → 30℃` still states the wrong relation. That class of defect needs a named owner, separate from interaction quality and evidence design.
+
+**Consequence:** Future Scenes must bind displayed values to official runtime functions and must not put different quantities on opposite ends of a state-change arrow. Existing Scene 01–04 are not auto-audited. Scene 05 remaining findings PRI-05-02 / 03 / 04 stay open and non-blocking. PRE/POST are not rerun. `metadata.status` unchanged.
+
+Default Scene-scoped review request: `spec/prompts/review-physics-representation-integrity.md`.
+
+---
+
+## D054 — Scene 06 primary is `ohms-law`
+
+**Date:** 2026-09-12
+
+**Decision:** Scene 06 primary Physics Model is the existing Library ID `ohms-law`. Fill the canonical definition, quantitative contract, PRI plan, evidence-claim preview, tutor boundaries, and PRE. Do not create a new model ID. Do not implement the Scene. Do not run Readiness. Do not promote `metadata.status`.
+
+**Why:** Scenes 01–05 do not cover a circuit relation model. The architecture value of Scene 06 is a new electricity / circuit relational structure, not another thermal or density clone, and not an electricity survey. Formula memory of `I = U / R` is not the cognitive target.
+
+**Consequence:** Intended Scene id is `simple-resistor-circuit`. `secondaryModels` is empty. Nearby quantity IDs and `series-circuit` / `parallel-circuit` stay out of the teaching target. PRE = `MODEL_QUALITY_PASS_WITH_REFINEMENTS`. Status stays `draft`. Scene 01–05 are unchanged. D049’s “Scene 06 is not the next step” is overridden for this model-definition pass only; it is not learner validation and not a production Scene.
+
+---
+
+## D055 — Scene 06 Evidence Claim Design and Readiness
+
+**Date:** 2026-09-12
+
+**Decision:** Record Evidence Claim Design for `ohms-law` / `simple-resistor-circuit` before any Scene implementation. L4 completeness (six model parts) is not student construction evidence. L6 B diagnoses rearrangement-as-manufacture, not resistivity. Then run the canonical Readiness Gate. Do not implement React, runtime, or evaluator functions. Do not promote `metadata.status`.
+
+**Why:** Human review accepted PRE `MODEL_QUALITY_PASS_WITH_REFINEMENTS` but rejected treating six structured L4 items as construction, and asked to retarget the AI_OFF distractor to the canonical rearrangement misconception.
+
+**Consequence:** Official L4 flag may be set only by one coherent relation construction plus authored control→I bind. Six correct options must fail. “分子变大所以电阻变大” remains a slogan variant of ohm-M2, not a microscopic lesson. Status stays `draft`. Scene 01–05, UPLP, and L1–L6 meanings are unchanged.
+
+---
+
+## D056 — Scene 06 one-pass production implementation
+
+**Date:** 2026-09-12
+
+**Decision:** Implement Scene 06 (`simple-resistor-circuit`, primary `ohms-law`) as one UPLP pass behind the existing Scene adapter boundary. Do not add universal `sceneId` / `ohms-law` branches in `progression.ts`, `tutor-request.ts`, or `useTutor`. Do not change Scene 01–05, UPLP, or L1–L6 meanings. Keep `metadata.status = draft` after POST `LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS`.
+
+**Why:** Readiness was `IMPLEMENTATION_READY`. This is the first Scene implemented natively under the current UPLP, Evidence Design, PRI, and Student UI contracts. Authored L4/L5/L6 still use deterministic regex gates; that residual shortcut risk is recorded, not promoted away.
+
+**Consequence:** Production route is `/scenes/simple-resistor-circuit`. Student-visible current comes from `officialCurrentA`. Six-click MODEL fails L4. Required transfer pair and both AI_OFF challenges are implemented. No `validated` claim. No electricity-survey widening.
+
+---
+
+## D057 — Scene 06 prototype inventory finalization
+
+**Date:** 2026-09-12
+
+**Decision:** After POST `LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS` and the targeted authored-evidence adversarial probe PASS, write Library / canonical `metadata.status = "prototype"` for `ohms-law`. Do not change Scene behavior, physics, UI architecture, PRI, UPLP, L1–L6, or the POST result. Do not write `validated` or `production`. Stop new Scene development after this inventory write.
+
+**Why:** Schema §20 / D041 allow inventory promotion only after a complete production Scene, Engineering PASS, and POST `PASS` or `PASS_WITH_REFINEMENTS`. The authored-evidence probe closed the named residual that physically incorrect or token-only text could pass L4/L5/L6 because keywords were present. Memorized-correct-pattern residual remains and is accepted as `PASS_WITH_REFINEMENTS`.
+
+**Consequence:** Scene 06 is a quality-reviewed prototype. It is not learner-validated. Student-visible behavior is unchanged by this inventory write. No Scene 07 is authorized.
+
+---
+
+## D058 — Scene 01–06 abstraction audit
+
+**Date:** 2026-09-12
+
+**Decision:** Record `spec/architecture/scene-01-06-abstraction-audit.md` as architecture discovery only. Recommendation is `START_HYBRID_DSL_PILOT`. First pilot, if later authorized, is Scene 04 chrome/options. Do not implement a DSL, renderer, or database in this pass. Do not create Scene 07. Do not change UPLP, L1–L6, Evidence Design, PRI, or production Scene behavior.
+
+**Why:** Six quality-reviewed prototypes now exist. About 30–35% of each Scene is repeated stage-shell / hook / exam / AI_OFF code. MODEL boards, physics engines, and authored evaluators are not the same thing and must stay code. A universal Scene renderer would move conditionals into a schema without reducing Gate B risk.
+
+**Consequence:** New Scene development stays stopped. The audit does not promote any model to `validated`. It does not rewrite Scenes 01–06.
+
+---
+
+## D059 — Scene 04 hybrid DSL pilot
+
+**Date:** 2026-09-12
+
+**Decision:** Extract a Scene-04-only typed DSL v0.1 (`lib/scene-dsl/v01.ts`) and three generic stage shells (observe checklist, predict outcome+reason, complete lookback). Move Scene 04 exam/AI_OFF/transfer/observe/describe/explain IDs and chrome copy behind `samplesSceneDsl`. Keep density physics, `SamplesRatioBoard`, nontrivial evaluators, PRI rendering, tutor leaks, and `deriveModelEvidenceLevel` as code. Do not migrate another Scene. Do not create Scene 07.
+
+**Why:** D058 recommended a hybrid pilot on Scene 04 chrome/options. The pilot is valid only if learner-visible behavior stays equivalent and no universal `sceneId` branch appears.
+
+**Consequence:** Student-visible Scene 04 behavior is intended to be unchanged. Recommendation after the pilot is `KEEP_SCENE04_ONLY`. Not learner-validated. UPLP, L1–L6, Evidence Design, and PRI semantics are unchanged.
+
+---
+

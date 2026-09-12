@@ -14,10 +14,9 @@ import type {
 } from "@/types/learning";
 import type { IndependentChallenge } from "@/types/physics-model";
 
-export const SAMPLES_AI_OFF_CHALLENGE_IDS = [
-  "ai-off-unfamiliar-sealed-packages",
-  "ai-off-condition-cut-uniform-bar",
-] as const;
+import { SAMPLES_AI_OFF_CHALLENGE_IDS } from "@/lib/content/equal-volume-material-samples";
+
+export { SAMPLES_AI_OFF_CHALLENGE_IDS };
 
 export const SAMPLES_AI_OFF_DRAFT_KIND = "samples-ai-off-draft";
 

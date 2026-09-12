@@ -4,6 +4,10 @@ import {
   isHeatSamplesSceneState,
 } from "@/lib/physics/equal-mass-heated-samples";
 import {
+  createInitialOhmsState,
+  isOhmsSceneState,
+} from "@/lib/physics/simple-resistor-circuit";
+import {
   createInitialDensityState,
   isDensitySceneState,
 } from "@/lib/physics/equal-volume-material-samples";
@@ -17,16 +21,19 @@ import {
   ENGINE_SCENE_ID,
   HEAT_SAMPLES_SCENE_ID,
   MICROWAVE_SCENE_ID,
+  OHMS_SCENE_ID,
   SAMPLES_SCENE_ID,
   type CartScenePhysicsState,
   type EngineScenePhysicsState,
   type HeatSamplesScenePhysicsState,
   type LearningSession,
   type MicrowaveScenePhysicsState,
+  type OhmsScenePhysicsState,
   type SamplesScenePhysicsState,
   type ScenePhysicsState,
 } from "@/types/learning";
 import type { HeatSamplesSceneState } from "@/lib/physics/equal-mass-heated-samples";
+import type { OhmsSceneState } from "@/lib/physics/simple-resistor-circuit";
 import type { MicrowavePhysicsState } from "@/types/physics";
 
 export function isMicrowaveScenePhysics(
@@ -157,6 +164,29 @@ export function wrapHeatSamplesPhysicsState(
 
 export function defaultHeatSamplesScenePhysics(): HeatSamplesScenePhysicsState {
   return wrapHeatSamplesPhysicsState(createInitialHeatState());
+}
+
+export function isOhmsScenePhysics(
+  physics: ScenePhysicsState,
+): physics is OhmsScenePhysicsState {
+  return physics.sceneId === OHMS_SCENE_ID && isOhmsSceneState(physics.state);
+}
+
+export function getOhmsPhysicsState(session: LearningSession): OhmsSceneState {
+  if (!isOhmsScenePhysics(session.physicsState)) {
+    throw new Error(
+      `Expected ohms-circuit physics, got scene "${session.physicsState.sceneId}".`,
+    );
+  }
+  return session.physicsState.state;
+}
+
+export function wrapOhmsPhysicsState(state: OhmsSceneState): OhmsScenePhysicsState {
+  return { sceneId: OHMS_SCENE_ID, state };
+}
+
+export function defaultOhmsScenePhysics(): OhmsScenePhysicsState {
+  return wrapOhmsPhysicsState(createInitialOhmsState());
 }
 
 export function isLegacyMicrowavePhysics(

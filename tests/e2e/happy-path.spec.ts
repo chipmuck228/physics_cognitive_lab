@@ -40,7 +40,7 @@ test.describe("happy path", () => {
     await completeExam(page);
 
     await expect(page.getByText(SCENE_COPY.aiOffBanner)).toBeVisible();
-    await expect(page.getByText(STUDENT_CHROME.tutorName)).toHaveCount(0);
+    await expect(page.getByText(STUDENT_CHROME.tutorName, { exact: true })).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: STUDENT_CHROME.tutorAskAria }),
     ).toHaveCount(0);

@@ -1,6 +1,7 @@
 import type { EngineState } from "@/lib/physics/engine/types";
 import type { CartState } from "@/lib/physics/horizontal-force-cart";
 import type { HeatSamplesSceneState } from "@/lib/physics/equal-mass-heated-samples";
+import type { OhmsSceneState } from "@/lib/physics/simple-resistor-circuit";
 import type { DensitySceneState } from "@/lib/physics/equal-volume-material-samples";
 import type { TutorInteraction } from "@/types/ai";
 import type { MicrowavePhysicsState } from "@/types/physics";
@@ -41,13 +42,15 @@ export const ENGINE_SCENE_ID = "four-stroke-engine" as const;
 export const CART_SCENE_ID = "horizontal-force-cart" as const;
 export const SAMPLES_SCENE_ID = "equal-volume-material-samples" as const;
 export const HEAT_SAMPLES_SCENE_ID = "equal-mass-heated-samples" as const;
+export const OHMS_SCENE_ID = "simple-resistor-circuit" as const;
 
 export type ProductionSceneId =
   | typeof MICROWAVE_SCENE_ID
   | typeof ENGINE_SCENE_ID
   | typeof CART_SCENE_ID
   | typeof SAMPLES_SCENE_ID
-  | typeof HEAT_SAMPLES_SCENE_ID;
+  | typeof HEAT_SAMPLES_SCENE_ID
+  | typeof OHMS_SCENE_ID;
 
 /** Production IDs plus adapter-registered fixtures. Progression looks up adapters by this string. */
 export type SceneId = string;
@@ -77,6 +80,11 @@ export type HeatSamplesScenePhysicsState = {
   state: HeatSamplesSceneState;
 };
 
+export type OhmsScenePhysicsState = {
+  sceneId: typeof OHMS_SCENE_ID;
+  state: OhmsSceneState;
+};
+
 export type AdapterOwnedPhysicsState = {
   sceneId: string;
   state: Record<string, unknown>;
@@ -88,6 +96,7 @@ export type ScenePhysicsState =
   | CartScenePhysicsState
   | SamplesScenePhysicsState
   | HeatSamplesScenePhysicsState
+  | OhmsScenePhysicsState
   | AdapterOwnedPhysicsState;
 
 export interface ObservationEvidence {
@@ -221,6 +230,11 @@ export interface ExplanationEvidence {
     sameCSameQ: string;
     timeAndPhase: string;
   };
+  ohmsAnswers?: {
+    quantitiesDistinct: string;
+    sameR: string;
+    sameU: string;
+  };
   identifiesPartialEnergyRelation?: boolean;
   microwaveAnswers?: {
     energyTransfer: string;
@@ -241,6 +255,8 @@ export interface ModelAttempt {
   enablingProcesses?: string[];
   conditions?: string[];
   failureKinds?: string[];
+  studentReasoning?: string;
+  completenessOnly?: boolean;
 }
 
 export interface TransferAttempt {
@@ -325,6 +341,16 @@ export interface IndependentReasoningSignals {
   preCommitEnergyTransfer?: boolean;
   preCommitInternalEnergyChange?: boolean;
   preCommitTemperatureRelation?: boolean;
+  identifiesCurrent?: boolean;
+  identifiesVoltage?: boolean;
+  identifiesResistance?: boolean;
+  usesCurrentVoltageResistanceRelation?: boolean;
+  checksControlledComparison?: boolean;
+  distinguishesRearrangementFromCause?: boolean;
+  rejectsResistanceCreatedByUI?: boolean;
+  preCommitTwoControls?: boolean;
+  preCommitRIsProperty?: boolean;
+  avoidsOhmsMisconception?: boolean;
   postCheckEnergyTransfer?: boolean;
   postCheckInternalEnergyChange?: boolean;
   postCheckWorkRelation?: boolean;

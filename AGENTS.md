@@ -14,13 +14,15 @@ Scene, AI tutor, assessment, or exam-mapping change, read:
 4. `spec/evidence-design-contract.md` when designing or reviewing
    evaluators, evidence flags, transfer, AI_OFF provenance, or L4–L6
    justification
-5. `spec/universal-physics-learning-protocol.md`
-6. `spec/physics-model-schema.md`
-7. `spec/physics-model-library.md`
-8. `spec/cognitive-action-taxonomy.md` when cognitive actions or assessment are involved
-9. `spec/physics-model-implementation-protocol.md` when implementing a Physics Model or Scene
-10. the relevant model-specific or scene-specific specification
-11. `DECISION_LOG.md`
+5. `spec/physics-representation-integrity-contract.md` when student-visible
+   physics values, units, arrows, or quantity labels are involved
+6. `spec/universal-physics-learning-protocol.md`
+7. `spec/physics-model-schema.md`
+8. `spec/physics-model-library.md`
+9. `spec/cognitive-action-taxonomy.md` when cognitive actions or assessment are involved
+10. `spec/physics-model-implementation-protocol.md` when implementing a Physics Model or Scene
+11. the relevant model-specific or scene-specific specification
+12. `DECISION_LOG.md`
 
 These documents form an architecture contract.
 
@@ -55,6 +57,12 @@ Canonical ownership:
   transfer-mode evidence semantics, weakest-pass design, and
   Evidence Claim Design. It does not own stage meanings or L-level
   meanings.
+
+- `physics-representation-integrity-contract.md`
+  owns whether student-visible physics labels, units, and relations
+  preserve canonical quantity identity. Correct runtime numbers do
+  not imply correct representation. Scene 05 PRI-05-01 is the worked
+  example. This contract does not authorize a bulk Scene 01–05 audit.
 
 - Scene-specific specs instantiate the canonical protocol and models.
   They must not redefine universal stages, hint semantics,
@@ -267,6 +275,8 @@ canonical model design
 → readiness validation
 → Evidence Claim Design
 → one-pass implementation
+→ Physical Representation Integrity check for new-Scene quantitative UI
+  (`spec/physics-representation-integrity-contract.md`; not a Scene 01–05 audit)
 → adversarial evaluator tests
 → engineering gates
 → POST Learning Evidence Review

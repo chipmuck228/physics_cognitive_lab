@@ -284,3 +284,27 @@ export function looksLikeHeatTutorLeak(
 
   return microwaveLeak || /热量等于比热容乘质量乘温度变化/.test(message);
 }
+
+export function looksLikeOhmsTutorLeak(
+  stage: LearningStageType,
+  message: string,
+): boolean {
+  const normalized = message.toLowerCase();
+
+  if (stage === LearningStage.PREDICT) {
+    return /电流会变成|电流是 0\.6|正确答案是|结果会是 1\.2/.test(message);
+  }
+  if (stage === LearningStage.OBSERVE || stage === LearningStage.DESCRIBE) {
+    return /电流等于电压除以电阻|i\s*=\s*u\s*\/\s*r/.test(normalized);
+  }
+  if (stage === LearningStage.MODEL) {
+    return /替你把关系建好|第一格填电流.{0,12}第二格填电压/.test(message);
+  }
+  if (stage === LearningStage.TRANSFER) {
+    return /这和刚才是同一个欧姆|也是电路所以一样/.test(message);
+  }
+  if (stage === LearningStage.EXAM) {
+    return /正确答案是|选3 a/.test(normalized);
+  }
+  return /电流等于电压除以电阻/.test(message);
+}

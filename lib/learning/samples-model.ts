@@ -1,3 +1,7 @@
+import {
+  studentUiFeedback,
+  type StudentUiFeedback,
+} from "@/lib/learning/student-ui-feedback";
 import type { ModelAttempt } from "@/types/learning";
 
 export const SAMPLES_MODEL_DRAFT_KIND = "samples-model-draft";
@@ -221,6 +225,67 @@ export function completeSamplesModelInput(timestamp: string): SamplesModelInput 
     conditions: ["volume-positive", "uniform-sample"],
     timestamp,
   };
+}
+
+export function samplesModelMissingLabels(
+  draft: Pick<
+    SamplesModelDraft,
+    | "numerator"
+    | "denominator"
+    | "result"
+    | "sameVolumeConclusion"
+    | "sameMassConclusion"
+    | "cutConclusion"
+    | "cutMassChange"
+    | "cutVolumeChange"
+    | "cutRatioChange"
+    | "cutWhy"
+    | "sufficiency"
+    | "conditions"
+  >,
+): string[] {
+  const missing: string[] = [];
+  if (!draft.numerator || !draft.denominator || !draft.result) {
+    missing.push("密度怎样由质量和体积得到");
+  }
+  if (!draft.sameVolumeConclusion) {
+    missing.push("同样体积时密度怎样变");
+  }
+  if (!draft.sameMassConclusion) {
+    missing.push("同样质量时密度怎样变");
+  }
+  if (!draft.cutConclusion) {
+    missing.push("均匀切开后密度怎样");
+  }
+  if (!draft.cutMassChange) {
+    missing.push("切开后，质量怎样");
+  }
+  if (!draft.cutVolumeChange) {
+    missing.push("切开后，体积怎样");
+  }
+  if (!draft.cutRatioChange) {
+    missing.push("切开后，m ÷ V 怎样");
+  }
+  if (!draft.cutWhy) {
+    missing.push("比值为什么可以保持不变");
+  }
+  if (!draft.sufficiency) {
+    missing.push("只知道质量变大能不能断定密度");
+  }
+  if (draft.conditions.length === 0) {
+    missing.push("这个关系在什么条件下能用");
+  }
+  return missing;
+}
+
+export function samplesModelStudentFeedback(
+  draft: SamplesModelDraft,
+  attempt: ModelAttempt,
+): StudentUiFeedback {
+  return studentUiFeedback(
+    samplesModelMissingLabels(draft),
+    summarizeSamplesModelAttempt(attempt),
+  );
 }
 
 export function summarizeSamplesModelAttempt(attempt: ModelAttempt): string {

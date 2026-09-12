@@ -1,3 +1,4 @@
+import { SAMPLES_DESCRIBE_ACCEPTED } from "@/lib/content/equal-volume-material-samples";
 import { hasOwnWords } from "@/lib/learning/engine-describe";
 import type { DescriptionEvidence } from "@/types/learning";
 
@@ -23,9 +24,10 @@ export interface SamplesDescribeEvaluation {
 export function evaluateSamplesDescription(
   input: SamplesDescribeInput,
 ): SamplesDescribeEvaluation {
-  const objectIsSamples = input.object === "samples";
-  const noticedSameSize = input.sizeRelation === "same";
-  const noticedMassDifference = input.massRelation === "different";
+  const objectIsSamples = input.object === SAMPLES_DESCRIBE_ACCEPTED.object;
+  const noticedSameSize = input.sizeRelation === SAMPLES_DESCRIBE_ACCEPTED.sizeRelation;
+  const noticedMassDifference =
+    input.massRelation === SAMPLES_DESCRIBE_ACCEPTED.massRelation;
   const hasMeaningfulDescription = hasOwnWords(input.studentDescription);
 
   return {

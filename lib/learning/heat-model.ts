@@ -1,4 +1,8 @@
 import { MINIMUM_L4_MODEL_EVIDENCE } from "@/content/physics-models/specific-heat-capacity/evaluator";
+import {
+  studentUiFeedback,
+  type StudentUiFeedback,
+} from "@/lib/learning/student-ui-feedback";
 import type { ModelAttempt } from "@/types/learning";
 
 export const HEAT_MODEL_DRAFT_KIND = "heat-model-draft";
@@ -210,6 +214,39 @@ export function completeHeatModelInput(timestamp: string): HeatModelInput {
     conditions: ["no-phase-change", "time-is-not-q"],
     timestamp,
   };
+}
+
+export function heatModelMissingLabels(draft: HeatModelDraft): string[] {
+  const missing: string[] = [];
+  if (!draft.factorC || !draft.factorM || !draft.factorDeltaT || !draft.productQ) {
+    missing.push("能量怎样由比热容、质量和温度变化得到");
+  }
+  if (!draft.sameMassSameDeltaT) {
+    missing.push("质量和升温相同时能量怎样");
+  }
+  if (!draft.sameMassSameQ) {
+    missing.push("质量和能量相同时升温怎样");
+  }
+  if (!draft.sameCSameQ) {
+    missing.push("材料和能量相同时升温怎样");
+  }
+  if (!draft.sufficiency) {
+    missing.push("只知道温度升了能不能断定吸收的能量");
+  }
+  if (draft.conditions.length === 0) {
+    missing.push("这个关系在什么条件下能用");
+  }
+  return missing;
+}
+
+export function heatModelStudentFeedback(
+  draft: HeatModelDraft,
+  attempt: ModelAttempt,
+): StudentUiFeedback {
+  return studentUiFeedback(
+    heatModelMissingLabels(draft),
+    summarizeHeatModelAttempt(attempt),
+  );
 }
 
 export function summarizeHeatModelAttempt(attempt: ModelAttempt): string {

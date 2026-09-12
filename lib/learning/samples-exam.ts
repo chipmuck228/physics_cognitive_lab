@@ -1,18 +1,14 @@
 import { densityMassVolumeAssessmentOverlay } from "@/content/physics-models/density-mass-volume/assessment-overlay";
 import { examPatterns } from "@/content/physics-models/density-mass-volume/exam";
+import {
+  SAMPLES_EXAM_MAX_ATTEMPTS_PER_ITEM,
+  SAMPLES_EXAM_PATTERN_IDS,
+} from "@/lib/content/equal-volume-material-samples";
 import { hasOwnWords } from "@/lib/learning/engine-describe";
 import type { ExamAttempt } from "@/types/learning";
 import type { ExamPattern } from "@/types/physics-model";
 
-export const SAMPLES_EXAM_PATTERN_IDS = [
-  "exam-density-is-not-mass-or-size",
-  "exam-same-volume-larger-mass",
-  "exam-cut-uniform-density-unchanged",
-  "exam-calculate-density-ratio",
-  "exam-mass-volume-density-table",
-] as const;
-
-export const SAMPLES_EXAM_MAX_ATTEMPTS_PER_ITEM = 2;
+export { SAMPLES_EXAM_MAX_ATTEMPTS_PER_ITEM, SAMPLES_EXAM_PATTERN_IDS };
 
 export const SAMPLES_EXAM_DRAFT_KIND = "samples-exam-draft";
 

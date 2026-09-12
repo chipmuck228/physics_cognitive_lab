@@ -44,7 +44,8 @@ This is an implementation activity contract. It is **not** a `metadata.status` v
 | [`physics-model-schema.md`](./physics-model-schema.md) | `PhysicsModel` fields, `transferMode` enum meanings, official L1–L6 meanings | Whether an evaluator actually evidences those meanings |
 | [`physics-model-quality-review.md`](./physics-model-quality-review.md) | WHETHER physics / pedagogy / implemented claims are justified | How to design the evaluator |
 | [`physics-model-implementation-protocol.md`](./physics-model-implementation-protocol.md) | HOW a ready model becomes software | The evidence-justification rules used while writing evaluators |
-| **This document** | HOW implementation evidence must justify a cognitive claim | Stage meanings, L-level meanings, Gate results, runtime schema |
+| [`physics-representation-integrity-contract.md`](./physics-representation-integrity-contract.md) | Whether student-visible physics representations preserve quantity identity | Cognitive-claim justification |
+| **This document** | HOW implementation evidence must justify a cognitive claim | Stage meanings, L-level meanings, Gate results, runtime schema, display grammar |
 
 When documents disagree: Schema owns field and L-level meanings; UPLP owns stage meanings; this document owns evaluator / accumulator justification rules; Quality Review uses those rules to judge a running Scene.
 

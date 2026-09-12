@@ -74,7 +74,7 @@ import {
   emptyHeatModelDraft,
   hasCompletedHeatModel,
   heatModelDraftFromAttempt,
-  summarizeHeatModelAttempt,
+  heatModelStudentFeedback,
   type HeatModelDraft,
 } from "@/lib/learning/heat-model";
 import { hasSufficientHeatObservation } from "@/lib/learning/heat-observe";
@@ -507,9 +507,9 @@ export function EqualMassHeatedSamplesLab() {
   ) : isModel ? (
     <HeatProductBoard
       draft={modelDraft}
-      feedback={
+      gateFeedback={
         latestModel && !latestModel.correctStructure
-          ? summarizeHeatModelAttempt(latestModel)
+          ? heatModelStudentFeedback(modelDraft, latestModel)
           : null
       }
       needStructure={modelNeedStructure && !modelComplete}

@@ -1,0 +1,166 @@
+import { MODEL_ID } from "./model";
+import type { ExamPattern } from "@/types/physics-model";
+
+export const examPatterns: ExamPattern[] = [
+  {
+    id: "exam-same-r-larger-u-larger-i",
+    format: "multiple-choice",
+    representation: "文字情境：同一电阻，电压不同",
+    testedModel: MODEL_ID,
+    difficulty: "basic",
+    requiredCognitiveActions: ["C3", "C7", "C8", "C11"],
+    stem: "同一段电阻两端的电压变大，电阻可以看成不变。下面哪一句更合适？",
+    representationOptions: [
+      "电阻不变时电压和电流怎样比",
+      "电阻是什么颜色",
+      "有没有画电池符号",
+      "是不是课堂上见过的电路板",
+    ],
+    modelOptions: [
+      "R 不变时，U 更大则 I 更大",
+      "电压大电流一定大，电阻不用看",
+      "电流决定电压",
+    ],
+    options: [
+      "电流会变大，因为电阻可以看成不变时，电压更大则电流更大。",
+      "电流一定不变，因为电阻没变。",
+      "电流会变小，因为电压被电阻挡住了。",
+      "只能说电压流得更快，不能谈电流。",
+    ],
+    correctAnswer:
+      "电流会变大，因为电阻可以看成不变时，电压更大则电流更大。",
+    commonDistractors: [
+      "电流一定不变，因为电阻没变。",
+      "电流会变小，因为电压被电阻挡住了。",
+    ],
+    requiredReasoning: ["先说明 R 不变", "再说明 I 随 U 增大"],
+    reasoningPrompt: "先写出哪个量相同，再说明电流怎样比。不要只抄 I = U / R。",
+  },
+  {
+    id: "exam-same-u-larger-r-smaller-i",
+    format: "multiple-choice",
+    representation: "文字情境：电压相同，电阻不同",
+    testedModel: MODEL_ID,
+    difficulty: "basic",
+    requiredCognitiveActions: ["C3", "C7", "C8", "C11"],
+    stem: "两段电阻两端的电压可以看成相同。乙的电阻比甲更大。下面哪一句更合适？",
+    representationOptions: [
+      "电压相同时电阻和电流怎样比",
+      "电阻贵不贵",
+      "导线粗不粗不用量",
+      "要不要先算电功率",
+    ],
+    modelOptions: [
+      "U 不变时，R 更大则 I 更小",
+      "电阻大电流就大",
+      "电压相同则电流一定相同",
+    ],
+    options: [
+      "乙的电流更小，因为电压可以看成相同时，电阻更大则电流更小。",
+      "乙的电流更大，因为电阻更大。",
+      "两段电流一定相同，因为电压相同。",
+      "无法比较，因为没有说出它们是不是串联。",
+    ],
+    correctAnswer:
+      "乙的电流更小，因为电压可以看成相同时，电阻更大则电流更小。",
+    commonDistractors: [
+      "乙的电流更大，因为电阻更大。",
+      "两段电流一定相同，因为电压相同。",
+    ],
+    requiredReasoning: ["先说明 U 不变", "再说明 I 随 R 减小"],
+    reasoningPrompt: "先写出哪个量相同，再说明电流怎样比。不要只抄公式。",
+  },
+  {
+    id: "exam-r-is-not-made-by-u-and-i",
+    format: "multiple-choice",
+    representation: "文字判断：R = U / I 是不是在制造电阻",
+    testedModel: MODEL_ID,
+    difficulty: "medium",
+    requiredCognitiveActions: ["C4", "C9", "C13"],
+    stem: "有人说：因为 R = U / I，所以电阻是电压和电流算出来才有的，电压变了电阻就一定变。下面哪一句更合适？",
+    representationOptions: [
+      "公式变形是不是新的因果关系",
+      "数字好不好算",
+      "电阻标不标色环",
+      "题目有没有图",
+    ],
+    modelOptions: [
+      "R 是这段导体的属性；R = U / I 是计算它的方法",
+      "电压和电流制造电阻",
+      "三个式子是三种不同的物理定律",
+    ],
+    options: [
+      "R = U / I 和 I = U / R 是同一个关系。电阻是这段导体的属性，不是电压和电流制造出来的。",
+      "电压变大，电阻一定变大，因为分子变了。",
+      "I = U / R、U = I R、R = U / I 是三条不同的定律，谁决定谁不一样。",
+      "只要会默写 I = U / R，就说明已经理解这个模型。",
+    ],
+    correctAnswer:
+      "R = U / I 和 I = U / R 是同一个关系。电阻是这段导体的属性，不是电压和电流制造出来的。",
+    commonDistractors: [
+      "电压变大，电阻一定变大，因为分子变了。",
+      "I = U / R、U = I R、R = U / I 是三条不同的定律，谁决定谁不一样。",
+    ],
+    requiredReasoning: ["区分属性与计算", "指出变形不是新因果"],
+    reasoningPrompt: "说明公式变形和“谁制造谁”有什么不同。",
+  },
+  {
+    id: "exam-calculate-i-from-u-and-r",
+    format: "calculation",
+    representation: "计算：用 U、R 求 I，并说明条件",
+    testedModel: MODEL_ID,
+    difficulty: "medium",
+    requiredCognitiveActions: ["C3", "C7", "C10", "C12"],
+    stem: "一段电阻为 4 Ω 的导体，两端电压是 12 V，电路闭合，电阻可以看成不变。通过它的电流最接近哪一个？写出你用到的量和条件，不要只抄得数。",
+    representationOptions: [
+      "用 U、R 求 I",
+      "4 和 12 是不是课堂上见过的",
+      "要不要先算电功率",
+      "要不要先画串并联",
+    ],
+    modelOptions: [
+      "闭合且 R 可看成不变时，I = U / R",
+      "I 等于电压的数值",
+      "I 等于电阻的数值",
+    ],
+    options: ["3 A", "16 A", "12 A", "4 A"],
+    correctAnswer: "3 A",
+    commonDistractors: ["16 A", "12 A"],
+    requiredReasoning: ["电路闭合", "R 可看成不变", "代入 I = U / R"],
+    reasoningPrompt: "先写出条件和用到的量，再计算。不要只抄得数。",
+  },
+  {
+    id: "exam-filament-not-constant-r",
+    format: "multiple-choice",
+    representation: "条件判断：灯丝发热时能不能用固定 R",
+    testedModel: MODEL_ID,
+    difficulty: "medium",
+    requiredCognitiveActions: ["C4", "C7", "C13"],
+    stem: "小灯泡两端电压增大，灯丝明显更亮更热。有人说电压加倍，电流一定加倍。下面哪一句更合适？",
+    representationOptions: [
+      "电阻还能不能看成不变",
+      "灯泡贵不贵",
+      "亮不亮好看",
+      "要不要改学电功率",
+    ],
+    modelOptions: [
+      "R 明显随温度变化时，不能再用固定 R 说 I 与 U 成正比",
+      "凡是电路都可以直接用 I = U / R 且 R 不变",
+      "变亮说明模型失效，三个量都没了",
+    ],
+    options: [
+      "灯丝温度升高时电阻会变，不能假定 R 不变，所以不能说电压加倍电流一定加倍。",
+      "电压加倍电流一定加倍，因为所有用电器都满足 I = U / R 且电阻不变。",
+      "灯丝变亮说明没有电流，公式作废。",
+      "这时应该改学串联电路，欧姆定律不能再用。",
+    ],
+    correctAnswer:
+      "灯丝温度升高时电阻会变，不能假定 R 不变，所以不能说电压加倍电流一定加倍。",
+    commonDistractors: [
+      "电压加倍电流一定加倍，因为所有用电器都满足 I = U / R 且电阻不变。",
+      "这时应该改学串联电路，欧姆定律不能再用。",
+    ],
+    requiredReasoning: ["检查 R 是否可看成不变", "C13：只背公式不够"],
+    reasoningPrompt: "先判断条件够不够，再决定能不能直接按固定电阻比较。",
+  },
+];

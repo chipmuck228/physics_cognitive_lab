@@ -72,9 +72,9 @@ import {
 } from "@/lib/learning/cart-exam";
 import {
   cartModelDraftFromAttempt,
+  cartModelStudentFeedback,
   emptyCartModelDraft,
   hasCompletedCartModel,
-  summarizeCartModelAttempt,
   type CartModelDraft,
 } from "@/lib/learning/cart-model";
 import { hasSufficientCartObservation } from "@/lib/learning/cart-observe";
@@ -538,9 +538,9 @@ export function HorizontalForceCartLab() {
   ) : isModel ? (
     <CartModelBoard
       draft={modelDraft}
-      feedback={
+      gateFeedback={
         latestModel && !latestModel.correctStructure
-          ? summarizeCartModelAttempt(latestModel)
+          ? cartModelStudentFeedback(modelDraft, latestModel)
           : null
       }
       needStructure={modelNeedStructure && !modelComplete}

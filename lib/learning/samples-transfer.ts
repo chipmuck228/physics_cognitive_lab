@@ -1,16 +1,15 @@
 import { transferTargets } from "@/content/physics-models/density-mass-volume/transfer";
 import { evaluateTransferAttempt } from "@/content/physics-models/density-mass-volume/evaluator";
 import { MODEL_RELATION_IDS } from "@/content/physics-models/density-mass-volume/model";
-import { SAMPLES_TRANSFER_RELATIONS } from "@/lib/content/equal-volume-material-samples";
+import {
+  SAMPLES_TRANSFER_RELATIONS,
+  SAMPLES_TRANSFER_TARGET_IDS,
+} from "@/lib/content/equal-volume-material-samples";
 import { hasOwnWords } from "@/lib/learning/engine-describe";
 import type { TransferAttempt } from "@/types/learning";
 import { TransferMode, type TransferTarget } from "@/types/physics-model";
 
-export const SAMPLES_TRANSFER_TARGET_IDS = {
-  cups: "near-equal-cups-of-liquids",
-  stone: "medium-irregular-stone",
-  hollow: "far-hollow-same-outer-size",
-} as const;
+export { SAMPLES_TRANSFER_TARGET_IDS };
 
 export const SAMPLES_FULL_MODEL_TARGET_IDS = [
   SAMPLES_TRANSFER_TARGET_IDS.cups,
