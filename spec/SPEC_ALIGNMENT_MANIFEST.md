@@ -16,6 +16,7 @@
 9. `prompts/review-physics-model-quality.md` — default PRE/POST quality-review request.
 10. `student-ui-interaction-contract.md` — student-facing interaction quality. Does not own UPLP, L1–L6, Physics Model, evidence semantics, or physical representation identity.
 11. `physics-representation-integrity-contract.md` — whether student-visible physics labels, units, and relations preserve canonical quantity identity. Does not own Physics Truth calculations, UPLP, L1–L6, evaluators, or interaction chrome. Scene 05 PRI-05-01 is the worked example. This contract does not authorize an immediate Scene 01–05 full audit.
+12. `architecture/interaction-shell-contract.md` — whether reusable interaction chrome may absorb domain semantics. Owns adoption/extraction freeze for generic shells. Does not own UPLP stages, Scene DSL, evidence, PRI, or student-facing copy quality. Status: `SUFFICIENT_EVIDENCE_TO_FREEZE`.
 
 Learner-observation documents are not architecture owners. `learner-validation/learner-validation-prep.md` (D050) owns WHY/WHAT for one informal Grade-9 observation of Scene 03. `learner-validation/first-learner-observation-guide.md` (D051) owns HOW to execute that first observation. They must not redefine UPLP stages, L1–L6, Schema lifecycle, Quality Review gates, or Evidence Design rules. They do not mark any model `validated`.
 
@@ -119,6 +120,7 @@ The canonical model definition lives in `content/physics-models/ohms-law/`. This
 
 - `architecture/scene-01-06-abstraction-audit.md` — discovery-only classification of Scenes 01–06 (D058). Not a source of truth for UPLP, L-levels, or lifecycle. Does not authorize a renderer or Scene 07.
 - `architecture/scene-04-hybrid-dsl-pilot.md` — Scene 04 chrome/options extraction (D059). Not a universal renderer. Recommendation: `KEEP_SCENE04_ONLY`.
+- `architecture/interaction-shell-contract.md` — reusable interaction-shell boundary after Scene 03/04/05 Observe+Predict reuse. Freeze: do not extract more shells merely because duplication exists. Not a Scene DSL. Not Scene 07.
 - `EXPERIMENT_LOG.md` — evidence log; non-authoritative for architecture.
 - `OPEN_QUESTIONS.md` — research backlog; non-authoritative for settled design decisions.
 - `microwave-bread-development-notes.md` — dated implementation snapshot; must be re-verified against code.
@@ -133,6 +135,7 @@ The canonical model definition lives in `content/physics-models/ohms-law/`. This
 - Physics Model pedagogical/learning-evidence quality is owned by `physics-model-quality-review.md`. Readiness and engineering tests do not own that question.
 - How implementation evidence must justify a cognitive claim is owned by `evidence-design-contract.md`. Quality Review uses that contract; it does not duplicate the evaluator-design rules.
 - Whether student-visible physics representations preserve quantity identity is owned by `physics-representation-integrity-contract.md`. Correct runtime numbers do not imply correct representation. No immediate full audit of Scene 01–05.
+- Whether reusable interaction chrome may absorb domain semantics is owned by `architecture/interaction-shell-contract.md`. Repeated React chrome does not justify widening `sceneDslV01Schema`. Do not extract more shells merely because duplication exists.
 - Scene 01 and Scene 02 documents are explicitly scoped as instances/configuration, not architecture sources of truth.
 - Scene 02 four-stroke names belong to Scene representation, not to a new Physics Model.
 - Scene 02 does not invent canonical model IDs and does not duplicate model experiments, transfer targets, exam patterns, or independent challenges.
@@ -146,6 +149,7 @@ The canonical model definition lives in `content/physics-models/ohms-law/`. This
 
 - `EXPERIMENT_LOG.md`
 - `OPEN_QUESTIONS.md`
+- `architecture/interaction-shell-contract.md`
 - `cognitive-action-taxonomy.md`
 - `exam-mapping.md`
 - `evidence-design-contract.md`
