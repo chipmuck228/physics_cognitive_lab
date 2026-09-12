@@ -1,0 +1,195 @@
+import { transferTargets } from "@/content/physics-models/convex-lens-imaging/transfer";
+import {
+  evaluateConvexLensTransfer,
+  evaluateRequiredTransferPair,
+  officialImageConsequence,
+  type ConvexLensTransferAttempt,
+  type ImageConsequence,
+  type MeetingMode,
+} from "@/content/physics-models/convex-lens-imaging/construction";
+import { PRODUCTION_TRANSFER_REQUIRED_IDS } from "@/content/physics-models/convex-lens-imaging/implementation-contract";
+import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
+import type { TransferAttempt } from "@/types/learning";
+import type { TransferTarget } from "@/types/physics-model";
+
+export const LENS_TRANSFER_DRAFT_KIND = "lens-transfer-draft";
+export const LENS_TRANSFER_REQUIRED_IDS = [...PRODUCTION_TRANSFER_REQUIRED_IDS] as const;
+
+export interface LensTransferDraft {
+  kind: typeof LENS_TRANSFER_DRAFT_KIND;
+  targetId: string;
+  objectStation: string;
+  meetingMode: string;
+  side: string;
+  nature: string;
+  orientation: string;
+  size: string;
+  screenReceivable: string;
+  studentExplanation: string;
+  surfaceCueSelected: boolean;
+}
+
+export function lensTransferTarget(targetId: string): TransferTarget | undefined {
+  return transferTargets.find((target) => target.id === targetId);
+}
+
+export function emptyLensTransferDraft(
+  targetId: string = LENS_TRANSFER_REQUIRED_IDS[0],
+): LensTransferDraft {
+  return {
+    kind: LENS_TRANSFER_DRAFT_KIND,
+    targetId,
+    objectStation: "",
+    meetingMode: "",
+    side: "",
+    nature: "",
+    orientation: "",
+    size: "",
+    screenReceivable: "",
+    studentExplanation: "",
+    surfaceCueSelected: false,
+  };
+}
+
+export function draftToLensTransferAttempt(
+  draft: LensTransferDraft,
+): ConvexLensTransferAttempt | null {
+  if (
+    !draft.targetId ||
+    !draft.objectStation ||
+    !draft.meetingMode ||
+    !draft.side ||
+    !draft.nature ||
+    !draft.orientation ||
+    !draft.size ||
+    (draft.screenReceivable !== "true" && draft.screenReceivable !== "false")
+  ) {
+    return null;
+  }
+  const explanation = draft.surfaceCueSelected
+    ? `${draft.studentExplanation} 都有凸透镜`
+    : draft.studentExplanation;
+  return {
+    targetId: draft.targetId,
+    objectStation: draft.objectStation as ObjectStation,
+    meetingMode: draft.meetingMode as MeetingMode,
+    image: {
+      side: draft.side as ImageConsequence["side"],
+      nature: draft.nature as ImageConsequence["nature"],
+      orientation: draft.orientation as ImageConsequence["orientation"],
+      size: draft.size as ImageConsequence["size"],
+      screenReceivable: draft.screenReceivable === "true",
+    },
+    explanation,
+  };
+}
+
+export function buildLensTransferAttempt(
+  draft: LensTransferDraft,
+  timestamp: string,
+): TransferAttempt {
+  const structured = draftToLensTransferAttempt(draft);
+  const evaluation = structured
+    ? evaluateConvexLensTransfer(structured)
+    : { ok: false, failureKind: "wrong-target-structure" as const };
+  return {
+    scenarioId: draft.targetId,
+    targetId: draft.targetId,
+    response: structured?.explanation ?? draft.studentExplanation,
+    timestamp,
+    accepted: evaluation.ok,
+    failureKinds: evaluation.ok ? [] : [evaluation.failureKind],
+    identifiedSharedModel: evaluation.ok,
+    surfaceCueSelected: draft.surfaceCueSelected,
+    selectedRelations: structured
+      ? [
+          structured.objectStation,
+          structured.meetingMode,
+          structured.image.nature,
+          structured.image.side,
+        ]
+      : [],
+    conditionReasoning: structured?.explanation,
+  };
+}
+
+export function reconstructLensTransferAttempts(
+  attempts: TransferAttempt[],
+): ConvexLensTransferAttempt[] {
+  return attempts.flatMap((attempt) => {
+    const targetId = attempt.targetId ?? attempt.scenarioId;
+    const parts = attempt.selectedRelations ?? [];
+    if (parts.length < 4) {
+      return [];
+    }
+    const station = parts[0] as ObjectStation;
+    return [
+      {
+        targetId,
+        objectStation: station,
+        meetingMode: parts[1] as MeetingMode,
+        image: officialImageConsequence(station),
+        explanation: attempt.response,
+      },
+    ];
+  });
+}
+
+export function hasCompletedLensTransfer(attempts: TransferAttempt[]): boolean {
+  const reconstructed = reconstructFromAccepted(attempts);
+  return evaluateRequiredTransferPair(reconstructed).ok;
+}
+
+function reconstructFromAccepted(attempts: TransferAttempt[]): ConvexLensTransferAttempt[] {
+  return attempts.flatMap((attempt) => {
+    if (!attempt.accepted) {
+      return [];
+    }
+    const targetId = attempt.targetId ?? attempt.scenarioId;
+    const parts = attempt.selectedRelations ?? [];
+    if (parts.length < 2) {
+      return [];
+    }
+    const station = parts[0] as ObjectStation;
+    return [
+      {
+        targetId,
+        objectStation: station,
+        meetingMode: parts[1] as MeetingMode,
+        image: officialImageConsequence(station),
+        explanation: attempt.response,
+      },
+    ];
+  });
+}
+
+export function activeLensTransferTargetId(attempts: TransferAttempt[]): string {
+  const passed = new Set(
+    attempts.filter((attempt) => attempt.accepted).map((attempt) => attempt.targetId ?? attempt.scenarioId),
+  );
+  return (
+    LENS_TRANSFER_REQUIRED_IDS.find((id) => !passed.has(id)) ?? LENS_TRANSFER_REQUIRED_IDS[0]
+  );
+}
+
+export function completeLensTransferDraft(targetId: string): LensTransferDraft {
+  const station =
+    targetId === "far-magnifying-glass-virtual" ? "inside-f" : "between-f-and-2f";
+  const image = officialImageConsequence(station);
+  return {
+    kind: LENS_TRANSFER_DRAFT_KIND,
+    targetId,
+    objectStation: station,
+    meetingMode: station === "inside-f" ? "backward-extension" : "actual-convergence",
+    side: image.side,
+    nature: image.nature,
+    orientation: image.orientation,
+    size: image.size,
+    screenReceivable: image.screenReceivable ? "true" : "false",
+    studentExplanation:
+      station === "inside-f"
+        ? "邮票在焦点以内，光线发散，反向延长线相交，所以是正立放大的虚像，屏接不到。"
+        : "幻灯片在 F 和 2F 之间，光线真正会聚，所以成倒立放大的实像，幕布放到像的位置才能接到。",
+    surfaceCueSelected: false,
+  };
+}

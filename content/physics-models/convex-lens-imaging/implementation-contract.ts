@@ -1,7 +1,8 @@
 /**
  * Intended sitting and MODEL grammar locks for the PRE-reviewed model.
- * This is not a SceneAdapter, physics engine, or UI.
- * Scene 07 is not implemented. metadata.status = draft.
+ * Intended sitting and MODEL grammar locks.
+ * This file is not a SceneAdapter. Production Scene 07 uses the
+ * adapter-owned runtime. metadata.status is prototype after POST.
  */
 export const PRODUCTION_SCENE_ID = "convex-lens-optical-bench" as const;
 export const PRODUCTION_PHYSICS_ENGINE = "deterministic-convex-lens-imaging" as const;

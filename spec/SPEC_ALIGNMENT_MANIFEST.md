@@ -120,17 +120,17 @@ The canonical model definition lives in `content/physics-models/ohms-law/`. This
 
 Canonical location: `spec/scenes/convex-lens-optical-bench/`
 
-Design sitting only. No production Scene, route, adapter, or DSL.
+Production Scene lives on the Universal Runtime (`app/scenes/convex-lens-optical-bench/`). No Scene DSL and no generic optics shell.
 
 - `README.md` — Scene identity and document index.
 - `evidence-claim-design.md` — L4/L5/L6 claims; construction ≠ table.
-- `readiness.md` — information gate `IMPLEMENTATION_READY`; status stays `draft`.
+- `readiness.md` — information gate `IMPLEMENTATION_READY`.
 - `physical-representation-plan.md` — design-time PRI locks.
 
 Primary model: `convex-lens-imaging`  
 Secondary models: none
 
-The canonical model definition lives in `content/physics-models/convex-lens-imaging/`. This is not a duplicate model ID. PRE is `MODEL_QUALITY_PASS_WITH_REFINEMENTS`. Readiness is `IMPLEMENTATION_READY`. `metadata.status` is `draft`. Not a quality-reviewed prototype. Not learner-validated. Interaction-shell freeze still forbids extracting a new generic shell.
+The canonical model definition lives in `content/physics-models/convex-lens-imaging/`. This is not a duplicate model ID. PRE is `MODEL_QUALITY_PASS_WITH_REFINEMENTS`. POST is `LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS`. `metadata.status` is `prototype`. Quality-reviewed prototype. Not learner-validated. Interaction-shell freeze still forbids extracting a new generic shell.
 
 ## Research / implementation-support documents
 
@@ -190,6 +190,7 @@ The canonical model definition lives in `content/physics-models/convex-lens-imag
 - `reviews/pre/energy-internal-energy-temperature.md`
 - `reviews/pre/ohms-law.md`
 - `reviews/pre/convex-lens-imaging.md`
+- `reviews/post/convex-lens-imaging.md`
 - `reviews/pre/specific-heat-capacity.md`
 - `scenes/microwave-bread/README.md`
 - `scenes/microwave-bread/evidence-claim-design.md`

@@ -86,9 +86,11 @@ describe("Physics Model lifecycle governance", () => {
     expect(energyInternalEnergyTemperatureModel.metadata.status).toBe("prototype");
     expect(ohmsLawModel.metadata.status).toBe("prototype");
     expect(ohmsLawModel.metadata.status).not.toBe("validated");
-    expect(convexLensImagingModel.metadata.status).toBe("draft");
-    expect(convexLensImagingModel.metadata.status).not.toBe("prototype");
+    expect(convexLensImagingModel.metadata.status).toBe("prototype");
     expect(convexLensImagingModel.metadata.status).not.toBe("validated");
+    expect(read("spec/reviews/post/convex-lens-imaging.md")).toMatch(
+      /LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS/,
+    );
     expect(read("spec/reviews/pre/convex-lens-imaging.md")).toMatch(
       /MODEL_QUALITY_PASS_WITH_REFINEMENTS/,
     );

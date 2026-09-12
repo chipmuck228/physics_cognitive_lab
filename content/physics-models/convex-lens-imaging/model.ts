@@ -502,7 +502,7 @@ export const scenes: SceneDefinition[] = [
 
 export const metadata: PhysicsModelMetadata = {
   version: "0.1.0",
-  status: "draft",
+  status: "prototype",
   sourceReferences: [
     "spec/physics-model-schema.md",
     "spec/physics-model-library.md",
@@ -512,6 +512,7 @@ export const metadata: PhysicsModelMetadata = {
     "spec/physics-representation-integrity-contract.md",
     "spec/architecture/interaction-shell-contract.md",
     "spec/reviews/pre/convex-lens-imaging.md",
+    "spec/reviews/post/convex-lens-imaging.md",
     "spec/scenes/convex-lens-optical-bench/evidence-claim-design.md",
     "spec/scenes/convex-lens-optical-bench/readiness.md",
     "spec/scenes/convex-lens-optical-bench/physical-representation-plan.md",
@@ -519,14 +520,14 @@ export const metadata: PhysicsModelMetadata = {
   lastReviewedAt: "2026-09-12",
   notes: [
     "Canonical ID already existed in the Library. This folder fills the previously empty definition. It does not invent a new model ID.",
-    "Intended Scene 07 primary is convex-lens-imaging only. No production Scene, Scene spec, DSL, or new generic shell is created in this pass.",
+    "Scene 07 primary is convex-lens-imaging only. Production Scene is convex-lens-optical-bench. No Scene DSL or new generic shell.",
     "secondaryModels is empty on purpose. light-rectilinear-propagation, light-refraction, and plane-mirror-imaging are nearby Library IDs, not Scene 07 teaching targets.",
     "Deep structure is object position relative to focal geometry → ray meeting mode → image properties. It is not a five-row mnemonic table.",
     "1/f = 1/u + 1/v is excluded from the Grade-9 primary model.",
     "u = f is a no-finite-image limiting case, not an ordinary finite image.",
     "Official stations live in physics-boundary.ts. They are engine truth, not MODEL evidence.",
     "Intended MODEL presentation is a spatial-ray relation construction. Readiness inference may still say relation-condition.",
-    "Library metadata.status stays draft. PRE does not promote lifecycle. Evidence Claim Design and readiness exist. Not learner-validated.",
+    "Library metadata.status is prototype after POST LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS. Not learner-validated.",
     "L4 construction evidence is evaluateConvexLensModelConstruction. Completeness rows remain TOO_WEAK_FOR_L4.",
   ],
 };

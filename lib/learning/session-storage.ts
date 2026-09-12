@@ -1,6 +1,7 @@
 import { createInitialEngineState } from "@/lib/physics/engine";
 import { isHeatSamplesSceneState } from "@/lib/physics/equal-mass-heated-samples";
 import { isOhmsSceneState } from "@/lib/physics/simple-resistor-circuit";
+import { isConvexLensSceneState } from "@/lib/physics/convex-lens-optical-bench";
 import { isDensitySceneState } from "@/lib/physics/equal-volume-material-samples";
 import { isCartState } from "@/lib/physics/horizontal-force-cart";
 import { createDefaultPhysicsState } from "@/lib/physics/microwave";
@@ -14,13 +15,16 @@ import {
   wrapCartPhysicsState,
   wrapEnginePhysicsState,
   wrapMicrowavePhysicsState,
+  defaultConvexLensScenePhysics,
   defaultOhmsScenePhysics,
+  wrapConvexLensPhysicsState,
   wrapHeatSamplesPhysicsState,
   wrapOhmsPhysicsState,
   wrapSamplesPhysicsState,
 } from "@/lib/runtime/physics-state";
 import {
   CART_SCENE_ID,
+  CONVEX_LENS_SCENE_ID,
   ENGINE_SCENE_ID,
   HEAT_SAMPLES_SCENE_ID,
   LearningStage,
@@ -42,6 +46,7 @@ export const SESSION_STORAGE_KEYS: Record<ProductionSceneId, string> = {
   [SAMPLES_SCENE_ID]: "physics-lab.session.equal-volume-material-samples.v1",
   [HEAT_SAMPLES_SCENE_ID]: "physics-lab.session.equal-mass-heated-samples.v1",
   [OHMS_SCENE_ID]: "physics-lab.session.simple-resistor-circuit.v1",
+  [CONVEX_LENS_SCENE_ID]: "physics-lab.session.convex-lens-optical-bench.v1",
 };
 
 export const SESSION_STORAGE_KEY = SESSION_STORAGE_KEYS[MICROWAVE_SCENE_ID];
@@ -53,7 +58,8 @@ export function sessionStorageKey(sceneId: SceneId): string {
     sceneId === CART_SCENE_ID ||
     sceneId === SAMPLES_SCENE_ID ||
     sceneId === HEAT_SAMPLES_SCENE_ID ||
-    sceneId === OHMS_SCENE_ID
+    sceneId === OHMS_SCENE_ID ||
+    sceneId === CONVEX_LENS_SCENE_ID
   ) {
     return SESSION_STORAGE_KEYS[sceneId];
   }
@@ -263,6 +269,13 @@ function wrapPersistedPhysicsState(
       return wrapOhmsPhysicsState(physics);
     }
     return defaultOhmsScenePhysics();
+  }
+
+  if (sceneId === CONVEX_LENS_SCENE_ID) {
+    if (isConvexLensSceneState(physics)) {
+      return wrapConvexLensPhysicsState(physics);
+    }
+    return defaultConvexLensScenePhysics();
   }
 
   return {

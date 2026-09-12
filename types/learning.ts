@@ -2,6 +2,7 @@ import type { EngineState } from "@/lib/physics/engine/types";
 import type { CartState } from "@/lib/physics/horizontal-force-cart";
 import type { HeatSamplesSceneState } from "@/lib/physics/equal-mass-heated-samples";
 import type { OhmsSceneState } from "@/lib/physics/simple-resistor-circuit";
+import type { ConvexLensSceneState } from "@/lib/physics/convex-lens-optical-bench";
 import type { DensitySceneState } from "@/lib/physics/equal-volume-material-samples";
 import type { TutorInteraction } from "@/types/ai";
 import type { MicrowavePhysicsState } from "@/types/physics";
@@ -43,6 +44,7 @@ export const CART_SCENE_ID = "horizontal-force-cart" as const;
 export const SAMPLES_SCENE_ID = "equal-volume-material-samples" as const;
 export const HEAT_SAMPLES_SCENE_ID = "equal-mass-heated-samples" as const;
 export const OHMS_SCENE_ID = "simple-resistor-circuit" as const;
+export const CONVEX_LENS_SCENE_ID = "convex-lens-optical-bench" as const;
 
 export type ProductionSceneId =
   | typeof MICROWAVE_SCENE_ID
@@ -50,7 +52,8 @@ export type ProductionSceneId =
   | typeof CART_SCENE_ID
   | typeof SAMPLES_SCENE_ID
   | typeof HEAT_SAMPLES_SCENE_ID
-  | typeof OHMS_SCENE_ID;
+  | typeof OHMS_SCENE_ID
+  | typeof CONVEX_LENS_SCENE_ID;
 
 /** Production IDs plus adapter-registered fixtures. Progression looks up adapters by this string. */
 export type SceneId = string;
@@ -85,6 +88,11 @@ export type OhmsScenePhysicsState = {
   state: OhmsSceneState;
 };
 
+export type ConvexLensScenePhysicsState = {
+  sceneId: typeof CONVEX_LENS_SCENE_ID;
+  state: ConvexLensSceneState;
+};
+
 export type AdapterOwnedPhysicsState = {
   sceneId: string;
   state: Record<string, unknown>;
@@ -97,6 +105,7 @@ export type ScenePhysicsState =
   | SamplesScenePhysicsState
   | HeatSamplesScenePhysicsState
   | OhmsScenePhysicsState
+  | ConvexLensScenePhysicsState
   | AdapterOwnedPhysicsState;
 
 export interface ObservationEvidence {
@@ -234,6 +243,10 @@ export interface ExplanationEvidence {
     quantitiesDistinct: string;
     sameR: string;
     sameU: string;
+  };
+  lensAnswers?: {
+    meetingFragment: string;
+    screenFragment: string;
   };
   identifiesPartialEnergyRelation?: boolean;
   microwaveAnswers?: {

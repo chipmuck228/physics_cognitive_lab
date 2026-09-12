@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { HEAT_COPY } from "@/lib/content/equal-mass-heated-samples";
+import { LENS_COPY } from "@/lib/content/convex-lens-optical-bench";
 import { OHMS_COPY } from "@/lib/content/simple-resistor-circuit";
 import { SAMPLES_COPY } from "@/lib/content/equal-volume-material-samples";
 import { CART_COPY } from "@/lib/content/horizontal-force-cart";
@@ -117,6 +118,23 @@ export default function Home() {
           className="mt-10 inline-flex h-12 w-fit items-center rounded-full bg-[var(--heat)] px-6 text-base font-medium text-white transition-colors hover:bg-[var(--heat-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--heat)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
         >
           {OHMS_COPY.landingCta}
+        </Link>
+
+        <p className="text-sm tracking-[0.18em] text-[var(--ink-muted)] pt-10">
+          {LENS_COPY.landingKicker}
+        </p>
+        <h1 className="mt-3 font-serif text-4xl leading-tight sm:text-5xl">
+          {LENS_COPY.landingTitle}
+        </h1>
+        <p className="mt-4 max-w-xl text-lg leading-relaxed text-[var(--ink-muted)]">
+          {LENS_COPY.landingBody}
+        </p>
+
+        <Link
+          href="/scenes/convex-lens-optical-bench"
+          className="mt-10 inline-flex h-12 w-fit items-center rounded-full bg-[var(--heat)] px-6 text-base font-medium text-white transition-colors hover:bg-[var(--heat-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--heat)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+        >
+          {LENS_COPY.landingCta}
         </Link>
       </main>
     </div>

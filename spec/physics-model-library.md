@@ -579,7 +579,7 @@ Important cognition:
 - reason from propagation rules,
 - connect diagram representation to observable phenomena.
 
-Intended Scene 07 primary (canonical package exists; `metadata.status` = `draft`; PRE only; no production Scene):
+Scene 07 primary model and anchor (quality-reviewed prototype; Library `metadata.status` = `prototype`):
 
 ```text
 convex-lens-imaging
@@ -597,7 +597,7 @@ actual convergence / backward extension / no finite meeting
 image position and properties
 ```
 
-The five imaging cases are reports of that structure, not the model. `1/f = 1/u + 1/v` is not this Grade-9 primary. `u = f` is a no-finite-image limit. Anchor Scene id, if later implemented: `convex-lens-optical-bench`. Readiness + Evidence Claim Design exist (`IMPLEMENTATION_READY`; `spec/scenes/convex-lens-optical-bench/evidence-claim-design.md`). Pipeline readiness is not `metadata.status`. This Library entry does not authorize Scene 07 implementation by itself. `metadata.status` stays `draft`.
+The five imaging cases are reports of that structure, not the model. `1/f = 1/u + 1/v` is not this Grade-9 primary. `u = f` is a no-finite-image limit. Anchor Scene id: `convex-lens-optical-bench`. Library `metadata.status` = `prototype` after POST `LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS`. Quality-reviewed prototype. Not learner-validated.
 
 ---
 
@@ -677,7 +677,7 @@ Maintain a living coverage matrix.
 | force-changes-motion-state | Horizontal Force Cart | defined | defined | defined | defined | defined | prototype |
 | specific-heat-capacity | Equal-mass heated samples | defined | defined | defined | defined | defined | prototype |
 | ohms-law | Simple resistor circuit | defined | defined | defined | defined | defined | prototype |
-| convex-lens-imaging | Convex-lens optical bench (intended) | defined | defined | defined | defined | defined | draft |
+| convex-lens-imaging | Convex-lens optical bench | defined | defined | defined | defined | defined | prototype |
 
 The matrix should eventually be generated from model metadata rather than manually maintained.
 

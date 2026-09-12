@@ -749,3 +749,15 @@ Default Scene-scoped review request: `spec/prompts/review-physics-representation
 
 ---
 
+## D063 — Scene 07 one-pass implementation and prototype inventory
+
+**Date:** 2026-09-12
+
+**Decision:** Implement Scene 07 (`convex-lens-optical-bench`) end-to-end on the existing adapter-owned runtime. Keep official imaging in `physics-boundary.ts`. L4 is one student-constructed spatial-ray pair plus an authored meeting→image bind. Required transfer is projector + magnifying glass. Required AI_OFF is window-card projection + magnifier-cannot-catch-virtual. Do not widen Scene DSL, extract an optics shell, or teach `1/f = 1/u + 1/v`. After Engineering PASS, PRI PASS, and POST `LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS`, write Library / canonical `metadata.status = "prototype"`. Do not write `validated`.
+
+**Why:** D060–D062 authorized the model package, Evidence Claim Design, and station-aware ray contract. A production Scene can now sit those contracts without copying Scene 01–06 MODEL UIs or changing UPLP / L-level meanings.
+
+**Consequence:** Production route is `/scenes/convex-lens-optical-bench`. Official image position does not follow the screen. Partial cover keeps the whole image and dims it. Quality-reviewed prototype only. Not learner-validated.
+
+---
+

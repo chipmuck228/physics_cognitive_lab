@@ -37,8 +37,8 @@ describe("convex-lens-imaging", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("stays draft and does not copy energy-chain or ratio-board grammar", () => {
-    expect(model.metadata.status).toBe("draft");
+  it("stays a quality-reviewed prototype and does not copy energy-chain or ratio-board grammar", () => {
+    expect(model.metadata.status).toBe("prototype");
     expect(model.metadata.status).not.toBe("validated");
     expect(model.energyRelations ?? []).toEqual([]);
     expect(model.modelEvaluator.requiredComponents.identifiesEnergySource).toBeUndefined();
@@ -158,8 +158,7 @@ describe("convex-lens-imaging", () => {
     expect(result.blockers).toEqual([]);
     expect(inferModelRepresentationKind(model)).toBe("relation-condition");
     expect(MODEL_REPRESENTATION_KIND).toBe("spatial-ray-relation");
-    expect(model.metadata.status).toBe("draft");
-    expect(model.metadata.status).not.toBe("prototype");
+    expect(model.metadata.status).toBe("prototype");
     expect(model.metadata.status).not.toBe("validated");
     expect(deriveModelEvidenceLevel({})).toBe("L0");
   });

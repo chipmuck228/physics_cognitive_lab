@@ -308,3 +308,25 @@ export function looksLikeOhmsTutorLeak(
   }
   return /电流等于电压除以电阻/.test(message);
 }
+
+export function looksLikeLensTutorLeak(
+  stage: LearningStageType,
+  message: string,
+): boolean {
+  if (stage === LearningStage.PREDICT) {
+    return /倒立缩小实像|这次会成|正确答案是|1\/f\s*=\s*1\/u/.test(message);
+  }
+  if (stage === LearningStage.OBSERVE || stage === LearningStage.DESCRIBE) {
+    return /五种情况|倒立缩小实像|1\/f\s*=\s*1\/u/.test(message);
+  }
+  if (stage === LearningStage.MODEL) {
+    return /替你把光路建好|完整光路已经画好|第一光线平行/.test(message);
+  }
+  if (stage === LearningStage.TRANSFER) {
+    return /这和刚才是同一种凸透镜成像|都有凸透镜所以一样/.test(message);
+  }
+  if (stage === LearningStage.EXAM) {
+    return /正确答案是|选倒立缩小实像/.test(message);
+  }
+  return /五种成像情况|1\/f\s*=\s*1\/u\s*\+\s*1\/v/.test(message);
+}

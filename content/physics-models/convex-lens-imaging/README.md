@@ -10,7 +10,7 @@ Chinese title: 凸透镜成像：物距相对焦点几何如何决定像
 
 This canonical ID already existed in [`spec/physics-model-library.md`](../../../spec/physics-model-library.md). This folder fills the previously empty definition. It does **not** invent a duplicate ID.
 
-`metadata.status` is **draft**. PRE exists. No production Scene. Not learner-validated.
+`metadata.status` is **prototype** after POST `LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS`. Not learner-validated.
 
 ## Primary reusable structure
 
@@ -80,7 +80,7 @@ Scene id: `convex-lens-optical-bench`
 
 Named engine: `deterministic-convex-lens-imaging`
 
-No production Scene in this pass.
+Production Scene route: `/scenes/convex-lens-optical-bench`.
 
 ## Official contract
 
@@ -92,6 +92,6 @@ PRE: `spec/reviews/pre/convex-lens-imaging.md`
 
 Evidence Claim Design: `spec/scenes/convex-lens-optical-bench/evidence-claim-design.md`
 
-Readiness: `IMPLEMENTATION_READY` as an information gate only. `metadata.status` stays **draft**.
+POST: `spec/reviews/post/convex-lens-imaging.md` — `LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS`.
 
-Do not implement Scene 07 from this README.
+Readiness: `IMPLEMENTATION_READY` as an information gate only. `metadata.status` is **prototype**. Not learner-validated.

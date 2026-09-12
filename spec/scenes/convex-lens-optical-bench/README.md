@@ -6,9 +6,9 @@ Secondary models: none
 
 Canonical model: [`../../../content/physics-models/convex-lens-imaging/`](../../../content/physics-models/convex-lens-imaging/)
 
-This folder is **design sitting only**. There is no production Scene, route, adapter, or DSL config.
+This folder owns Scene 07 design sitting. The production Scene lives on the Universal Runtime (`app/scenes/convex-lens-optical-bench/`). It does not widen Scene DSL and does not extract a generic optics shell.
 
-Library `metadata.status` remains `draft`. PRE is `MODEL_QUALITY_PASS_WITH_REFINEMENTS`. Readiness is `IMPLEMENTATION_READY` as an information gate only. Not a quality-reviewed prototype. Not learner-validated.
+Library `metadata.status` is `prototype` after POST `LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS`. PRE is `MODEL_QUALITY_PASS_WITH_REFINEMENTS`. Readiness is `IMPLEMENTATION_READY`. Not learner-validated.
 
 | File | Owns |
 |---|---|

@@ -8,6 +8,10 @@ import {
   isOhmsSceneState,
 } from "@/lib/physics/simple-resistor-circuit";
 import {
+  createInitialConvexLensState,
+  isConvexLensSceneState,
+} from "@/lib/physics/convex-lens-optical-bench";
+import {
   createInitialDensityState,
   isDensitySceneState,
 } from "@/lib/physics/equal-volume-material-samples";
@@ -21,9 +25,11 @@ import {
   ENGINE_SCENE_ID,
   HEAT_SAMPLES_SCENE_ID,
   MICROWAVE_SCENE_ID,
+  CONVEX_LENS_SCENE_ID,
   OHMS_SCENE_ID,
   SAMPLES_SCENE_ID,
   type CartScenePhysicsState,
+  type ConvexLensScenePhysicsState,
   type EngineScenePhysicsState,
   type HeatSamplesScenePhysicsState,
   type LearningSession,
@@ -34,6 +40,7 @@ import {
 } from "@/types/learning";
 import type { HeatSamplesSceneState } from "@/lib/physics/equal-mass-heated-samples";
 import type { OhmsSceneState } from "@/lib/physics/simple-resistor-circuit";
+import type { ConvexLensSceneState } from "@/lib/physics/convex-lens-optical-bench";
 import type { MicrowavePhysicsState } from "@/types/physics";
 
 export function isMicrowaveScenePhysics(
@@ -187,6 +194,36 @@ export function wrapOhmsPhysicsState(state: OhmsSceneState): OhmsScenePhysicsSta
 
 export function defaultOhmsScenePhysics(): OhmsScenePhysicsState {
   return wrapOhmsPhysicsState(createInitialOhmsState());
+}
+
+export function isConvexLensScenePhysics(
+  physics: ScenePhysicsState,
+): physics is ConvexLensScenePhysicsState {
+  return (
+    physics.sceneId === CONVEX_LENS_SCENE_ID &&
+    isConvexLensSceneState(physics.state)
+  );
+}
+
+export function getConvexLensPhysicsState(
+  session: LearningSession,
+): ConvexLensSceneState {
+  if (!isConvexLensScenePhysics(session.physicsState)) {
+    throw new Error(
+      `Expected convex-lens physics, got scene "${session.physicsState.sceneId}".`,
+    );
+  }
+  return session.physicsState.state;
+}
+
+export function wrapConvexLensPhysicsState(
+  state: ConvexLensSceneState,
+): ConvexLensScenePhysicsState {
+  return { sceneId: CONVEX_LENS_SCENE_ID, state };
+}
+
+export function defaultConvexLensScenePhysics(): ConvexLensScenePhysicsState {
+  return wrapConvexLensPhysicsState(createInitialConvexLensState());
 }
 
 export function isLegacyMicrowavePhysics(
