@@ -579,6 +579,26 @@ Important cognition:
 - reason from propagation rules,
 - connect diagram representation to observable phenomena.
 
+Intended Scene 07 primary (canonical package exists; `metadata.status` = `draft`; PRE only; no production Scene):
+
+```text
+convex-lens-imaging
+```
+
+Deep structure:
+
+```text
+object position relative to F / 2F
+        ↓
+emergent rays after the convex lens
+        ↓
+actual convergence / backward extension / no finite meeting
+        ↓
+image position and properties
+```
+
+The five imaging cases are reports of that structure, not the model. `1/f = 1/u + 1/v` is not this Grade-9 primary. `u = f` is a no-finite-image limit. Anchor Scene id, if later implemented: `convex-lens-optical-bench`. This Library entry does not authorize Scene 07 implementation by itself.
+
 ---
 
 ### L. Sound
@@ -657,6 +677,7 @@ Maintain a living coverage matrix.
 | force-changes-motion-state | Horizontal Force Cart | defined | defined | defined | defined | defined | prototype |
 | specific-heat-capacity | Equal-mass heated samples | defined | defined | defined | defined | defined | prototype |
 | ohms-law | Simple resistor circuit | defined | defined | defined | defined | defined | prototype |
+| convex-lens-imaging | Convex-lens optical bench (intended) | defined | defined | defined | defined | defined | draft |
 
 The matrix should eventually be generated from model metadata rather than manually maintained.
 

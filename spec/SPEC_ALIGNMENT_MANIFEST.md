@@ -116,6 +116,17 @@ Secondary models: none
 
 The canonical model definition lives in `content/physics-models/ohms-law/`. This is not a duplicate model ID. PRE is `MODEL_QUALITY_PASS_WITH_REFINEMENTS`. POST is `LEARNING_EVIDENCE_PASS_WITH_REFINEMENTS`. `metadata.status` is `prototype`. Quality-reviewed prototype. Not learner-validated.
 
+## Scene 07 documents
+
+No Scene spec. No production Scene. Interaction-shell freeze still forbids extracting a new generic shell because optics is visual.
+
+Intended primary model only:
+
+- `content/physics-models/convex-lens-imaging/` — canonical package, `metadata.status` = `draft`
+- `spec/reviews/pre/convex-lens-imaging.md` — Gate A `MODEL_QUALITY_PASS_WITH_REFINEMENTS`
+
+This is not a duplicate model ID. PRE does not authorize implementation.
+
 ## Research / implementation-support documents
 
 - `architecture/scene-01-06-abstraction-audit.md` — discovery-only classification of Scenes 01–06 (D058). Not a source of truth for UPLP, L-levels, or lifecycle. Does not authorize a renderer or Scene 07.
@@ -173,6 +184,7 @@ The canonical model definition lives in `content/physics-models/ohms-law/`. This
 - `reviews/examples/density-mass-volume.md`
 - `reviews/pre/energy-internal-energy-temperature.md`
 - `reviews/pre/ohms-law.md`
+- `reviews/pre/convex-lens-imaging.md`
 - `reviews/pre/specific-heat-capacity.md`
 - `scenes/microwave-bread/README.md`
 - `scenes/microwave-bread/evidence-claim-design.md`

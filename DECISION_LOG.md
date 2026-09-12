@@ -713,3 +713,15 @@ Default Scene-scoped review request: `spec/prompts/review-physics-representation
 
 ---
 
+## D060 — Scene 07 starts as convex-lens-imaging model + PRE only
+
+**Date:** 2026-09-12
+
+**Decision:** After the Scene 01–06 abstraction freeze, authorize the first new Physics Model package for canonical ID `convex-lens-imaging`. This pass is canonical inspection, model definition, and PRE Gate A only. Do not implement Scene 07 UI, Scene spec, Scene DSL, or a new generic shell. Keep `metadata.status = draft`. Keep the primary model qualitative/spatial. Exclude `1/f = 1/u + 1/v` as the taught cause. Treat `u = f` as a no-finite-image limit.
+
+**Why:** D057–D059 stopped Scene 07 while the first six prototypes and the shell freeze were recorded. A new domain after that freeze still has to begin with a Library ID and Gate A, not a page. The Grade-9 target is imaging structure, not a mnemonic table and not a thin-lens calculator.
+
+**Consequence:** PRE may pass with refinements. That does not mean `IMPLEMENTATION_READY`, does not write `prototype` or `validated`, and does not authorize Scene 07 implementation. Interaction-shell freeze remains. Nearby optics IDs stay non-primary.
+
+---
+

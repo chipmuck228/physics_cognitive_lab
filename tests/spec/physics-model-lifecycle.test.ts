@@ -5,6 +5,7 @@ import { chemicalEnergyInternalEnergyMechanicalEnergyModel } from "@/content/phy
 import { densityMassVolumeModel } from "@/content/physics-models/density-mass-volume";
 import { energyInternalEnergyTemperatureModel } from "@/content/physics-models/energy-internal-energy-temperature";
 import { forceChangesMotionStateModel } from "@/content/physics-models/force-changes-motion-state";
+import { convexLensImagingModel } from "@/content/physics-models/convex-lens-imaging";
 import { ohmsLawModel } from "@/content/physics-models/ohms-law";
 import { specificHeatCapacityModel } from "@/content/physics-models/specific-heat-capacity";
 
@@ -85,6 +86,12 @@ describe("Physics Model lifecycle governance", () => {
     expect(energyInternalEnergyTemperatureModel.metadata.status).toBe("prototype");
     expect(ohmsLawModel.metadata.status).toBe("prototype");
     expect(ohmsLawModel.metadata.status).not.toBe("validated");
+    expect(convexLensImagingModel.metadata.status).toBe("draft");
+    expect(convexLensImagingModel.metadata.status).not.toBe("prototype");
+    expect(convexLensImagingModel.metadata.status).not.toBe("validated");
+    expect(read("spec/reviews/pre/convex-lens-imaging.md")).toMatch(
+      /MODEL_QUALITY_PASS_WITH_REFINEMENTS/,
+    );
     expect(read("spec/reviews/pre/energy-internal-energy-temperature.md")).toMatch(
       /MODEL_QUALITY_PASS_WITH_REFINEMENTS/,
     );

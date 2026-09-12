@@ -1,0 +1,173 @@
+import { MODEL_ID } from "./model";
+import type { ExamPattern } from "@/types/physics-model";
+
+export const examPatterns: ExamPattern[] = [
+  {
+    id: "exam-object-beyond-2f-properties",
+    format: "diagram",
+    representation: "光具座示意图：物体在 2F 以外，光屏在另一侧",
+    testedModel: MODEL_ID,
+    difficulty: "basic",
+    requiredCognitiveActions: ["C3", "C4", "C10", "C11"],
+    stem: "如图，物体在凸透镜 2F 以外，光屏放在另一侧像的位置。下面哪一句更合适？",
+    representationOptions: [
+      "物距相对 2F 的光具座图",
+      "有没有画蜡烛火焰",
+      "透镜框是不是圆形",
+      "是不是课堂上见过的木尺",
+    ],
+    modelOptions: [
+      "u > 2f 时另一侧成倒立、缩小的实像，光屏可接到",
+      "像一定在透镜上",
+      "只要有凸透镜就一定是放大镜",
+    ],
+    options: [
+      "另一侧成倒立、缩小的实像，光屏放在像的位置可以接到。",
+      "像就在透镜上，不必再放光屏。",
+      "一定成正立、放大的虚像，因为有凸透镜。",
+      "u > 2f 和 u < f 是同一种成像。",
+    ],
+    correctAnswer:
+      "另一侧成倒立、缩小的实像，光屏放在像的位置可以接到。",
+    commonDistractors: [
+      "像就在透镜上，不必再放光屏。",
+      "一定成正立、放大的虚像，因为有凸透镜。",
+    ],
+    requiredReasoning: ["指出物体在 2F 以外", "指出真正会聚成实像"],
+    reasoningPrompt: "先说出物体相对 F、2F 在哪里，再说明光线会不会真正会聚。不要只背“缩小倒立实像”。",
+  },
+  {
+    id: "exam-move-object-toward-f-real-image",
+    format: "multiple-choice",
+    representation: "文字情境：实像范围内把物体向透镜移近",
+    testedModel: MODEL_ID,
+    difficulty: "medium",
+    requiredCognitiveActions: ["C5", "C8", "C11"],
+    stem: "物体仍在焦点以外，沿主光轴向透镜移近。要再次接到清晰实像，光屏和像的大小怎样变？",
+    representationOptions: [
+      "物距变小但仍大于 f",
+      "蜡烛亮不亮",
+      "光具座是木的还是金属的",
+      "要不要先写 1/f = 1/u + 1/v",
+    ],
+    modelOptions: [
+      "像远离透镜并且变大",
+      "物体近像一定近、一定小",
+      "像的位置由光屏决定",
+    ],
+    options: [
+      "光屏要往更远处移才能再清晰，像变大。",
+      "光屏要跟着物体靠近透镜，像变小。",
+      "像贴在透镜上，光屏不用动。",
+      "只要光屏还在，像的位置就不会变。",
+    ],
+    correctAnswer: "光屏要往更远处移才能再清晰，像变大。",
+    commonDistractors: [
+      "光屏要跟着物体靠近透镜，像变小。",
+      "只要光屏还在，像的位置就不会变。",
+    ],
+    requiredReasoning: ["物体靠近但仍在 F 外", "实像变远变大"],
+    reasoningPrompt: "说明你改的是物距，不是光屏在“制造”像。不要只写“近大远小”。",
+  },
+  {
+    id: "exam-inside-f-screen-cannot-receive",
+    format: "experimental",
+    representation: "实验记录：物在焦点以内，光屏找不到清晰像",
+    testedModel: MODEL_ID,
+    difficulty: "medium",
+    requiredCognitiveActions: ["C4", "C7", "C13"],
+    stem: "物体在焦点以内。同学把光屏来回移动，一直接不到清晰的像。下面哪一句更合适？",
+    representationOptions: [
+      "光屏接不到与透过透镜看到的像",
+      "光屏是白色还是灰色",
+      "教室灯开没开",
+      "题目有没有公式",
+    ],
+    modelOptions: [
+      "虚像存在但光屏接不到",
+      "接不到就等于没有像",
+      "虚像也可以投到屏上",
+    ],
+    options: [
+      "这时成正立、放大的虚像，光屏接不到；透过透镜可以看到。",
+      "没有像，因为光屏上什么都没有。",
+      "只要继续把光屏移得足够远，一定能接到这个虚像。",
+      "虚像和实像是同一个意思，只是名字不同。",
+    ],
+    correctAnswer:
+      "这时成正立、放大的虚像，光屏接不到；透过透镜可以看到。",
+    commonDistractors: [
+      "没有像，因为光屏上什么都没有。",
+      "只要继续把光屏移得足够远，一定能接到这个虚像。",
+    ],
+    requiredReasoning: ["指出 u < f", "区分虚像存在与光屏接收"],
+    reasoningPrompt: "先判断光线是会聚还是只有反向延长线相交，再说明光屏为什么接不到。",
+  },
+  {
+    id: "exam-object-at-f-no-finite-image",
+    format: "multiple-choice",
+    representation: "边界：物体正好在焦点上",
+    testedModel: MODEL_ID,
+    difficulty: "medium",
+    requiredCognitiveActions: ["C7", "C11", "C13"],
+    stem: "物体正好放在凸透镜的焦点上。下面哪一句更合适？",
+    representationOptions: [
+      "u = f 的极限情形",
+      "焦点字母是不是大写",
+      "要不要先算焦距数字",
+      "透镜有没有边框",
+    ],
+    modelOptions: [
+      "有限远处不成完整的像",
+      "u = f 也是一种普通有限远成像",
+      "像在透镜上",
+    ],
+    options: [
+      "出射光线平行，有限远处既没有实像也没有虚像，光屏接不到清晰像。",
+      "会成一个普通的、只是特别远的有限远实像，属于五种正常成像之一。",
+      "一定成正立虚像，因为找不到光屏位置。",
+      "像就在焦点上，和物体重合。",
+    ],
+    correctAnswer:
+      "出射光线平行，有限远处既没有实像也没有虚像，光屏接不到清晰像。",
+    commonDistractors: [
+      "会成一个普通的、只是特别远的有限远实像，属于五种正常成像之一。",
+      "一定成正立虚像，因为找不到光屏位置。",
+    ],
+    requiredReasoning: ["指出出射光线平行", "拒绝把 u = f 当成普通有限远成像"],
+    reasoningPrompt: "说明有限远处有没有交点。不要把“像在无穷远”说成又一种平常的清晰成像。",
+  },
+  {
+    id: "exam-cover-part-of-lens",
+    format: "multiple-choice",
+    representation: "实验：遮住透镜一部分",
+    testedModel: MODEL_ID,
+    difficulty: "basic",
+    requiredCognitiveActions: ["C4", "C10"],
+    stem: "光屏已经接到清晰实像。用不透光纸遮住透镜上半部分。下面哪一句更合适？",
+    representationOptions: [
+      "遮挡后的实像是否完整",
+      "纸是什么颜色",
+      "透镜贵不贵",
+      "要不要改用凹透镜",
+    ],
+    modelOptions: [
+      "整幅像仍在，通常变暗",
+      "像的上半部分消失",
+      "像搬到透镜上",
+    ],
+    options: [
+      "整幅倒立实像仍在，通常只是变暗。",
+      "像的上半部分会消失，因为透镜上半部分被挡住了。",
+      "像会变成虚像，因为进光少了。",
+      "像会跑到透镜表面上。",
+    ],
+    correctAnswer: "整幅倒立实像仍在，通常只是变暗。",
+    commonDistractors: [
+      "像的上半部分会消失，因为透镜上半部分被挡住了。",
+      "像会变成虚像，因为进光少了。",
+    ],
+    requiredReasoning: ["透镜各部分都对整幅像有贡献", "遮挡不等于切掉像"],
+    reasoningPrompt: "说明透镜是不是把像按上下拼起来的。",
+  },
+];

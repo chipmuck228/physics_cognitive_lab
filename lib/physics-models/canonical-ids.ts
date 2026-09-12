@@ -71,6 +71,8 @@ export const SPECIFIC_HEAT_CAPACITY_ID = "specific-heat-capacity" as const;
 
 export const OHMS_LAW_ID = "ohms-law" as const;
 
+export const CONVEX_LENS_IMAGING_ID = "convex-lens-imaging" as const;
+
 export const ENERGY_INTERNAL_ENERGY_TEMPERATURE_ID =
   "energy-internal-energy-temperature" as const;
 

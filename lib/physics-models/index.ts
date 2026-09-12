@@ -10,6 +10,7 @@ export {
   DENSITY_MASS_VOLUME_ID,
   ENERGY_INTERNAL_ENERGY_TEMPERATURE_ID,
   FORCE_CHANGES_MOTION_STATE_ID,
+  CONVEX_LENS_IMAGING_ID,
   OHMS_LAW_ID,
   SPECIFIC_HEAT_CAPACITY_ID,
   isCanonicalPhysicsModelId,
@@ -20,3 +21,4 @@ export { densityMassVolumeModel } from "@/content/physics-models/density-mass-vo
 export { forceChangesMotionStateModel } from "@/content/physics-models/force-changes-motion-state";
 export { specificHeatCapacityModel } from "@/content/physics-models/specific-heat-capacity";
 export { ohmsLawModel } from "@/content/physics-models/ohms-law";
+export { convexLensImagingModel } from "@/content/physics-models/convex-lens-imaging";
