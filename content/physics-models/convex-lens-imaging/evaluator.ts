@@ -33,9 +33,10 @@ export const MINIMUM_L4_MODEL_EVIDENCE = MINIMUM_L4_MODEL_COMPLETENESS;
  */
 export const MINIMUM_L4_CONSTRUCTION_EVIDENCE = [
   "places-object-relative-to-f-or-2f",
-  "constructs-or-decides-two-canonical-rays",
+  "constructs-required-parallel-and-center-pair",
   "decides-actual-convergence-vs-backward-extension-vs-no-finite-meeting",
   "assigns-image-properties-as-consequences-not-lookup",
+  "authored-meeting-mode-to-image-bind",
 ] as const;
 
 export const WEAKEST_PASS_PROBES = [
@@ -79,7 +80,58 @@ export const WEAKEST_PASS_PROBES = [
     studentMove: "把 u = f 说成又一种普通有限远成像。",
     mustFail: ["L4", "L5", "L6"],
   },
+  {
+    id: "properties-correct-no-ray-relation",
+    studentMove: "像的性质全对，但没有光线关系。",
+    mustFail: ["L4", "L5", "L6"],
+  },
+  {
+    id: "station-plus-memorized-table-row",
+    studentMove: "物距站点正确，只背对应的表行。",
+    mustFail: ["L4", "L5", "L6"],
+  },
+  {
+    id: "two-ray-tokens-incoherent",
+    studentMove: "选了两个光线名字，但起点/终点几何不一致。",
+    mustFail: ["L4"],
+  },
+  {
+    id: "convergence-with-virtual-image",
+    studentMove: "选了真正会聚，却配虚像。",
+    mustFail: ["L4", "L5", "L6"],
+  },
+  {
+    id: "backward-extension-with-real-receivable",
+    studentMove: "选了反向延长，却配可上屏的实像。",
+    mustFail: ["L4", "L5", "L6"],
+  },
+  {
+    id: "wrong-target-transfer",
+    studentMove: "把投影仪的正确结构交到放大镜 targetId。",
+    mustFail: ["L5"],
+  },
+  {
+    id: "camera-substitutes-required-pair",
+    studentMove: "用照相机答案代替必做的投影仪+放大镜。",
+    mustFail: ["L5"],
+  },
 ] as const;
+
+export const EVALUATOR_EXPORT_AUDIT = {
+  modelEvaluatorSpec: "MODEL_PACKAGE_HELPER_ONLY",
+  EVALUATOR_COMPONENT_IDS: "MODEL_PACKAGE_HELPER_ONLY",
+  MINIMUM_L4_MODEL_COMPLETENESS: "TOO_WEAK_FOR_L4",
+  MINIMUM_L4_CONSTRUCTION_EVIDENCE: "MODEL_PACKAGE_HELPER_ONLY",
+  WEAKEST_PASS_PROBES: "MODEL_PACKAGE_HELPER_ONLY",
+  evaluateConvexLensModelConstruction: "READY_FOR_SCENE_EVIDENCE",
+  evaluateConvexLensTransfer: "READY_FOR_SCENE_EVIDENCE",
+  evaluateRequiredTransferPair: "READY_FOR_SCENE_EVIDENCE",
+  evaluateConvexLensAiOff: "READY_FOR_SCENE_EVIDENCE",
+  evaluateRequiredAiOffPair: "READY_FOR_SCENE_EVIDENCE",
+  officialImagingState: "MODEL_PACKAGE_HELPER_ONLY",
+  assessmentOverlayJudgmentAlone: "TOO_WEAK_FOR_L6",
+  assessmentOverlayPostCheck: "TOO_WEAK_FOR_L6",
+} as const;
 
 export const modelEvaluatorSpec: ModelEvaluatorSpec = {
   requiredComponents: {
@@ -108,7 +160,7 @@ export const modelEvaluatorSpec: ModelEvaluatorSpec = {
     [ModelEvidenceLevel.L3]:
       "能说出部分关系，例如焦点以外可以接到倒立的像，焦点以内光屏接不到。",
     [ModelEvidenceLevel.L4]:
-      "在一次连贯的空间光路建构中，自己决定物体相对 F/2F 的位置、两条典型光线如何走、交点是真正会聚还是反向延长，并把实像/虚像和光屏能否接到绑在这个决定上。只背五种情况、只点性质、或只认出已画好的图，都不算构建。",
+      "在一次连贯的空间光路建构中，自己决定物体相对 F/2F 的位置、平行主光轴和过光心这两条对应当前物距站点的光线、会聚方式，并用自己的话把像的后果绑在会聚结构上。只背五种情况、只点性质、只认出已画好的图、或用静态光线名字冒充当前站点的几何，都不算构建。",
     [ModelEvidenceLevel.L5]:
       "能在投影仪或放大镜等新表面中调用同一条会聚结构，并分清平面镜成像和“也有凸透镜”不能代替它。",
     [ModelEvidenceLevel.L6]:

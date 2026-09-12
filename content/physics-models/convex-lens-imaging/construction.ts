@@ -14,6 +14,11 @@ export const CANONICAL_RAY_KINDS = [
 
 export type CanonicalRayKind = (typeof CANONICAL_RAY_KINDS)[number];
 
+export const REQUIRED_CONSTRUCTION_RAY_KINDS = [
+  "parallel-axis",
+  "through-center",
+] as const;
+
 export const RAY_SEGMENTS = [
   "parallel-to-principal-axis",
   "toward-optical-center",
@@ -24,30 +29,34 @@ export const RAY_SEGMENTS = [
 
 export type RaySegment = (typeof RAY_SEGMENTS)[number];
 
-export const CANONICAL_RAY_GEOMETRY: Record<
-  CanonicalRayKind,
-  { beforeLens: RaySegment; afterLens: RaySegment; required: boolean }
-> = {
+export type RayIncidentPath = "actual" | "backward-extension";
+
+export type FocalRayReferenceStatus =
+  | "actual-optional-reference"
+  | "backward-extension-optional-reference"
+  | "not-applicable";
+
+/**
+ * After-lens pairing for the required pair only.
+ * This table is not station-complete and must not be used as the
+ * sole coherence proof. Use isCanonicalRayGeometricallyCoherent(station, ray).
+ */
+export const REQUIRED_RAY_SEGMENT_PAIRING = {
   "parallel-axis": {
     beforeLens: "parallel-to-principal-axis",
     afterLens: "through-far-focal-point",
-    required: false,
+    incidentPath: "actual",
   },
   "through-center": {
     beforeLens: "toward-optical-center",
     afterLens: "undeviated",
-    required: false,
+    incidentPath: "actual",
   },
-  "through-near-focus": {
-    beforeLens: "through-near-focal-point",
-    afterLens: "parallel-to-principal-axis",
-    required: false,
-  },
-};
+} as const;
 
 /**
- * Grade-9 construction needs any two distinct canonical rays.
- * The focal-point → emerge-parallel ray is valid, not mandatory.
+ * L4 requires this pair at every station. The third textbook focal ray
+ * is VALID_OPTIONAL_REFERENCE only where the object-station geometry allows it.
  */
 export const REQUIRED_CANONICAL_RAY_COUNT = 2;
 
@@ -70,6 +79,7 @@ export interface CanonicalRayChoice {
   kind: CanonicalRayKind;
   beforeLens: RaySegment;
   afterLens: RaySegment;
+  incidentPath: RayIncidentPath;
 }
 
 export interface ImageConsequence {
@@ -93,7 +103,9 @@ export type ModelConstructionFailure =
   | "copied-visible-diagram"
   | "recognized-finished-diagram"
   | "missing-or-duplicate-rays"
+  | "missing-required-construction-pair"
   | "geometrically-incoherent-rays"
+  | "station-impossible-ray"
   | "meeting-mode-conflicts-station"
   | "image-conflicts-meeting-mode"
   | "u-equals-f-as-ordinary-image"
@@ -108,13 +120,54 @@ export interface ModelConstructionResult {
   failureKind: ModelConstructionFailure;
 }
 
+export function focalRayReferenceStatus(
+  objectStation: ObjectStation,
+): FocalRayReferenceStatus {
+  if (objectStation === "at-f") {
+    return "not-applicable";
+  }
+  if (objectStation === "inside-f") {
+    return "backward-extension-optional-reference";
+  }
+  return "actual-optional-reference";
+}
+
 export function isCanonicalRayGeometricallyCoherent(
+  objectStation: ObjectStation,
   ray: CanonicalRayChoice,
 ): boolean {
-  const expected = CANONICAL_RAY_GEOMETRY[ray.kind];
+  if (ray.kind === "parallel-axis") {
+    const expected = REQUIRED_RAY_SEGMENT_PAIRING["parallel-axis"];
+    return (
+      ray.incidentPath === expected.incidentPath &&
+      ray.beforeLens === expected.beforeLens &&
+      ray.afterLens === expected.afterLens
+    );
+  }
+  if (ray.kind === "through-center") {
+    const expected = REQUIRED_RAY_SEGMENT_PAIRING["through-center"];
+    return (
+      ray.incidentPath === expected.incidentPath &&
+      ray.beforeLens === expected.beforeLens &&
+      ray.afterLens === expected.afterLens
+    );
+  }
+
+  const status = focalRayReferenceStatus(objectStation);
+  if (status === "not-applicable") {
+    return false;
+  }
+  if (status === "actual-optional-reference") {
+    return (
+      ray.incidentPath === "actual" &&
+      ray.beforeLens === "through-near-focal-point" &&
+      ray.afterLens === "parallel-to-principal-axis"
+    );
+  }
   return (
-    ray.beforeLens === expected.beforeLens &&
-    ray.afterLens === expected.afterLens
+    ray.incidentPath === "backward-extension" &&
+    ray.beforeLens === "through-near-focal-point" &&
+    ray.afterLens === "parallel-to-principal-axis"
   );
 }
 
@@ -231,14 +284,32 @@ export function analyzeConvexLensAuthored(text: string): {
   };
 }
 
-function raysAreValidPair(rays: CanonicalRayChoice[]): boolean {
-  if (rays.length !== REQUIRED_CANONICAL_RAY_COUNT) {
-    return false;
+function evaluateRayConstruction(
+  objectStation: ObjectStation,
+  rays: CanonicalRayChoice[],
+): ModelConstructionResult {
+  const parallel = rays.filter((item) => item.kind === "parallel-axis");
+  const center = rays.filter((item) => item.kind === "through-center");
+  const focal = rays.filter((item) => item.kind === "through-near-focus");
+
+  if (parallel.length !== 1 || center.length !== 1) {
+    return { ok: false, failureKind: "missing-required-construction-pair" };
   }
-  if (rays[0]!.kind === rays[1]!.kind) {
-    return false;
+  if (
+    !isCanonicalRayGeometricallyCoherent(objectStation, parallel[0]!) ||
+    !isCanonicalRayGeometricallyCoherent(objectStation, center[0]!)
+  ) {
+    return { ok: false, failureKind: "geometrically-incoherent-rays" };
   }
-  return rays.every(isCanonicalRayGeometricallyCoherent);
+  for (const ray of focal) {
+    if (!isCanonicalRayGeometricallyCoherent(objectStation, ray)) {
+      return { ok: false, failureKind: "station-impossible-ray" };
+    }
+  }
+  if (rays.length !== parallel.length + center.length + focal.length) {
+    return { ok: false, failureKind: "missing-or-duplicate-rays" };
+  }
+  return { ok: true, failureKind: "ok" };
 }
 
 function meetingMatchesStation(station: ObjectStation, meeting: MeetingMode): boolean {
@@ -283,13 +354,9 @@ export function evaluateConvexLensModelConstruction(
   if (attempt.constructionSource === "recognized-option") {
     return { ok: false, failureKind: "recognized-finished-diagram" };
   }
-  if (!raysAreValidPair(attempt.rays)) {
-    const kinds = attempt.rays.map((item) => item.kind);
-    const unique = new Set(kinds);
-    if (attempt.rays.length !== 2 || unique.size !== 2) {
-      return { ok: false, failureKind: "missing-or-duplicate-rays" };
-    }
-    return { ok: false, failureKind: "geometrically-incoherent-rays" };
+  const rayResult = evaluateRayConstruction(attempt.objectStation, attempt.rays);
+  if (!rayResult.ok) {
+    return rayResult;
   }
   if (!meetingMatchesStation(attempt.objectStation, attempt.meetingMode)) {
     if (attempt.objectStation === "at-f" && attempt.meetingMode !== "no-finite-meeting") {
@@ -551,11 +618,31 @@ export function twoStandardRays(): CanonicalRayChoice[] {
       kind: "parallel-axis",
       beforeLens: "parallel-to-principal-axis",
       afterLens: "through-far-focal-point",
+      incidentPath: "actual",
     },
     {
       kind: "through-center",
       beforeLens: "toward-optical-center",
       afterLens: "undeviated",
+      incidentPath: "actual",
     },
   ];
+}
+
+export function actualThroughNearFocusRay(): CanonicalRayChoice {
+  return {
+    kind: "through-near-focus",
+    beforeLens: "through-near-focal-point",
+    afterLens: "parallel-to-principal-axis",
+    incidentPath: "actual",
+  };
+}
+
+export function backwardExtensionThroughNearFocusRay(): CanonicalRayChoice {
+  return {
+    kind: "through-near-focus",
+    beforeLens: "through-near-focal-point",
+    afterLens: "parallel-to-principal-axis",
+    incidentPath: "backward-extension",
+  };
 }

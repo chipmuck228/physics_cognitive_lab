@@ -118,14 +118,19 @@ The canonical model definition lives in `content/physics-models/ohms-law/`. This
 
 ## Scene 07 documents
 
-No Scene spec. No production Scene. Interaction-shell freeze still forbids extracting a new generic shell because optics is visual.
+Canonical location: `spec/scenes/convex-lens-optical-bench/`
 
-Intended primary model only:
+Design sitting only. No production Scene, route, adapter, or DSL.
 
-- `content/physics-models/convex-lens-imaging/` — canonical package, `metadata.status` = `draft`
-- `spec/reviews/pre/convex-lens-imaging.md` — Gate A `MODEL_QUALITY_PASS_WITH_REFINEMENTS`
+- `README.md` — Scene identity and document index.
+- `evidence-claim-design.md` — L4/L5/L6 claims; construction ≠ table.
+- `readiness.md` — information gate `IMPLEMENTATION_READY`; status stays `draft`.
+- `physical-representation-plan.md` — design-time PRI locks.
 
-This is not a duplicate model ID. PRE does not authorize implementation.
+Primary model: `convex-lens-imaging`  
+Secondary models: none
+
+The canonical model definition lives in `content/physics-models/convex-lens-imaging/`. This is not a duplicate model ID. PRE is `MODEL_QUALITY_PASS_WITH_REFINEMENTS`. Readiness is `IMPLEMENTATION_READY`. `metadata.status` is `draft`. Not a quality-reviewed prototype. Not learner-validated. Interaction-shell freeze still forbids extracting a new generic shell.
 
 ## Research / implementation-support documents
 
@@ -216,6 +221,10 @@ This is not a duplicate model ID. PRE does not authorize implementation.
 - `scenes/simple-resistor-circuit/physics-state.md`
 - `scenes/simple-resistor-circuit/physical-representation-plan.md`
 - `scenes/simple-resistor-circuit/evidence-claim-design.md`
+- `scenes/convex-lens-optical-bench/README.md`
+- `scenes/convex-lens-optical-bench/evidence-claim-design.md`
+- `scenes/convex-lens-optical-bench/readiness.md`
+- `scenes/convex-lens-optical-bench/physical-representation-plan.md`
 - `state-machine.md`
 - `universal-physics-learning-protocol.md`
 

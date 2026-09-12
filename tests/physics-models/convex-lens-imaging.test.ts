@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  convexLensImagingAssessmentOverlay,
   convexLensImagingModel as model,
+  EVALUATOR_EXPORT_AUDIT,
   MINIMUM_L4_CONSTRUCTION_EVIDENCE,
   MODEL_QUANTITY_IDS,
   MODEL_REPRESENTATION_KIND,
@@ -15,7 +17,11 @@ import {
   WEAKEST_PASS_PROBES,
 } from "@/content/physics-models/convex-lens-imaging";
 import { CONVEX_LENS_IMAGING_ID } from "@/lib/physics-models/canonical-ids";
-import { inferModelRepresentationKind } from "@/lib/physics-models/readiness";
+import { deriveModelEvidenceLevel } from "@/lib/physics-models/evidence";
+import {
+  inferModelRepresentationKind,
+  validatePhysicsModelReadiness,
+} from "@/lib/physics-models/readiness";
 import { validatePhysicsModel } from "@/lib/physics-models/validate";
 import { TransferMode } from "@/types/physics-model";
 
@@ -121,11 +127,40 @@ describe("convex-lens-imaging", () => {
     expect(MINIMUM_L4_CONSTRUCTION_EVIDENCE).toContain(
       "decides-actual-convergence-vs-backward-extension-vs-no-finite-meeting",
     );
+    expect(MINIMUM_L4_CONSTRUCTION_EVIDENCE).toContain(
+      "authored-meeting-mode-to-image-bind",
+    );
     expect(
       WEAKEST_PASS_PROBES.some((item) => item.id === "five-row-table-recitation"),
     ).toBe(true);
     expect(
       WEAKEST_PASS_PROBES.some((item) => item.id === "recognize-completed-ray-diagram"),
     ).toBe(true);
+    expect(EVALUATOR_EXPORT_AUDIT.MINIMUM_L4_MODEL_COMPLETENESS).toBe(
+      "TOO_WEAK_FOR_L4",
+    );
+    expect(EVALUATOR_EXPORT_AUDIT.evaluateConvexLensModelConstruction).toBe(
+      "READY_FOR_SCENE_EVIDENCE",
+    );
+    expect(EVALUATOR_EXPORT_AUDIT.assessmentOverlayJudgmentAlone).toBe(
+      "TOO_WEAK_FOR_L6",
+    );
+  });
+
+  it("is information-ready without promoting lifecycle or assigning L-levels", () => {
+    const result = validatePhysicsModelReadiness(
+      model,
+      model.scenes[0]!,
+      convexLensImagingAssessmentOverlay,
+    );
+    expect(result.status).toBe("IMPLEMENTATION_READY");
+    expect(result.missing).toEqual([]);
+    expect(result.blockers).toEqual([]);
+    expect(inferModelRepresentationKind(model)).toBe("relation-condition");
+    expect(MODEL_REPRESENTATION_KIND).toBe("spatial-ray-relation");
+    expect(model.metadata.status).toBe("draft");
+    expect(model.metadata.status).not.toBe("prototype");
+    expect(model.metadata.status).not.toBe("validated");
+    expect(deriveModelEvidenceLevel({})).toBe("L0");
   });
 });

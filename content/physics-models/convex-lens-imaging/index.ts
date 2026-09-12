@@ -56,11 +56,26 @@ export {
 } from "./model";
 export {
   EVALUATOR_COMPONENT_IDS,
+  EVALUATOR_EXPORT_AUDIT,
   MINIMUM_L4_CONSTRUCTION_EVIDENCE,
   MINIMUM_L4_MODEL_COMPLETENESS,
   MINIMUM_L4_MODEL_EVIDENCE,
   WEAKEST_PASS_PROBES,
 } from "./evaluator";
+export {
+  REQUIRED_CONSTRUCTION_RAY_KINDS,
+  actualThroughNearFocusRay,
+  backwardExtensionThroughNearFocusRay,
+  evaluateConvexLensAiOff,
+  evaluateConvexLensModelConstruction,
+  evaluateConvexLensTransfer,
+  evaluateRequiredAiOffPair,
+  evaluateRequiredTransferPair,
+  focalRayReferenceStatus,
+  isCanonicalRayGeometricallyCoherent,
+  officialImageConsequence,
+  twoStandardRays,
+} from "./construction";
 export { convexLensImagingAssessmentOverlay } from "./assessment-overlay";
 export {
   PRODUCTION_AI_OFF_IDS,

@@ -90,4 +90,8 @@ Official stations live in `physics-boundary.ts`. They are pedagogical engine tru
 
 PRE: `spec/reviews/pre/convex-lens-imaging.md`
 
-This pass stops after PRE. Do not implement Scene 07 from this README.
+Evidence Claim Design: `spec/scenes/convex-lens-optical-bench/evidence-claim-design.md`
+
+Readiness: `IMPLEMENTATION_READY` as an information gate only. `metadata.status` stays **draft**.
+
+Do not implement Scene 07 from this README.

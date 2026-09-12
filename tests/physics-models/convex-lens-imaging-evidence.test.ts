@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  actualThroughNearFocusRay,
+  backwardExtensionThroughNearFocusRay,
   evaluateConvexLensAiOff,
   evaluateConvexLensModelConstruction,
   evaluateConvexLensTransfer,
   evaluateRequiredAiOffPair,
   evaluateRequiredTransferPair,
+  focalRayReferenceStatus,
+  isCanonicalRayGeometricallyCoherent,
   officialImageConsequence,
   twoStandardRays,
 } from "@/content/physics-models/convex-lens-imaging/construction";
@@ -151,11 +155,13 @@ describe("convex-lens-imaging evidence contract", () => {
         kind: "parallel-axis",
         beforeLens: "parallel-to-principal-axis",
         afterLens: "undeviated",
+        incidentPath: "actual",
       },
       {
         kind: "through-center",
         beforeLens: "toward-optical-center",
         afterLens: "undeviated",
+        incidentPath: "actual",
       },
     ];
     expect(
@@ -235,6 +241,78 @@ describe("convex-lens-imaging evidence contract", () => {
     expect(evaluateRequiredTransferPair([projectorPass, magnifierPass]).ok).toBe(
       true,
     );
+  });
+
+  it("accepts the required pair at every official station", () => {
+    expect(evaluateConvexLensModelConstruction(coherentAttempt()).ok).toBe(true);
+    expect(
+      evaluateConvexLensModelConstruction(
+        coherentAttempt({
+          objectStation: "between-f-and-2f",
+          image: officialImageConsequence("between-f-and-2f"),
+          modelReasoning:
+            "物体在 F 与 2F 之间，光线在另一侧真正会聚，所以成倒立放大的实像，光屏放到交点才能接到。",
+        }),
+      ).ok,
+    ).toBe(true);
+    expect(evaluateConvexLensModelConstruction(insideFAttempt()).ok).toBe(true);
+    expect(evaluateConvexLensModelConstruction(atFAttempt()).ok).toBe(true);
+  });
+
+  it("makes focal-ray geometry station-aware", () => {
+    expect(focalRayReferenceStatus("beyond-2f")).toBe("actual-optional-reference");
+    expect(focalRayReferenceStatus("between-f-and-2f")).toBe(
+      "actual-optional-reference",
+    );
+    expect(focalRayReferenceStatus("inside-f")).toBe(
+      "backward-extension-optional-reference",
+    );
+    expect(focalRayReferenceStatus("at-f")).toBe("not-applicable");
+
+    const actualFocus = actualThroughNearFocusRay();
+    expect(isCanonicalRayGeometricallyCoherent("beyond-2f", actualFocus)).toBe(
+      true,
+    );
+    expect(isCanonicalRayGeometricallyCoherent("inside-f", actualFocus)).toBe(
+      false,
+    );
+    expect(isCanonicalRayGeometricallyCoherent("at-f", actualFocus)).toBe(false);
+
+    expect(
+      evaluateConvexLensModelConstruction(
+        insideFAttempt({
+          rays: [...twoStandardRays(), actualThroughNearFocusRay()],
+        }),
+      ).failureKind,
+    ).toBe("station-impossible-ray");
+    expect(
+      evaluateConvexLensModelConstruction(
+        atFAttempt({
+          rays: [...twoStandardRays(), actualThroughNearFocusRay()],
+        }),
+      ).failureKind,
+    ).toBe("station-impossible-ray");
+    expect(
+      evaluateConvexLensModelConstruction(
+        coherentAttempt({
+          rays: [twoStandardRays()[1]!, actualThroughNearFocusRay()],
+        }),
+      ).failureKind,
+    ).toBe("missing-required-construction-pair");
+    expect(
+      evaluateConvexLensModelConstruction(
+        coherentAttempt({
+          rays: [...twoStandardRays(), actualThroughNearFocusRay()],
+        }),
+      ).ok,
+    ).toBe(true);
+    expect(
+      evaluateConvexLensModelConstruction(
+        insideFAttempt({
+          rays: [...twoStandardRays(), backwardExtensionThroughNearFocusRay()],
+        }),
+      ).ok,
+    ).toBe(true);
   });
 
   it("keeps L6 on pre-commit structure and rejects post-check manufacture", () => {

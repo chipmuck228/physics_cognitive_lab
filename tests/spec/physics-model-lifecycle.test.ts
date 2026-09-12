@@ -92,6 +92,12 @@ describe("Physics Model lifecycle governance", () => {
     expect(read("spec/reviews/pre/convex-lens-imaging.md")).toMatch(
       /MODEL_QUALITY_PASS_WITH_REFINEMENTS/,
     );
+    expect(read("spec/scenes/convex-lens-optical-bench/readiness.md")).toMatch(
+      /IMPLEMENTATION_READY/,
+    );
+    expect(
+      read("spec/scenes/convex-lens-optical-bench/evidence-claim-design.md"),
+    ).toMatch(/constructedValidCausalModel/);
     expect(read("spec/reviews/pre/energy-internal-energy-temperature.md")).toMatch(
       /MODEL_QUALITY_PASS_WITH_REFINEMENTS/,
     );

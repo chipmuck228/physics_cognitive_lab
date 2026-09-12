@@ -597,7 +597,7 @@ actual convergence / backward extension / no finite meeting
 image position and properties
 ```
 
-The five imaging cases are reports of that structure, not the model. `1/f = 1/u + 1/v` is not this Grade-9 primary. `u = f` is a no-finite-image limit. Anchor Scene id, if later implemented: `convex-lens-optical-bench`. This Library entry does not authorize Scene 07 implementation by itself.
+The five imaging cases are reports of that structure, not the model. `1/f = 1/u + 1/v` is not this Grade-9 primary. `u = f` is a no-finite-image limit. Anchor Scene id, if later implemented: `convex-lens-optical-bench`. Readiness + Evidence Claim Design exist (`IMPLEMENTATION_READY`; `spec/scenes/convex-lens-optical-bench/evidence-claim-design.md`). Pipeline readiness is not `metadata.status`. This Library entry does not authorize Scene 07 implementation by itself. `metadata.status` stays `draft`.
 
 ---
 

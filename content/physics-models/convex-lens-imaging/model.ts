@@ -329,7 +329,7 @@ export const conditions: Condition[] = [
   {
     id: MODEL_CONDITION_IDS.twoCanonicalRaysForConstruction,
     description:
-      "模型建构使用两条典型光线：过光心方向不变；平行主光轴的光线过另一侧焦点。交点或反向延长线交点才是像点。",
+      "模型建构必须使用两条对应当前物距站点的光线：过光心方向不变；平行主光轴的光线过另一侧焦点。过近侧焦点的第三条光线只在该站点几何允许时作为可选参考，不能代替这两条。交点或反向延长线交点才是像点。",
     importance: "essential",
   },
 ];
@@ -512,6 +512,9 @@ export const metadata: PhysicsModelMetadata = {
     "spec/physics-representation-integrity-contract.md",
     "spec/architecture/interaction-shell-contract.md",
     "spec/reviews/pre/convex-lens-imaging.md",
+    "spec/scenes/convex-lens-optical-bench/evidence-claim-design.md",
+    "spec/scenes/convex-lens-optical-bench/readiness.md",
+    "spec/scenes/convex-lens-optical-bench/physical-representation-plan.md",
   ],
   lastReviewedAt: "2026-09-12",
   notes: [
@@ -523,6 +526,7 @@ export const metadata: PhysicsModelMetadata = {
     "u = f is a no-finite-image limiting case, not an ordinary finite image.",
     "Official stations live in physics-boundary.ts. They are engine truth, not MODEL evidence.",
     "Intended MODEL presentation is a spatial-ray relation construction. Readiness inference may still say relation-condition.",
-    "Library metadata.status stays draft. PRE does not promote lifecycle. Not learner-validated.",
+    "Library metadata.status stays draft. PRE does not promote lifecycle. Evidence Claim Design and readiness exist. Not learner-validated.",
+    "L4 construction evidence is evaluateConvexLensModelConstruction. Completeness rows remain TOO_WEAK_FOR_L4.",
   ],
 };

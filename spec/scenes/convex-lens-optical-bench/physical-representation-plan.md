@@ -38,6 +38,20 @@ Forbidden later: drawing a finite image at `u = f`, or moving the official image
 - Moving the screen never moves `officialImagingState`. A real image is clear only when `screenAtImagePlane` is true. Virtual / no-finite-image screens stay `never`.
 - Visual scale must agree with the official station (reduced / same / enlarged). Do not show a huge real image for `beyond-2f`.
 
+### 3.1 Station-aware focal construction
+
+Required MODEL rays remain **parallel-axis** and **through-center**. Both are actual light for every official station.
+
+The third textbook focal ray is `VALID_OPTIONAL_REFERENCE` only:
+
+| Station | Draw this | Do not draw this |
+|---|---|---|
+| `u > f` | A **solid** incident ray may pass through near F and emerge parallel | A dashed incoming segment pretending the actual path missed F |
+| `u < f` | If shown at all, only a **dashed** backward extension through near F | A **solid** incident segment as if the ray physically passed through a focal point behind the object |
+| `u = f` | No through-F construction from the object top | A generic “through near focus” token or a solid/dashed through-F incoming ray that treats this like `u > f` |
+
+Solid lines remain actual light. Dashed lines remain backward extensions only.
+
 ## 4. Arrow / relation locks
 
 Arrows may show a ray path or a before/after position of the **same** quantity.

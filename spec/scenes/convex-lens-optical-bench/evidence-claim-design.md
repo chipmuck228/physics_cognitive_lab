@@ -59,7 +59,8 @@ The student commits **one** spatial-ray construction.
 ```text
 ONE CONSTRUCTION
   A. objectStation relative to F / 2F
-  B. two distinct canonical rays, each geometrically coherent
+  B. required pair: parallel-axis + through-center,
+     each geometrically coherent for this objectStation
   C. meetingMode:
        actual-convergence
        OR backward-extension
@@ -121,7 +122,7 @@ Post-check may confirm. Post-check must not create `constructedValidCausalModel`
 
 ```text
 student-constructed
-  AND two distinct geometrically coherent canonical rays
+  AND required parallel-axis + through-center pair, coherent for this objectStation
   AND meetingMode matches officialImagingState(station)
   AND image matches that meeting mode and official station
   AND authored has meeting-mode language + consequence bind
@@ -299,16 +300,24 @@ May support L6 only with valid MODEL and TRANSFER already present. EXAM must not
 
 ## 7. Canonical-ray contract
 
-Allowed Grade-9 rays:
+L4 requires this pair at every station. Geometry is **station-aware**. A matching kind/before/after token table is not enough.
 
-| Kind | Before lens | After lens | Required? |
-|---|---|---|---|
-| `parallel-axis` | parallel to principal axis | through far focal point | no |
-| `through-center` | toward optical center | undeviated | no |
-| `through-near-focus` | through near focal point | emerge parallel | no; valid extra construction ray |
+| Kind | Incident path | Before lens | After lens | Role |
+|---|---|---|---|---|
+| `parallel-axis` | actual | parallel to principal axis | through far focal point | **required** |
+| `through-center` | actual | toward optical center | undeviated | **required** |
+| `through-near-focus` | see station table | through near focal point | emerge parallel | `VALID_OPTIONAL_REFERENCE` only |
 
-A construction must use **any two distinct** of these, each with matching start/end.  
-“Two ray names” without that geometry fail.
+Focal-ray station table:
+
+| ObjectStation | Focal-ray status | What may be drawn |
+|---|---|---|
+| `beyond-2f`, `at-2f`, `f < u < 2f` | `actual-optional-reference` | A solid incident ray may actually pass through near F, then emerge parallel |
+| `inside-f` (`u < f`) | `backward-extension-optional-reference` | The actual incident segment does **not** pass through near F. Only the backward extension may align with near F. A solid “through-F” incoming segment fails |
+| `at-f` (`u = f`) | `not-applicable` | Do not accept a generic through-near-focus token. Do not draw a misleading through-F construction from the object top |
+
+Substituting the optional focal ray for either required ray fails.  
+“Two ray names” without station-true geometry fail.
 
 Image location:
 

@@ -20,7 +20,7 @@
 | Transfer | required projector + magnifier |
 | Exam | five patterns; overlay covered |
 | AI_OFF | two challenges; overlay covered |
-| Evaluator design | construction.ts READY_FOR_SCENE_EVIDENCE |
+| Evaluator design | construction.ts READY_FOR_SCENE_EVIDENCE; ray geometry is station-aware |
 | Overlay | present; judgment-alone TOO_WEAK_FOR_L6 |
 | Deterministic physics | `officialImagingState` discrete stations |
 | Intended SceneDefinition | declared on the model |
@@ -37,9 +37,11 @@ Expected warnings:
 - `energyRelations` / `modelRepresentation`: inferred `relation-condition` because the readiness helper has no spatial-ray kind. Implementation must still use the spatial-ray contract, not Scene 02–06 boards.
 
 Missing: none  
-Blockers: none
+Blockers: none after canonical-ray repair (`CANONICAL_RAY_CONTRACT_REPAIR_REQUIRED` closed)
 
 `metadata.status` stays **`draft`**. This result does not authorize React, a route, a DSL, or a new shell.
+
+Repair recorded in this pass: L4 no longer accepts “any two of three” rays from a static token table. Required pair is parallel-axis + through-center. Focal ray is optional and station-bound.
 
 ## Stop conditions checked
 

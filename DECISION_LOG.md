@@ -725,3 +725,27 @@ Default Scene-scoped review request: `spec/prompts/review-physics-representation
 
 ---
 
+## D061 — Scene 07 Evidence Claim Design and Readiness
+
+**Date:** 2026-09-12
+
+**Decision:** Record Evidence Claim Design and run readiness for `convex-lens-imaging` / `convex-lens-optical-bench`. L4 is one spatial-ray construction plus an authored meeting→image bind. Required transfer pair is projector full-model + magnifying-glass full-model; both `targetId`-bound. AI_OFF flags come from pre-commit structure; post-check cannot manufacture them. Completeness rows, finished-diagram recognition, and overlay judgments alone are too weak. Readiness result is `IMPLEMENTATION_READY`. `metadata.status` remains `draft`. Do not implement Scene 07, extract an optics shell, or widen Scene DSL in this pass.
+
+**Why:** PRE `MODEL_QUALITY_PASS_WITH_REFINEMENTS` is not readiness. The package evaluator checklist could not justify L4/L5/L6. A later Scene must not be able to pass those claims by reciting the F/2F table or clicking image properties.
+
+**Consequence:** There is enough canonical information to implement later. Student-visible product behavior is unchanged. UPLP, L1–L6, PRI semantics, and the interaction-shell freeze are unchanged. Not learner-validated.
+
+---
+
+## D062 — Scene 07 station-aware canonical-ray repair
+
+**Date:** 2026-09-12
+
+**Decision:** Repair the Scene 07 ray contract before any implementation. L4 requires the parallel-axis + through-center pair at every station. Geometric coherence is `isCanonicalRayGeometricallyCoherent(objectStation, ray)`. The third focal ray is `VALID_OPTIONAL_REFERENCE` only: actual through near F when `u > f`; backward-extension relation when `u < f`; not applicable at `u = f`. A static kind/before/after table is not sufficient proof. `metadata.status` stays `draft`. Do not implement Scene 07 in this pass.
+
+**Why:** External readiness review returned `NOT_READY — CANONICAL_RAY_CONTRACT_REPAIR_REQUIRED`. For `u < f`, an actual incident segment does not pass through near F. Treating “any two of three” token-matching rays as coherent overclaimed the geometry.
+
+**Consequence:** Readiness may return `IMPLEMENTATION_READY` only after this station-aware contract and its adversarial tests. UPLP, L-level meanings, and the no-React stop are unchanged.
+
+---
+
