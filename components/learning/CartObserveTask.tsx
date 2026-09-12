@@ -1,5 +1,4 @@
-import { Button } from "@/components/common/Button";
-import { Card } from "@/components/common/Card";
+import { ChecklistObserveTask } from "@/components/learning/dsl/ChecklistObserveTask";
 import {
   CART_COPY,
   CART_OBSERVE_OPTIONS,
@@ -24,47 +23,27 @@ export function CartObserveTask({
   saved,
   demoPlaying,
 }: CartObserveTaskProps) {
-  const selected = new Set(selectedOptionIds);
-
   return (
-    <div data-testid="cart-observe-task">
-      <Card className="space-y-4 p-4">
-        <p className="text-sm leading-relaxed text-[var(--ink-muted)]">
-          {CART_COPY.observeInstruction}
-        </p>
-        <Button variant="secondary" onClick={onPlayDemo} data-testid="cart-play-demo">
-          {demoPlaying ? CART_COPY.pauseDemo : CART_COPY.playDemo}
-        </Button>
-        <fieldset className="space-y-3">
-          <legend className="text-sm font-medium text-[var(--ink)]">
-            {CART_COPY.observePrompt}
-          </legend>
-          {CART_OBSERVE_OPTIONS.map((option) => (
-            <label
-              key={option.id}
-              className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-[var(--ink)]"
-            >
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={selected.has(option.id)}
-                onChange={() => onToggle(option.id)}
-                value={option.id}
-              />
-              <span>{option.label}</span>
-            </label>
-          ))}
-        </fieldset>
-        {needMore ? (
-          <p className="text-sm text-[var(--ink-muted)]">{CART_COPY.observeNeedMore}</p>
-        ) : null}
-        {saved && !needMore ? (
-          <p className="text-sm text-[var(--ink-muted)]">{CART_COPY.observeSaved}</p>
-        ) : null}
-        <div className="flex justify-end">
-          <Button onClick={onSubmit}>{CART_COPY.observeSubmit}</Button>
-        </div>
-      </Card>
-    </div>
+    <ChecklistObserveTask
+      copy={{
+        instruction: CART_COPY.observeInstruction,
+        prompt: CART_COPY.observePrompt,
+        submit: CART_COPY.observeSubmit,
+        needMore: CART_COPY.observeNeedMore,
+        saved: CART_COPY.observeSaved,
+        playDemo: CART_COPY.playDemo,
+        pauseDemo: CART_COPY.pauseDemo,
+      }}
+      options={CART_OBSERVE_OPTIONS}
+      selectedOptionIds={selectedOptionIds}
+      onToggle={onToggle}
+      onSubmit={onSubmit}
+      onPlayDemo={onPlayDemo}
+      needMore={needMore}
+      saved={saved}
+      demoPlaying={demoPlaying}
+      testId="cart-observe-task"
+      playDemoTestId="cart-play-demo"
+    />
   );
 }
