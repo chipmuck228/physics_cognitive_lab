@@ -68,12 +68,15 @@ import {
   lensHelpPrompts,
   lensHelpState,
 } from "@/lib/learning/lens-help-intents";
-import { lensVisibleInteractionContext } from "@/lib/learning/lens-interaction-context";
 import {
-  draftToConvexLensAttempt,
+  formatLensReferenceAttr,
+  lensVisibleInteractionContext,
+} from "@/lib/learning/lens-interaction-context";
+import {
   emptyLensModelDraft,
   hasCompletedLensModel,
   lensModelMissingLabels,
+  visibleLensStudentRays,
 } from "@/lib/learning/lens-model";
 import {
   isLensRevisiting,
@@ -382,7 +385,7 @@ export function ConvexLensOpticalBenchLab() {
       : aiOffDraft.step;
 
   const physicsState = lensPreviewPhysics(session);
-  const constructed = draftToConvexLensAttempt(modelDraft);
+  const studentRays = isModel ? visibleLensStudentRays(modelDraft) : [];
   const hideScene = isExam || isAiOff || isComplete || isTransfer;
   const scene = hideScene ? undefined : (
     <div className="w-full max-w-3xl space-y-3">
@@ -391,7 +394,7 @@ export function ConvexLensOpticalBenchLab() {
         frozen={isModel}
         showOfficialImage={!isModel}
         hideOfficialRays
-        studentRays={isModel ? constructed?.rays : undefined}
+        studentRays={studentRays}
         caption={
           isModel
             ? LENS_COPY.modelFrozenCaption
@@ -753,11 +756,13 @@ export function ConvexLensOpticalBenchLab() {
   const interaction = lensVisibleInteractionContext(displayStage, {
     constructionStep: modelDraft.constructionStep,
     revisiting,
+    modelDraft,
   });
   const helpIntents = availableLensHelpIntents(displayStage, {
     constructionStep: modelDraft.constructionStep,
     revisiting,
     interaction,
+    modelDraft,
   });
   const help = lensHelpState(session, displayStage);
   const activeHelpIntent =
@@ -776,7 +781,8 @@ export function ConvexLensOpticalBenchLab() {
         .filter((item) => item.available)
         .map((item) => item.id)
         .join(",")}
-      data-references={interaction.references.map((item) => item.id).join(",")}
+      data-references={formatLensReferenceAttr(interaction)}
+      data-student-ray-count={String(studentRays.length)}
     >
       {revisiting && viewingStage ? (
         <LensReviewBanner
@@ -798,8 +804,11 @@ export function ConvexLensOpticalBenchLab() {
         <LensHelpPanel
           intents={helpIntents}
           intentId={activeHelpIntent}
+          interaction={interaction}
           prompts={
-            activeHelpIntent ? lensHelpPrompts(activeHelpIntent, help.revealed) : []
+            activeHelpIntent
+              ? lensHelpPrompts(activeHelpIntent, help.revealed, interaction)
+              : []
           }
           onSelectIntent={selectHelpIntent}
           onRevealNext={revealHelpNext}

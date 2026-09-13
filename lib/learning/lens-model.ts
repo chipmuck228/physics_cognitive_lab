@@ -60,7 +60,7 @@ export function emptyLensModelDraft(): LensModelDraft {
   };
 }
 
-function asRay(draft: LensRayDraft): CanonicalRayChoice | null {
+export function asCompletedLensRay(draft: LensRayDraft): CanonicalRayChoice | null {
   if (!draft.kind || !draft.beforeLens || !draft.afterLens || !draft.incidentPath) {
     return null;
   }
@@ -72,11 +72,24 @@ function asRay(draft: LensRayDraft): CanonicalRayChoice | null {
   };
 }
 
+export function visibleLensStudentRays(draft: LensModelDraft): CanonicalRayChoice[] {
+  const rays = [draft.rayA, draft.rayB]
+    .map((ray) => asCompletedLensRay(ray))
+    .filter((ray): ray is CanonicalRayChoice => ray !== null);
+  if (draft.includeOptionalFocal) {
+    const extra = asCompletedLensRay(draft.optionalFocal);
+    if (extra) {
+      rays.push(extra);
+    }
+  }
+  return rays;
+}
+
 export function draftToConvexLensAttempt(
   draft: LensModelDraft,
 ): ConvexLensModelAttempt | null {
-  const rayA = asRay(draft.rayA);
-  const rayB = asRay(draft.rayB);
+  const rayA = asCompletedLensRay(draft.rayA);
+  const rayB = asCompletedLensRay(draft.rayB);
   if (
     !draft.objectStation ||
     !rayA ||
@@ -92,7 +105,7 @@ export function draftToConvexLensAttempt(
   }
   const rays: CanonicalRayChoice[] = [rayA, rayB];
   if (draft.includeOptionalFocal) {
-    const extra = asRay(draft.optionalFocal);
+    const extra = asCompletedLensRay(draft.optionalFocal);
     if (extra) {
       rays.push(extra);
     }

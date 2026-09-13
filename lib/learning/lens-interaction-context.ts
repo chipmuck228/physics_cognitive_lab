@@ -1,3 +1,4 @@
+import { visibleLensStudentRays, type LensModelDraft } from "@/lib/learning/lens-model";
 import { LearningStage } from "@/types/learning";
 
 export type LensCapabilityId =
@@ -31,6 +32,8 @@ export type LensReferenceId =
   | "new-situation"
   | "exam-stem";
 
+export type LensReferenceKind = "rendered" | "textual" | "constructed";
+
 export interface LensVisibleCapability {
   id: LensCapabilityId;
   available: boolean;
@@ -38,6 +41,7 @@ export interface LensVisibleCapability {
 
 export interface LensVisibleReference {
   id: LensReferenceId;
+  kind: LensReferenceKind;
 }
 
 export interface LensVisibleInteractionContext {
@@ -47,9 +51,24 @@ export interface LensVisibleInteractionContext {
   references: LensVisibleReference[];
 }
 
+export interface LensRenderedSurface {
+  benchVisible: boolean;
+  officialImageVisible: boolean;
+  studentRayCount: number;
+  predictionTextVisible: boolean;
+  transferScenarioVisible: boolean;
+  examStemVisible: boolean;
+  modelRayEditorVisible: boolean;
+  modelImageQuestionVisible: boolean;
+  explainMeetingQuestionVisible: boolean;
+  transferMeetingQuestionVisible: boolean;
+}
+
 export interface LensInteractionLookup {
   constructionStep?: number;
   revisiting?: boolean;
+  modelDraft?: LensModelDraft;
+  surface?: LensRenderedSurface;
 }
 
 export function lensModelSubstep(constructionStep = 1): string {
@@ -57,18 +76,49 @@ export function lensModelSubstep(constructionStep = 1): string {
   return `construction-${step}`;
 }
 
+export function lensRenderedSurfaceFor(
+  stage: LearningStage,
+  lookup: LensInteractionLookup = {},
+): LensRenderedSurface {
+  if (lookup.surface) {
+    return lookup.surface;
+  }
+  const step = lookup.constructionStep ?? lookup.modelDraft?.constructionStep ?? 1;
+  const hideBench =
+    stage === LearningStage.EXAM ||
+    stage === LearningStage.AI_OFF ||
+    stage === LearningStage.COMPLETE ||
+    stage === LearningStage.TRANSFER;
+  const isModel = stage === LearningStage.MODEL;
+  const studentRayCount =
+    isModel && lookup.modelDraft ? visibleLensStudentRays(lookup.modelDraft).length : 0;
+  return {
+    benchVisible: !hideBench && stage !== LearningStage.ENTRY,
+    officialImageVisible: !hideBench && !isModel && stage !== LearningStage.ENTRY,
+    studentRayCount,
+    predictionTextVisible: stage === LearningStage.EXPERIMENT,
+    transferScenarioVisible: stage === LearningStage.TRANSFER,
+    examStemVisible: stage === LearningStage.EXAM,
+    modelRayEditorVisible: isModel && step >= 2,
+    modelImageQuestionVisible: isModel && step >= 5,
+    explainMeetingQuestionVisible: stage === LearningStage.EXPLAIN,
+    transferMeetingQuestionVisible: stage === LearningStage.TRANSFER,
+  };
+}
+
 export function lensVisibleInteractionContext(
   stage: LearningStage,
   lookup: LensInteractionLookup = {},
 ): LensVisibleInteractionContext {
   const revisiting = lookup.revisiting === true;
-  const constructionStep = lookup.constructionStep ?? 1;
+  const constructionStep = lookup.constructionStep ?? lookup.modelDraft?.constructionStep ?? 1;
+  const surface = lensRenderedSurfaceFor(stage, { ...lookup, constructionStep });
   const substep = stage === LearningStage.MODEL ? lensModelSubstep(constructionStep) : undefined;
   return {
     stage,
     substep,
-    capabilities: capabilitiesFor(stage, constructionStep, revisiting),
-    references: referencesFor(stage, constructionStep).map((id) => ({ id })),
+    capabilities: capabilitiesFor(stage, revisiting),
+    references: referencesFromSurface(surface),
   };
 }
 
@@ -86,15 +136,24 @@ export function lensContextHasReference(
   return context.references.some((item) => item.id === id);
 }
 
+export function lensContextLookableReference(
+  context: LensVisibleInteractionContext,
+  id: LensReferenceId,
+): boolean {
+  return context.references.some(
+    (item) => item.id === id && (item.kind === "rendered" || item.kind === "constructed"),
+  );
+}
+
+export function formatLensReferenceAttr(context: LensVisibleInteractionContext): string {
+  return context.references.map((item) => `${item.id}:${item.kind}`).join(",");
+}
+
 function cap(id: LensCapabilityId, available: boolean): LensVisibleCapability {
   return { id, available };
 }
 
-function capabilitiesFor(
-  stage: LearningStage,
-  _constructionStep: number,
-  revisiting: boolean,
-): LensVisibleCapability[] {
+function capabilitiesFor(stage: LearningStage, revisiting: boolean): LensVisibleCapability[] {
   const help = cap("request-help", !revisiting && helpAllowed(stage));
   const ret = cap("return-to-progress", revisiting);
   if (stage === LearningStage.OBSERVE) {
@@ -149,46 +208,59 @@ function helpAllowed(stage: LearningStage): boolean {
   );
 }
 
-function referencesFor(stage: LearningStage, constructionStep: number): LensReferenceId[] {
-  const bench: LensReferenceId[] = ["object", "lens", "screen", "f-marks", "visible-image-state"];
-  if (stage === LearningStage.OBSERVE || stage === LearningStage.DESCRIBE) {
-    return bench;
+function addRef(
+  refs: LensVisibleReference[],
+  id: LensReferenceId,
+  kind: LensReferenceKind,
+) {
+  const better =
+    kind === "constructed" ? 3 : kind === "rendered" ? 2 : 1;
+  const existing = refs.find((item) => item.id === id);
+  if (!existing) {
+    refs.push({ id, kind });
+    return;
   }
-  if (stage === LearningStage.PREDICT) {
-    return bench;
+  const current = existing.kind === "constructed" ? 3 : existing.kind === "rendered" ? 2 : 1;
+  if (better > current) {
+    existing.kind = kind;
   }
-  if (stage === LearningStage.EXPERIMENT) {
-    return [...bench, "committed-prediction"];
+}
+
+function referencesFromSurface(surface: LensRenderedSurface): LensVisibleReference[] {
+  const refs: LensVisibleReference[] = [];
+  if (surface.benchVisible) {
+    addRef(refs, "object", "rendered");
+    addRef(refs, "lens", "rendered");
+    addRef(refs, "screen", "rendered");
+    addRef(refs, "f-marks", "rendered");
   }
-  if (stage === LearningStage.EXPLAIN) {
-    return [...bench, "ray", "meeting-point"];
+  if (surface.officialImageVisible) {
+    addRef(refs, "visible-image-state", "rendered");
   }
-  if (stage === LearningStage.MODEL) {
-    const refs: LensReferenceId[] = ["object", "lens", "f-marks"];
-    if (constructionStep >= 2) {
-      refs.push("ray");
-    }
-    if (constructionStep >= 4) {
-      refs.push("meeting-point");
-    }
-    if (constructionStep >= 5) {
-      refs.push("image-consequence");
-    }
-    return refs;
+  if (surface.studentRayCount > 0) {
+    addRef(refs, "ray", "constructed");
   }
-  if (stage === LearningStage.TRANSFER) {
-    return [
-      "new-situation",
-      "object",
-      "lens",
-      "f-marks",
-      "ray",
-      "meeting-point",
-      "image-consequence",
-    ];
+  if (surface.studentRayCount >= 2) {
+    addRef(refs, "meeting-point", "constructed");
   }
-  if (stage === LearningStage.EXAM) {
-    return ["exam-stem"];
+  if (surface.modelRayEditorVisible || surface.explainMeetingQuestionVisible || surface.transferMeetingQuestionVisible) {
+    addRef(refs, "ray", "textual");
   }
-  return [];
+  if (surface.explainMeetingQuestionVisible || surface.transferMeetingQuestionVisible || surface.modelRayEditorVisible) {
+    addRef(refs, "meeting-point", "textual");
+  }
+  if (surface.predictionTextVisible) {
+    addRef(refs, "committed-prediction", "textual");
+  }
+  if (surface.modelImageQuestionVisible) {
+    addRef(refs, "image-consequence", "textual");
+  }
+  if (surface.transferScenarioVisible) {
+    addRef(refs, "new-situation", "textual");
+    addRef(refs, "image-consequence", "textual");
+  }
+  if (surface.examStemVisible) {
+    addRef(refs, "exam-stem", "textual");
+  }
+  return refs;
 }

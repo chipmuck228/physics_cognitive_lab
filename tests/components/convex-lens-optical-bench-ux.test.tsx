@@ -277,8 +277,8 @@ describe("Scene 07 learner UX chrome", () => {
     });
     render(<ConvexLensOpticalBenchLab />);
     const context = screen.getByTestId("lens-interaction-context");
-    expect(context.getAttribute("data-references")).toContain("screen");
-    expect(context.getAttribute("data-references")).not.toContain("ray");
+    expect(context.getAttribute("data-references")).toContain("screen:rendered");
+    expect(context.getAttribute("data-references") ?? "").not.toMatch(/ray:/);
     expect(context.getAttribute("data-capabilities")).toContain("move-screen");
     expect(screen.getByTestId("lens-cognitive-trace")).toBeInTheDocument();
   });
@@ -292,10 +292,71 @@ describe("Scene 07 learner UX chrome", () => {
       },
     });
     render(<ConvexLensOpticalBenchLab />);
-    expect(screen.getByTestId("lens-interaction-context").getAttribute("data-references")).toContain(
-      "ray",
+    const refs = screen.getByTestId("lens-interaction-context").getAttribute("data-references") ?? "";
+    expect(refs).toContain("ray:textual");
+    expect(refs).not.toContain("ray:constructed");
+    expect(screen.getByTestId("lens-interaction-context")).toHaveAttribute(
+      "data-student-ray-count",
+      "0",
     );
+    expect(screen.queryByTestId("ray-parallel-axis")).not.toBeInTheDocument();
     expect(screen.getByTestId("lens-help-how-rays")).toBeInTheDocument();
+  });
+
+  it("EXPLAIN help cannot say look at two rays when the bench hides rays", async () => {
+    const user = userEvent.setup();
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-explain-help", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.EXPLAIN,
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    expect(screen.getByTestId("convex-lens-optical-bench")).toBeInTheDocument();
+    expect(screen.queryByTestId("ray-parallel-axis")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("ray-through-center")).not.toBeInTheDocument();
+    expect(screen.getByTestId("lens-interaction-context")).toHaveAttribute(
+      "data-student-ray-count",
+      "0",
+    );
+    await user.click(screen.getByTestId("lens-help-how-meeting"));
+    expect(screen.queryByText(/先看两条光线/)).not.toBeInTheDocument();
+    expect(screen.getByText(/先问自己：出射以后/)).toBeInTheDocument();
+  });
+
+  it("TRANSFER help cannot say look at rays when no bench renders", async () => {
+    const user = userEvent.setup();
+    replaceSession({
+      ...modelSession(),
+      stage: LearningStage.TRANSFER,
+      events: [
+        ...modelSession().events,
+        { type: "stage_entered" as const, timestamp: "t7", stage: LearningStage.TRANSFER },
+      ],
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    expect(screen.queryByTestId("convex-lens-optical-bench")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("lens-help-how-image"));
+    expect(screen.queryByText(/先看两条光线/)).not.toBeInTheDocument();
+    expect(screen.getByText(/不要去找图上还不存在的光线/)).toBeInTheDocument();
+  });
+
+  it("MODEL look-at-ray help appears only after learner rays are on the bench", async () => {
+    const user = userEvent.setup();
+    replaceSession({
+      ...modelSession(),
+      sceneData: {
+        ...modelSession().sceneData,
+        modelDraft: { ...completeLensModelDraft(), constructionStep: 4 },
+      },
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    expect(screen.getByTestId("lens-interaction-context")).toHaveAttribute(
+      "data-student-ray-count",
+      "2",
+    );
+    expect(screen.getByTestId("ray-parallel-axis")).toBeInTheDocument();
+    expect(screen.getByTestId("ray-through-center")).toBeInTheDocument();
+    await user.click(screen.getByTestId("lens-help-how-meeting"));
+    expect(screen.getByText(/先看两条光线过透镜以后/)).toBeInTheDocument();
   });
 
   it("cognitive trace does not mutate evidence when opened", async () => {

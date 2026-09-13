@@ -187,8 +187,10 @@ export function useConvexLensLearningSession() {
       if (isLensRevisiting(current) || current.stage === LearningStage.AI_OFF) {
         return current;
       }
+      const draft = lensModelDraft(current);
       const context = {
-        constructionStep: lensModelDraft(current).constructionStep,
+        constructionStep: draft.constructionStep,
+        modelDraft: draft,
       };
       if (!availableLensHelpIntents(current.stage, context).includes(intentId)) {
         return current;
@@ -202,8 +204,10 @@ export function useConvexLensLearningSession() {
       if (isLensRevisiting(current) || current.stage === LearningStage.AI_OFF) {
         return current;
       }
+      const draft = lensModelDraft(current);
       const context = {
-        constructionStep: lensModelDraft(current).constructionStep,
+        constructionStep: draft.constructionStep,
+        modelDraft: draft,
       };
       return applyLensHelpNext(current, current.stage, context);
     }, CONVEX_LENS_SCENE_ID);

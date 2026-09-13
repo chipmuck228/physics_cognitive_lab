@@ -164,14 +164,21 @@ ENTRY, AI_OFF, and COMPLETE use their own UPLP-facing copy. AI_OFF must not add 
 Help and framing are bound to more than operable controls.
 
 A **capability** is something the learner can operate or do now.  
-A **reference** is a learner-visible object or representation that may safely be mentioned now.
+A **reference** is something on the current learner-visible surface — not merely a domain concept that belongs to the stage.
 
 ```text
 VisibleInteractionContext
   capabilities   what the learner can operate / do now
-  references     what learner-visible objects / representations
-                 may safely be mentioned now
+  references     { id, kind: rendered | textual | constructed }
 ```
+
+A declared reference is not enough. The context must correspond to what the UI actually renders, what the task text shows, or what the learner has constructed onto the screen.
+
+Reference kinds (visibility only — not Physics Truth):
+
+- `rendered` — physically drawn on the current screen (bench object, screen, official image overlay)
+- `textual` — present as task / question / scenario language, not as a drawn representation
+- `constructed` — the learner’s own representation is now on screen (for example student rays)
 
 Examples of capability *kinds* (neutral):
 
@@ -191,7 +198,7 @@ Examples of reference *kinds* (visibility only — not Physics Truth):
 - a force arrow, cart motion, temperature display
 - a station mark the student can currently see
 
-`VisibleReference` describes **whether that cue is on screen / mentionable**. It must not store official values, formulas, or evaluator truth.
+`VisibleReference` describes **surface truth**. It must not store official values, formulas, or evaluator truth. Same UPLP stage does not authorize the same references.
 
 Exact TypeScript shape is not mandated. A Scene-local context that preserves this split is enough.
 
@@ -200,8 +207,10 @@ Exact TypeScript shape is not mandated. A Scene-local context that preserves thi
 1. If a control is enabled, it must produce a visible response (UI-04).  
 2. If an action is illegal in the current mode (review vs work), hide it or show a blocked reason. Never silent no-op.  
 3. A help hint must not refer to an action, control, object, representation, or physical cue that is unavailable or invisible in the current `VisibleInteractionContext`.  
-4. Help may mention a visible reference even when that object is not an operable control (for example a screen, image, or ray that is on the bench).  
-5. AI_OFF: `request-help` is absent; the context still exists for framing, not for help.
+4. Help may discuss a **textual** reference as a task concept.  
+5. A help prompt that tells the learner to **look at** something (“看两条光线…”, “看交点…”) may only use a `rendered` or `constructed` reference. A question that merely mentions “光线” is not sufficient.  
+6. Do not render official protected answers merely to make a look-at hint legal.  
+7. AI_OFF: `request-help` is absent; the context still exists for framing, not for help.
 
 ---
 
@@ -452,7 +461,7 @@ A Scene that claims runtime v1 compliance MUST have tests for:
 
 1. Back / revisit / return does not change Progress or Evidence.  
 2. Review physics (if any) does not write authoritative Physics.  
-3. Help intents and hint text ⊆ current `VisibleInteractionContext` (capabilities **and** references).  
+3. Help intents and hint text ⊆ current `VisibleInteractionContext`. Context must match the rendered UI, not a stage-only declaration. Look-at language requires a rendered or constructed reference.  
 4. AI_OFF has zero help / Tutor chrome and zero Tutor requests.  
 5. Uncommitted draft survives help / review-preview session writes.  
 6. Enabled control never silent-no-ops.  
@@ -538,7 +547,8 @@ interface VisibleCapability {
 
 interface VisibleReference {
   id: OpaqueId;
-  // visibility / mentionability only — no official value, formula, or Physics Truth
+  kind: "rendered" | "textual" | "constructed";
+  // surface truth only — no official value, formula, or Physics Truth
 }
 
 interface VisibleInteractionContext {

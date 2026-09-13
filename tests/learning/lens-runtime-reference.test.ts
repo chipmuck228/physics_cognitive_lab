@@ -14,10 +14,18 @@ import {
   availableLensHelpIntents,
   isLensHelpTextLegal,
   lensHelpAllowed,
+  lensHelpLadder,
   lensHelpPrompts,
 } from "@/lib/learning/lens-help-intents";
-import { lensVisibleInteractionContext } from "@/lib/learning/lens-interaction-context";
-import { completeLensModelDraft, draftToConvexLensAttempt } from "@/lib/learning/lens-model";
+import {
+  lensContextLookableReference,
+  lensVisibleInteractionContext,
+} from "@/lib/learning/lens-interaction-context";
+import {
+  completeLensModelDraft,
+  draftToConvexLensAttempt,
+  emptyLensModelDraft,
+} from "@/lib/learning/lens-model";
 import {
   applyLensGoBack,
   applyLensReturnToProgress,
@@ -137,7 +145,9 @@ describe("Scene 07 reference state split", () => {
 });
 
 describe("Scene 07 VisibleInteractionContext help binding", () => {
-  it("7-9. OBSERVE cannot discuss rays; MODEL ray substep may", () => {
+  const lookAtRays = "先看两条光线过透镜以后是聚到一起，还是散开。";
+
+  it("7-9. OBSERVE cannot discuss rays; MODEL editor may mention rays textually", () => {
     const observe = lensVisibleInteractionContext(LearningStage.OBSERVE);
     expect(observe.references.map((item) => item.id)).not.toContain("ray");
     expect(availableLensHelpIntents(LearningStage.OBSERVE, { interaction: observe })).toEqual([
@@ -145,28 +155,58 @@ describe("Scene 07 VisibleInteractionContext help binding", () => {
       "where-look",
     ]);
     expect(availableLensHelpIntents(LearningStage.OBSERVE)).not.toContain("how-rays");
-    for (const line of lensHelpPrompts("where-look", 4)) {
+    for (const line of lensHelpPrompts("where-look", 4, observe)) {
       expect(isLensHelpTextLegal(line, observe)).toBe(true);
       expect(line).not.toMatch(/光线/);
     }
 
     const station = lensVisibleInteractionContext(LearningStage.MODEL, {
       constructionStep: 1,
+      modelDraft: emptyLensModelDraft(),
     });
-    expect(station.references.map((item) => item.id)).not.toContain("ray");
+    expect(station.references.some((item) => item.id === "ray")).toBe(false);
     expect(availableLensHelpIntents(LearningStage.MODEL, { constructionStep: 1 })).toEqual([
       "what-now",
     ]);
 
-    const rays = lensVisibleInteractionContext(LearningStage.MODEL, {
+    const editor = lensVisibleInteractionContext(LearningStage.MODEL, {
       constructionStep: 2,
+      modelDraft: { ...emptyLensModelDraft(), constructionStep: 2 },
     });
-    expect(rays.references.map((item) => item.id)).toContain("ray");
+    expect(editor.references).toContainEqual({ id: "ray", kind: "textual" });
+    expect(lensContextLookableReference(editor, "ray")).toBe(false);
     expect(
-      availableLensHelpIntents(LearningStage.MODEL, { constructionStep: 2, interaction: rays }),
+      availableLensHelpIntents(LearningStage.MODEL, { constructionStep: 2, interaction: editor }),
     ).toContain("how-rays");
-    expect(isLensHelpTextLegal("先选一条你能说清楚的光线。", rays)).toBe(true);
+    expect(isLensHelpTextLegal("先选一条你能说清楚的光线。", editor)).toBe(true);
+    expect(isLensHelpTextLegal(lookAtRays, editor)).toBe(false);
     expect(isLensHelpTextLegal("先选一条你能说清楚的光线。", observe)).toBe(false);
+  });
+
+  it("EXPLAIN cannot use a look-at-two-rays hint when no rays render", () => {
+    const explain = lensVisibleInteractionContext(LearningStage.EXPLAIN);
+    expect(explain.references.find((item) => item.id === "ray")?.kind).toBe("textual");
+    expect(lensContextLookableReference(explain, "ray")).toBe(false);
+    expect(isLensHelpTextLegal(lookAtRays, explain)).toBe(false);
+    expect(lensHelpLadder("how-meeting", explain).join("\n")).not.toMatch(/先看两条光线/);
+  });
+
+  it("TRANSFER cannot use a rendered-ray observation hint", () => {
+    const transfer = lensVisibleInteractionContext(LearningStage.TRANSFER);
+    expect(transfer.references.find((item) => item.id === "ray")?.kind).toBe("textual");
+    expect(lensContextLookableReference(transfer, "ray")).toBe(false);
+    expect(isLensHelpTextLegal(lookAtRays, transfer)).toBe(false);
+    expect(lensHelpLadder("how-image", transfer).join("\n")).not.toMatch(/先看两条光线/);
+  });
+
+  it("MODEL look-at-ray help is legal only when learner rays are constructed", () => {
+    const withRays = lensVisibleInteractionContext(LearningStage.MODEL, {
+      constructionStep: 4,
+      modelDraft: { ...completeLensModelDraft(), constructionStep: 4 },
+    });
+    expect(lensContextLookableReference(withRays, "ray")).toBe(true);
+    expect(isLensHelpTextLegal(lookAtRays, withRays)).toBe(true);
+    expect(lensHelpLadder("how-meeting", withRays)[0]).toMatch(/先看两条光线/);
   });
 
   it("11. AI_OFF has zero help", () => {

@@ -5,11 +5,13 @@ import {
   nextLensHelpPrompt,
   type LensHelpIntentId,
 } from "@/lib/learning/lens-help-intents";
+import type { LensVisibleInteractionContext } from "@/lib/learning/lens-interaction-context";
 
 interface LensHelpPanelProps {
   intents: readonly LensHelpIntentId[];
   intentId: LensHelpIntentId | "";
   prompts: string[];
+  interaction?: LensVisibleInteractionContext;
   onSelectIntent: (intentId: LensHelpIntentId) => void;
   onRevealNext: () => void;
 }
@@ -18,10 +20,13 @@ export function LensHelpPanel({
   intents,
   intentId,
   prompts,
+  interaction,
   onSelectIntent,
   onRevealNext,
 }: LensHelpPanelProps) {
-  const canReveal = intentId ? Boolean(nextLensHelpPrompt(intentId, prompts.length)) : false;
+  const canReveal = intentId
+    ? Boolean(nextLensHelpPrompt(intentId, prompts.length, interaction))
+    : false;
   return (
     <div className="space-y-3" data-testid="lens-help-panel">
       <p className="text-sm font-medium">需要帮忙？先说卡在哪。</p>

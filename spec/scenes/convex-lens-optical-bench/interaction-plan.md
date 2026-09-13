@@ -327,7 +327,9 @@ Visible capabilities
   - request-help (working-path)
 
 Visible references  
-  object, lens, screen, visible-image-state, ray, meeting-point
+  rendered: object, lens, screen, f-marks, visible-image-state  
+  textual: ray, meeting-point (question language only)  
+  constructed: none — official rays stay hidden; do not draw them to satisfy Help
 
 Student action  
   选会聚碎片，再写一段说明。
@@ -345,8 +347,8 @@ Feedback mapping
   missing fragments / text → missing
 
 Help intents  
-  what-now, how-meeting, how-say  
-  Rays are mentionable references here; construct-ray is not a capability.
+  what-now, how-meeting (textual ladder), how-say  
+  Must not say “先看两条光线” — no rays are rendered.
 
 Revisit behavior  
   Inspect last explanation. No commit.
@@ -422,15 +424,15 @@ Protected answer / leak boundary
 
 | Step | Focus | Extra capabilities | Extra references | Help intents |
 |---|---|---|---|---|
-| 1 station | 物体相对 F / 2F | construct-relation | object, lens, f-marks | what-now |
-| 2 ray A | 第一条必做光线 | construct-relation | + ray | what-now, how-rays |
-| 3 ray B | 第二条必做光线 | construct-relation | + ray | what-now, how-rays |
-| 4 meeting | 光线怎样相遇 | construct-relation | + ray, meeting-point | how-meeting |
-| 5 image | 像会怎样 | construct-relation | + ray, meeting-point, image-consequence | how-image |
-| 6 bind | 用一句话连起来 | author-text | + ray, meeting-point, image-consequence | how-say |
-| 7 review | 检查后再提交 | construct-relation | + ray, meeting-point, image-consequence | what-now |
+| 1 station | 物体相对 F / 2F | construct-relation | rendered bench marks | what-now |
+| 2 ray A | 第一条必做光线 | construct-relation | ray textual (editor); constructed only if that ray is drawn | what-now, how-rays |
+| 3 ray B | 第二条必做光线 | construct-relation | same | what-now, how-rays |
+| 4 meeting | 光线怎样相遇 | construct-relation | look-at meeting only if ≥2 student rays are on the bench | how-meeting |
+| 5 image | 像会怎样 | construct-relation | look-at rays only if student rays are on the bench | how-image |
+| 6 bind | 用一句话连起来 | author-text | textual / constructed as actually shown | how-say |
+| 7 review | 检查后再提交 | construct-relation | constructed rays if present | what-now |
 
-Official image overlay stays off during MODEL. Student rays may appear only after the student has assembled them.
+Official image overlay stays off during MODEL. Official rays stay hidden. Student rays appear only after the learner has assembled them. Look-at help requires those constructed rays.
 
 ---
 
@@ -453,7 +455,8 @@ Visible capabilities
   - request-help (working-path)
 
 Visible references  
-  new-situation, object, lens, f-marks, ray, meeting-point, image-consequence
+  textual: new-situation, ray, meeting-point, image-consequence  
+  rendered/constructed: none — no optical bench on TRANSFER
 
 Student action  
   选出物距 / 会聚 / 像的后果，再写理由。
@@ -473,7 +476,8 @@ Feedback mapping
   incomplete → missing / think_again
 
 Help intents  
-  what-now, how-image, how-say
+  what-now, how-image (textual ladder), how-say  
+  Must not say “看这些光线” — no rays render.
 
 Revisit behavior  
   Inspect last attempt. No commit.

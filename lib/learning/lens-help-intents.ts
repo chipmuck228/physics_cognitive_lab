@@ -1,6 +1,7 @@
 import {
   lensContextHasCapability,
   lensContextHasReference,
+  lensContextLookableReference,
   lensVisibleInteractionContext,
   type LensCapabilityId,
   type LensReferenceId,
@@ -28,6 +29,7 @@ export interface LensHelpContext {
   constructionStep?: number;
   revisiting?: boolean;
   interaction?: LensVisibleInteractionContext;
+  modelDraft?: import("@/lib/learning/lens-model").LensModelDraft;
 }
 
 interface LensHelpBinding {
@@ -120,6 +122,23 @@ const LADDERS: Record<LensHelpIntentId, readonly string[]> = {
   ],
 };
 
+const HOW_MEETING_TEXTUAL = [
+  "先问自己：出射以后，光线是聚到一起，还是散开。",
+  "把“真的交在一点”和“只有延长线相交”并排放。",
+  "先问：交点是在前进方向上，还是只有反方向延长才有？",
+  "用自己的话写会聚方式，不要只背表。",
+] as const;
+
+const HOW_IMAGE_TEXTUAL = [
+  "先问这个情境里，会聚方式会怎样，不要去找图上还不存在的光线。",
+  COMPARE,
+  "像在哪一侧、能不能接到，要跟会聚方式放在一起想。",
+  EXPRESS,
+] as const;
+
+const LOOK_AT_RAY = /看(?:两条)?光线|先看两条/;
+const LOOK_AT_MEETING = /看交点|看.*相遇/;
+
 export function lensHelpAllowed(stage: LearningStage): boolean {
   return (
     stage !== LearningStage.AI_OFF &&
@@ -137,8 +156,23 @@ export function resolveLensHelpContext(
     lensVisibleInteractionContext(stage, {
       constructionStep: lookup.constructionStep,
       revisiting: lookup.revisiting,
+      modelDraft: lookup.modelDraft,
     })
   );
+}
+
+export function lensHelpLadder(
+  intentId: LensHelpIntentId,
+  context?: LensVisibleInteractionContext,
+): readonly string[] {
+  const canLookAtRays = context ? lensContextLookableReference(context, "ray") : false;
+  if (intentId === "how-meeting" && !canLookAtRays) {
+    return HOW_MEETING_TEXTUAL;
+  }
+  if (intentId === "how-image" && !canLookAtRays) {
+    return HOW_IMAGE_TEXTUAL;
+  }
+  return LADDERS[intentId];
 }
 
 export function availableLensHelpIntents(
@@ -219,13 +253,19 @@ export function isLensHelpIntentLegal(
   if (!binding.references.every((id) => lensContextHasReference(context, id))) {
     return false;
   }
-  return LADDERS[intentId].every((line) => isLensHelpTextLegal(line, context));
+  return lensHelpLadder(intentId, context).every((line) => isLensHelpTextLegal(line, context));
 }
 
 export function isLensHelpTextLegal(
   text: string,
   context: LensVisibleInteractionContext,
 ): boolean {
+  if (LOOK_AT_RAY.test(text) && !lensContextLookableReference(context, "ray")) {
+    return false;
+  }
+  if (LOOK_AT_MEETING.test(text) && !lensContextLookableReference(context, "meeting-point")) {
+    return false;
+  }
   for (const [referenceId, tokens] of Object.entries(REFERENCE_TOKENS) as [
     LensReferenceId,
     readonly string[],
@@ -279,15 +319,20 @@ export function withLensHelpState(
   return { ...sceneData, [LENS_HELP_KEY]: current };
 }
 
-export function lensHelpPrompts(intentId: LensHelpIntentId, revealed: number): string[] {
-  return LADDERS[intentId].slice(0, Math.max(0, revealed));
+export function lensHelpPrompts(
+  intentId: LensHelpIntentId,
+  revealed: number,
+  context?: LensVisibleInteractionContext,
+): string[] {
+  return lensHelpLadder(intentId, context).slice(0, Math.max(0, revealed));
 }
 
 export function nextLensHelpPrompt(
   intentId: LensHelpIntentId,
   revealed: number,
+  context?: LensVisibleInteractionContext,
 ): string | null {
-  return LADDERS[intentId][revealed] ?? null;
+  return lensHelpLadder(intentId, context)[revealed] ?? null;
 }
 
 export function applyLensHelpIntent(
@@ -323,7 +368,7 @@ export function applyLensHelpNext(
   if (!availableLensHelpIntents(stage, context).includes(current.intentId)) {
     return session;
   }
-  if (!nextLensHelpPrompt(current.intentId, current.revealed)) {
+  if (!nextLensHelpPrompt(current.intentId, current.revealed, resolveLensHelpContext(stage, context))) {
     return session;
   }
   return {
