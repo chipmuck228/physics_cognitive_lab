@@ -17,6 +17,9 @@
 10. `student-ui-interaction-contract.md` — student-facing interaction quality. Does not own UPLP, L1–L6, Physics Model, evidence semantics, or physical representation identity.
 11. `physics-representation-integrity-contract.md` — whether student-visible physics labels, units, and relations preserve canonical quantity identity. Does not own Physics Truth calculations, UPLP, L1–L6, evaluators, or interaction chrome. Scene 05 PRI-05-01 is the worked example. This contract does not authorize an immediate Scene 01–05 full audit.
 12. `architecture/interaction-shell-contract.md` — whether reusable interaction chrome may absorb domain semantics. Owns adoption/extraction freeze for generic shells. Does not own UPLP stages, Scene DSL, evidence, PRI, or student-facing copy quality. Status: `SUFFICIENT_EVIDENCE_TO_FREEZE`.
+13. `architecture/learner-interaction-runtime-contract.md` — HOW those architecture owners appear and behave in the learner UI (framing, VisibleInteractionContext, response chrome, help binding, revisit, cognitive trace). Does not own physics correctness, L-levels, evaluators, Scene DSL, or Interaction Shell freeze. Scene 01–07 are not claimed runtime-v1 compliant as a set.
+14. `architecture/learner-interaction-state-contract.md` — Progress ≠ Draft ≠ View ≠ Review ≠ Evidence ≠ Physics. Evidence and Physics stay with their existing owners.
+15. `architecture/learner-interaction-design-template.md` — pre-React Interaction Plan worksheet when implementing or rebuilding a Scene. Not Evidence Claim Design and not a Physics Model.
 
 Learner-observation documents are not architecture owners. `learner-validation/learner-validation-prep.md` (D050) owns WHY/WHAT for one informal Grade-9 observation of Scene 03. `learner-validation/first-learner-observation-guide.md` (D051) owns HOW to execute that first observation. They must not redefine UPLP stages, L1–L6, Schema lifecycle, Quality Review gates, or Evidence Design rules. They do not mark any model `validated`.
 
@@ -126,6 +129,7 @@ Production Scene lives on the Universal Runtime (`app/scenes/convex-lens-optical
 - `evidence-claim-design.md` — L4/L5/L6 claims; construction ≠ table.
 - `readiness.md` — information gate `IMPLEMENTATION_READY`.
 - `physical-representation-plan.md` — design-time PRI locks.
+- `interaction-plan.md` — Scene 07 learner-interaction plan (first reference consumer). Not a universal runtime and not learner validation.
 
 Primary model: `convex-lens-imaging`  
 Secondary models: none
@@ -152,6 +156,7 @@ The canonical model definition lives in `content/physics-models/convex-lens-imag
 - How implementation evidence must justify a cognitive claim is owned by `evidence-design-contract.md`. Quality Review uses that contract; it does not duplicate the evaluator-design rules.
 - Whether student-visible physics representations preserve quantity identity is owned by `physics-representation-integrity-contract.md`. Correct runtime numbers do not imply correct representation. No immediate full audit of Scene 01–05.
 - Whether reusable interaction chrome may absorb domain semantics is owned by `architecture/interaction-shell-contract.md`. Repeated React chrome does not justify widening `sceneDslV01Schema`. Do not extract more shells merely because duplication exists.
+- How learner-facing navigation, drafts, framing, help, feedback chrome, and traces behave is owned by `architecture/learner-interaction-runtime-contract.md` and `architecture/learner-interaction-state-contract.md`. They do not take Physics Truth, evaluators, L-levels, or Scene DSL. Scene 01–07 are not claimed runtime-v1 compliant as a set.
 - Scene 01 and Scene 02 documents are explicitly scoped as instances/configuration, not architecture sources of truth.
 - Scene 02 four-stroke names belong to Scene representation, not to a new Physics Model.
 - Scene 02 does not invent canonical model IDs and does not duplicate model experiments, transfer targets, exam patterns, or independent challenges.
@@ -166,6 +171,10 @@ The canonical model definition lives in `content/physics-models/convex-lens-imag
 - `EXPERIMENT_LOG.md`
 - `OPEN_QUESTIONS.md`
 - `architecture/interaction-shell-contract.md`
+- `architecture/learner-interaction-runtime-audit.md`
+- `architecture/learner-interaction-runtime-contract.md`
+- `architecture/learner-interaction-state-contract.md`
+- `architecture/learner-interaction-design-template.md`
 - `cognitive-action-taxonomy.md`
 - `exam-mapping.md`
 - `evidence-design-contract.md`
@@ -226,6 +235,7 @@ The canonical model definition lives in `content/physics-models/convex-lens-imag
 - `scenes/convex-lens-optical-bench/evidence-claim-design.md`
 - `scenes/convex-lens-optical-bench/readiness.md`
 - `scenes/convex-lens-optical-bench/physical-representation-plan.md`
+- `scenes/convex-lens-optical-bench/interaction-plan.md`
 - `state-machine.md`
 - `universal-physics-learning-protocol.md`
 

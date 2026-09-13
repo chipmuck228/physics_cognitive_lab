@@ -14,6 +14,7 @@ import {
   completeLensPredictA,
   completeLensProjectorTransfer,
   expectNoTutorChrome,
+  lensStageHeading,
   openLensLab,
   startLensLesson,
 } from "./lens-helpers";
@@ -36,7 +37,7 @@ test.describe("Scene 07 complete loop", () => {
 
     await page.reload();
     await expect(
-      page.getByRole("heading", { name: LENS_STAGE_PROMPTS[LearningStage.DESCRIBE] }),
+      page.getByRole("heading", { name: lensStageHeading(LearningStage.DESCRIBE) }),
     ).toBeVisible();
 
     await completeLensDescribe(page);
@@ -103,7 +104,7 @@ test.describe("Scene 07 complete loop", () => {
     await completeLensObserve(page);
     await completeLensDescribe(page);
     await expect(
-      page.getByRole("heading", { name: LENS_STAGE_PROMPTS[LearningStage.PREDICT] }),
+      page.getByRole("heading", { name: lensStageHeading(LearningStage.PREDICT) }),
     ).toBeVisible();
   });
 });

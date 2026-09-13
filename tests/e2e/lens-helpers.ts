@@ -5,6 +5,7 @@ import {
   LENS_OBSERVE_OPTIONS,
   LENS_OBSERVE_REQUIRED_IDS,
   LENS_STAGE_PROMPTS,
+  LENS_TASK_FRAMES,
 } from "../../lib/content/convex-lens-optical-bench";
 import { STUDENT_CHROME } from "../../lib/content/student-language";
 import { LearningStage } from "../../types/learning";
@@ -25,6 +26,10 @@ import { officialImageConsequence } from "../../content/physics-models/convex-le
 
 export const LENS_LAB_PATH = "/scenes/convex-lens-optical-bench";
 
+export function lensStageHeading(stage: LearningStage): string {
+  return LENS_TASK_FRAMES[stage]?.goal ?? LENS_STAGE_PROMPTS[stage];
+}
+
 export async function openLensLab(page: Page) {
   await page.goto(LENS_LAB_PATH);
   await expect(page.getByRole("heading", { name: LENS_COPY.landingTitle })).toBeVisible();
@@ -33,7 +38,7 @@ export async function openLensLab(page: Page) {
 export async function startLensLesson(page: Page) {
   await page.getByRole("button", { name: LENS_COPY.startLesson }).click();
   await expect(
-    page.getByRole("heading", { name: LENS_STAGE_PROMPTS[LearningStage.OBSERVE] }),
+    page.getByRole("heading", { name: lensStageHeading(LearningStage.OBSERVE) }),
   ).toBeVisible();
 }
 
@@ -48,7 +53,7 @@ export async function completeLensObserve(page: Page) {
   }
   await page.getByRole("button", { name: LENS_COPY.observeSubmit }).click();
   await expect(
-    page.getByRole("heading", { name: LENS_STAGE_PROMPTS[LearningStage.DESCRIBE] }),
+    page.getByRole("heading", { name: lensStageHeading(LearningStage.DESCRIBE) }),
   ).toBeVisible();
 }
 
@@ -59,7 +64,7 @@ export async function completeLensDescribe(page: Page) {
   await page.getByLabel(LENS_COPY.describeQuestion).fill("物体、透镜、像和光屏不是同一个东西。");
   await page.getByRole("button", { name: LENS_COPY.describeSubmit }).click();
   await expect(
-    page.getByRole("heading", { name: LENS_STAGE_PROMPTS[LearningStage.PREDICT] }),
+    page.getByRole("heading", { name: lensStageHeading(LearningStage.PREDICT) }),
   ).toBeVisible();
 }
 
@@ -68,7 +73,7 @@ export async function completeLensPredictA(page: Page) {
   await page.getByLabel(LENS_COPY.reasonLabel).fill("物体更靠近焦点，我预计像会更大。");
   await page.getByRole("button", { name: LENS_COPY.predictSubmit }).click();
   await expect(
-    page.getByRole("heading", { name: LENS_STAGE_PROMPTS[LearningStage.EXPERIMENT] }),
+    page.getByRole("heading", { name: lensStageHeading(LearningStage.EXPERIMENT) }),
   ).toBeVisible();
 }
 
@@ -108,7 +113,7 @@ export async function completeLensExplain(page: Page) {
   );
   await page.getByRole("button", { name: LENS_COPY.explainSubmit }).click();
   await expect(
-    page.getByRole("heading", { name: LENS_STAGE_PROMPTS[LearningStage.MODEL] }),
+    page.getByRole("heading", { name: lensStageHeading(LearningStage.MODEL) }),
   ).toBeVisible();
 }
 
@@ -144,7 +149,7 @@ export async function completeLensModel(page: Page) {
   await page.getByTestId("lens-model-next").click();
   await page.getByRole("button", { name: LENS_COPY.modelSubmit }).click();
   await expect(
-    page.getByRole("heading", { name: LENS_STAGE_PROMPTS[LearningStage.TRANSFER] }),
+    page.getByRole("heading", { name: lensStageHeading(LearningStage.TRANSFER) }),
   ).toBeVisible();
 }
 
@@ -178,7 +183,7 @@ export async function completeLensMagnifierTransfer(page: Page) {
   );
   await page.getByRole("button", { name: LENS_COPY.transferSubmit }).click();
   await expect(
-    page.getByRole("heading", { name: LENS_STAGE_PROMPTS[LearningStage.EXAM] }),
+    page.getByRole("heading", { name: lensStageHeading(LearningStage.EXAM) }),
   ).toBeVisible();
 }
 

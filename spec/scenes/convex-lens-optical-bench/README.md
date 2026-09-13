@@ -15,5 +15,6 @@ Library `metadata.status` is `prototype` after POST `LEARNING_EVIDENCE_PASS_WITH
 | [`evidence-claim-design.md`](./evidence-claim-design.md) | L4/L5/L6 claims; construction ≠ table |
 | [`readiness.md`](./readiness.md) | Gate checklist and `validatePhysicsModelReadiness` result |
 | [`physical-representation-plan.md`](./physical-representation-plan.md) | design-time PRI locks |
+| [`interaction-plan.md`](./interaction-plan.md) | learner-interaction plan; first runtime reference consumer |
 
 Do not extract a generic optics shell. Do not widen Scene DSL.

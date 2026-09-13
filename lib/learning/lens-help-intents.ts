@@ -1,3 +1,11 @@
+import {
+  lensContextHasCapability,
+  lensContextHasReference,
+  lensVisibleInteractionContext,
+  type LensCapabilityId,
+  type LensReferenceId,
+  type LensVisibleInteractionContext,
+} from "@/lib/learning/lens-interaction-context";
 import { LearningStage, type LearningSession } from "@/types/learning";
 
 export const LENS_HELP_KEY = "helpByStage";
@@ -18,7 +26,37 @@ export type LensHelpIntentId = (typeof LENS_HELP_INTENTS)[number]["id"];
 
 export interface LensHelpContext {
   constructionStep?: number;
+  revisiting?: boolean;
+  interaction?: LensVisibleInteractionContext;
 }
+
+interface LensHelpBinding {
+  capabilities: readonly LensCapabilityId[];
+  references: readonly LensReferenceId[];
+}
+
+const INTENT_BINDINGS: Record<LensHelpIntentId, LensHelpBinding> = {
+  "what-now": { capabilities: ["request-help"], references: [] },
+  "where-look": {
+    capabilities: ["request-help"],
+    references: ["object", "lens", "screen", "visible-image-state"],
+  },
+  "how-distinguish": {
+    capabilities: ["request-help"],
+    references: ["object", "lens", "f-marks", "visible-image-state"],
+  },
+  "what-compare": { capabilities: ["request-help"], references: [] },
+  "how-reason": { capabilities: ["request-help"], references: [] },
+  "how-rays": { capabilities: ["construct-relation"], references: ["ray"] },
+  "how-meeting": { capabilities: ["request-help"], references: ["ray", "meeting-point"] },
+  "how-image": { capabilities: ["request-help"], references: ["ray", "meeting-point"] },
+  "how-say": { capabilities: ["request-help"], references: [] },
+};
+
+const REFERENCE_TOKENS: Partial<Record<LensReferenceId, readonly string[]>> = {
+  ray: ["光线", "实线", "虚线"],
+  "meeting-point": ["相遇", "相交", "会聚"],
+};
 
 const ATTENTION = "先停一下，只看眼前这一步，不要一次想完整张表。";
 const COMPARE = "把两个东西并排放：你刚改的，和你看见的。";
@@ -90,6 +128,19 @@ export function lensHelpAllowed(stage: LearningStage): boolean {
   );
 }
 
+export function resolveLensHelpContext(
+  stage: LearningStage,
+  lookup: LensHelpContext = {},
+): LensVisibleInteractionContext {
+  return (
+    lookup.interaction ??
+    lensVisibleInteractionContext(stage, {
+      constructionStep: lookup.constructionStep,
+      revisiting: lookup.revisiting,
+    })
+  );
+}
+
 export function availableLensHelpIntents(
   stage: LearningStage,
   context: LensHelpContext = {},
@@ -97,6 +148,15 @@ export function availableLensHelpIntents(
   if (!lensHelpAllowed(stage)) {
     return [];
   }
+  const interaction = resolveLensHelpContext(stage, context);
+  return candidateLensHelpIntents(stage, context.constructionStep ?? constructionStepFrom(interaction))
+    .filter((intentId) => isLensHelpIntentLegal(intentId, interaction));
+}
+
+export function candidateLensHelpIntents(
+  stage: LearningStage,
+  constructionStep = 1,
+): readonly LensHelpIntentId[] {
   if (stage === LearningStage.OBSERVE) {
     return ["what-now", "where-look"];
   }
@@ -113,7 +173,7 @@ export function availableLensHelpIntents(
     return ["what-now", "how-meeting", "how-say"];
   }
   if (stage === LearningStage.MODEL) {
-    return modelHelpIntents(context.constructionStep ?? 1);
+    return modelHelpIntents(constructionStep);
   }
   if (stage === LearningStage.TRANSFER) {
     return ["what-now", "how-image", "how-say"];
@@ -126,7 +186,7 @@ export function availableLensHelpIntents(
 
 function modelHelpIntents(step: number): readonly LensHelpIntentId[] {
   if (step <= 1) {
-    return ["what-now", "where-look"];
+    return ["what-now"];
   }
   if (step === 2 || step === 3) {
     return ["what-now", "how-rays"];
@@ -141,6 +201,43 @@ function modelHelpIntents(step: number): readonly LensHelpIntentId[] {
     return ["how-say"];
   }
   return ["what-now"];
+}
+
+function constructionStepFrom(context: LensVisibleInteractionContext): number {
+  const match = context.substep?.match(/^construction-(\d+)$/);
+  return match ? Number(match[1]) : 1;
+}
+
+export function isLensHelpIntentLegal(
+  intentId: LensHelpIntentId,
+  context: LensVisibleInteractionContext,
+): boolean {
+  const binding = INTENT_BINDINGS[intentId];
+  if (!binding.capabilities.every((id) => lensContextHasCapability(context, id))) {
+    return false;
+  }
+  if (!binding.references.every((id) => lensContextHasReference(context, id))) {
+    return false;
+  }
+  return LADDERS[intentId].every((line) => isLensHelpTextLegal(line, context));
+}
+
+export function isLensHelpTextLegal(
+  text: string,
+  context: LensVisibleInteractionContext,
+): boolean {
+  for (const [referenceId, tokens] of Object.entries(REFERENCE_TOKENS) as [
+    LensReferenceId,
+    readonly string[],
+  ][]) {
+    if (lensContextHasReference(context, referenceId)) {
+      continue;
+    }
+    if (tokens.some((token) => text.includes(token))) {
+      return false;
+    }
+  }
+  return true;
 }
 
 export function lensHelpIntentLabel(intentId: LensHelpIntentId): string {

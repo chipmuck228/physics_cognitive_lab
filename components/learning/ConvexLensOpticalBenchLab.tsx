@@ -6,6 +6,7 @@ import { Button } from "@/components/common/Button";
 import { ConvexLensOpticalBench } from "@/components/physics/convex-lens/ConvexLensOpticalBench";
 import { LearningShell } from "@/components/learning/LearningShell";
 import { LensAiOffTask } from "@/components/learning/LensAiOffTask";
+import { LensCognitiveTrace } from "@/components/learning/LensCognitiveTrace";
 import { LensCompleteView } from "@/components/learning/LensCompleteView";
 import { LensDescribeTask } from "@/components/learning/LensDescribeTask";
 import { LensExamTask } from "@/components/learning/LensExamTask";
@@ -60,12 +61,14 @@ import {
 } from "@/lib/learning/lens-experiment";
 import { emptyLensExplainInput } from "@/lib/learning/lens-explain";
 import { lensFeedbackForFailureKind, lensTransferFeedback } from "@/lib/learning/lens-feedback";
+import { lensCognitiveTraceItems } from "@/lib/learning/lens-cognitive-trace";
 import {
   availableLensHelpIntents,
   lensHelpAllowed,
   lensHelpPrompts,
   lensHelpState,
 } from "@/lib/learning/lens-help-intents";
+import { lensVisibleInteractionContext } from "@/lib/learning/lens-interaction-context";
 import {
   draftToConvexLensAttempt,
   emptyLensModelDraft,
@@ -164,6 +167,7 @@ export function ConvexLensOpticalBenchLab() {
   const [comparison, setComparison] = useState<"" | "same" | "different" | "partial">("");
   const [reflection, setReflection] = useState("");
   const [observedNeedMore, setObservedNeedMore] = useState(false);
+  const [reflectionNeedMore, setReflectionNeedMore] = useState(false);
   const [explain, setExplain] = useState(emptyLensExplainInput());
   const [explainNeedMore, setExplainNeedMore] = useState(false);
   const [modelDraft, setModelDraft] = useState(emptyLensModelDraft());
@@ -388,6 +392,13 @@ export function ConvexLensOpticalBenchLab() {
         showOfficialImage={!isModel}
         hideOfficialRays
         studentRays={isModel ? constructed?.rays : undefined}
+        caption={
+          isModel
+            ? LENS_COPY.modelFrozenCaption
+            : isObserve
+              ? LENS_COPY.observeCaption
+              : undefined
+        }
       />
     </div>
   );
@@ -521,11 +532,14 @@ export function ConvexLensOpticalBenchLab() {
         }}
         onSaveReflection={() => {
           if (reflection.trim().length < 2) {
+            setReflectionNeedMore(true);
             return;
           }
+          setReflectionNeedMore(false);
           saveReflection(activeExperiment, reflection);
         }}
         observedNeedMore={observedNeedMore}
+        reflectionNeedMore={reflectionNeedMore}
         reviewOnly={revisiting}
       />
     </div>
@@ -736,8 +750,14 @@ export function ConvexLensOpticalBenchLab() {
   ) : null;
 
   const frame = LENS_TASK_FRAMES[displayStage];
+  const interaction = lensVisibleInteractionContext(displayStage, {
+    constructionStep: modelDraft.constructionStep,
+    revisiting,
+  });
   const helpIntents = availableLensHelpIntents(displayStage, {
     constructionStep: modelDraft.constructionStep,
+    revisiting,
+    interaction,
   });
   const help = lensHelpState(session, displayStage);
   const activeHelpIntent =
@@ -748,7 +768,16 @@ export function ConvexLensOpticalBenchLab() {
     !authoritativeAiOff &&
     helpIntents.length > 0;
   const framedTask = (
-    <div className="space-y-5">
+    <div
+      className="space-y-5"
+      data-testid="lens-interaction-context"
+      data-substep={interaction.substep ?? ""}
+      data-capabilities={interaction.capabilities
+        .filter((item) => item.available)
+        .map((item) => item.id)
+        .join(",")}
+      data-references={interaction.references.map((item) => item.id).join(",")}
+    >
       {revisiting && viewingStage ? (
         <LensReviewBanner
           viewingStage={viewingStage}
@@ -759,6 +788,7 @@ export function ConvexLensOpticalBenchLab() {
       {frame && !isEntry && !isAiOff && !isComplete ? (
         <LensTaskFrame
           context={frame.context}
+          goal={frame.goal}
           focus={frame.focus}
           action={frame.action}
         />
@@ -775,6 +805,13 @@ export function ConvexLensOpticalBenchLab() {
           onRevealNext={revealHelpNext}
         />
       ) : null}
+      {!isEntry && !isComplete ? (
+        <LensCognitiveTrace
+          items={lensCognitiveTraceItems(session)}
+          progressStage={session.stage}
+          displayStage={displayStage}
+        />
+      ) : null}
     </div>
   );
 
@@ -787,7 +824,13 @@ export function ConvexLensOpticalBenchLab() {
     <LearningShell
       stage={session.stage}
       stageLabels={LENS_STAGE_LABELS}
-      stagePrompts={revisiting ? {} : LENS_STAGE_PROMPTS}
+      stagePrompts={
+        frame && !isAiOff && !isComplete
+          ? {}
+          : revisiting
+            ? {}
+            : LENS_STAGE_PROMPTS
+      }
       progressStages={[...LENS_PHASE_STAGES]}
       scene={scene}
       task={framedTask}

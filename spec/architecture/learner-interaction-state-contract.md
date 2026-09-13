@@ -2,7 +2,7 @@
 
 > Date: 2026-09-13  
 > Kind: architecture contract  
-> Status: DESIGN — not implemented  
+> Status: DESIGN — Scene 07 is the first reference consumer; not a universal freeze  
 > Companion to: `learner-interaction-runtime-contract.md`  
 > Does not own: evaluator truth, L-levels, official physics, Scene DSL
 
@@ -169,7 +169,7 @@ Do **not** hydrate Draft because:
 - Tutor returned a message;
 - View entered or left review (except to load the **viewed** stage’s last committed + its own draft, without touching Progress drafts).
 
-Scene 07 `hydrateKey` is a candidate implementation of this rule, not the mandated code shape.
+Scene 07 `hydrateKey` is the first Scene-local implementation of this rule, not a mandated generic code shape.
 
 ---
 
@@ -187,7 +187,7 @@ Forbidden: two writers (local state and `sceneData`) that silently diverge, then
 
 This contract does **not** require a new session schema in this pass.
 
-Suggested conceptual mapping (future implementation, not done now):
+Suggested conceptual mapping (Scene 07 uses this layout; generic `LearningSession` must not grow these as first-class columns):
 
 | Contract state | Current typical storage |
 |---|---|

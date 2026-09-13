@@ -112,7 +112,16 @@ describe("Scene 07 learner UX chrome", () => {
       stage: LearningStage.OBSERVE,
     });
     render(<ConvexLensOpticalBenchLab />);
-    expect(screen.getByTestId("lens-task-frame")).toHaveTextContent(
+    expect(screen.getByTestId("lens-task-context")).toHaveTextContent(
+      LENS_TASK_FRAMES[LearningStage.OBSERVE]!.context,
+    );
+    expect(screen.getByTestId("lens-task-goal")).toHaveTextContent(
+      LENS_TASK_FRAMES[LearningStage.OBSERVE]!.goal,
+    );
+    expect(screen.getByTestId("lens-task-focus")).toHaveTextContent(
+      LENS_TASK_FRAMES[LearningStage.OBSERVE]!.focus,
+    );
+    expect(screen.getByTestId("lens-task-action")).toHaveTextContent(
       LENS_TASK_FRAMES[LearningStage.OBSERVE]!.action,
     );
     expect(screen.getByTestId("lens-help-panel")).toBeInTheDocument();
@@ -259,6 +268,46 @@ describe("Scene 07 learner UX chrome", () => {
     expect(screen.queryByText(STUDENT_CHROME.tutorAsk)).not.toBeInTheDocument();
     expect(screen.queryByText(STUDENT_CHROME.tutorName)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: STUDENT_CHROME.tutorAskAria })).not.toBeInTheDocument();
+  });
+
+  it("exposes OBSERVE interaction context without ray references", () => {
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-observe-context", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.OBSERVE,
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    const context = screen.getByTestId("lens-interaction-context");
+    expect(context.getAttribute("data-references")).toContain("screen");
+    expect(context.getAttribute("data-references")).not.toContain("ray");
+    expect(context.getAttribute("data-capabilities")).toContain("move-screen");
+    expect(screen.getByTestId("lens-cognitive-trace")).toBeInTheDocument();
+  });
+
+  it("MODEL ray substep exposes ray references for help", () => {
+    replaceSession({
+      ...modelSession(),
+      sceneData: {
+        ...modelSession().sceneData,
+        modelDraft: { ...emptyLensModelDraft(), constructionStep: 2 },
+      },
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    expect(screen.getByTestId("lens-interaction-context").getAttribute("data-references")).toContain(
+      "ray",
+    );
+    expect(screen.getByTestId("lens-help-how-rays")).toBeInTheDocument();
+  });
+
+  it("cognitive trace does not mutate evidence when opened", async () => {
+    const user = userEvent.setup();
+    const seeded = modelSession();
+    replaceSession(seeded);
+    render(<ConvexLensOpticalBenchLab />);
+    await user.click(screen.getByText("我走过的路"));
+    expect(screen.getByText("我的观察")).toBeInTheDocument();
+    expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).observations).toEqual(seeded.observations);
+    expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).explanations).toEqual(seeded.explanations);
+    expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.MODEL);
   });
 
   it("hides help intents on AI_OFF", () => {

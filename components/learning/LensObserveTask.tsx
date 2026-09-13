@@ -46,7 +46,9 @@ export function LensObserveTask({
           {LENS_OBSERVE_OPTIONS.map((option) => (
             <label
               key={option.id}
-              className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-[var(--ink)]"
+              className={`flex items-start gap-3 text-sm leading-relaxed text-[var(--ink)] ${
+                reviewOnly ? "cursor-default opacity-70" : "cursor-pointer"
+              }`}
             >
               <input
                 type="checkbox"
@@ -54,6 +56,7 @@ export function LensObserveTask({
                 checked={selected.has(option.id)}
                 onChange={() => onToggle(option.id)}
                 value={option.id}
+                disabled={reviewOnly}
               />
               <span>{option.label}</span>
             </label>

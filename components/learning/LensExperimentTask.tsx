@@ -29,6 +29,7 @@ interface LensExperimentTaskProps {
   onReflectionChange: (value: string) => void;
   onSaveReflection: () => void;
   observedNeedMore: boolean;
+  reflectionNeedMore?: boolean;
   reviewOnly?: boolean;
 }
 
@@ -51,6 +52,7 @@ export function LensExperimentTask({
   onReflectionChange,
   onSaveReflection,
   observedNeedMore,
+  reflectionNeedMore = false,
   reviewOnly = false,
 }: LensExperimentTaskProps) {
   return (
@@ -141,11 +143,15 @@ export function LensExperimentTask({
                 <span className="text-sm font-medium">{reflectionPrompt}</span>
                 <textarea
                   data-testid={`lens-reflection-${experimentId}`}
-                  className="min-h-24 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm"
+                  className="min-h-24 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm disabled:opacity-60"
                   value={reflection}
                   onChange={(event) => onReflectionChange(event.target.value)}
+                  disabled={reviewOnly}
                 />
               </label>
+              {reflectionNeedMore ? (
+                <ValidationMessage kind="missing">先写下你现在怎么想，再记下。</ValidationMessage>
+              ) : null}
               {reviewOnly ? null : (
                 <div className="flex justify-end">
                   <Button onClick={onSaveReflection}>{LENS_COPY.reflectionSubmit}</Button>

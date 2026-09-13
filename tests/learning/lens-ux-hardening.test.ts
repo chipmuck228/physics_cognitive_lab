@@ -253,7 +253,7 @@ describe("Scene 07 Observe and framing contracts", () => {
     ).toBe(false);
   });
 
-  it("defines context / focus / action for OBSERVE through EXAM", () => {
+  it("defines context / goal / focus / action for OBSERVE through EXAM", () => {
     const stages = [
       LearningStage.OBSERVE,
       LearningStage.DESCRIBE,
@@ -267,6 +267,7 @@ describe("Scene 07 Observe and framing contracts", () => {
     for (const stage of stages) {
       const frame = LENS_TASK_FRAMES[stage];
       expect(frame?.context).toBeTruthy();
+      expect(frame?.goal).toBeTruthy();
       expect(frame?.focus).toBeTruthy();
       expect(frame?.action).toBeTruthy();
     }

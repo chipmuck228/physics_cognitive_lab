@@ -2,9 +2,10 @@
 
 > Date: 2026-09-13  
 > Kind: architecture contract  
-> Status: DESIGN — not implemented  
+> Status: DESIGN — Scene 07 is the first reference consumer; not a universal freeze  
 > Does not own: UPLP stage meanings, Physics Model schema, Scene DSL, Evidence / L-levels, PRI quantity identity, Interaction Shell freeze  
-> Related: `learner-interaction-state-contract.md`, `learner-interaction-design-template.md`, `learner-interaction-runtime-audit.md`
+> Related: `learner-interaction-state-contract.md`, `learner-interaction-design-template.md`, `learner-interaction-runtime-audit.md`  
+> Scene 01–07 are not claimed runtime-v1 compliant as a set. Scene 07 may become a reference implementation without making the runtime universal.
 
 This document defines **how** UPLP stages, Physics Models, and Evidence claims appear and behave in the learner UI.
 
@@ -65,17 +66,17 @@ The runtime MAY own:
 
 1. Distinguishing Progress / Draft / View / Review / Evidence / Physics at the interaction layer.  
 2. Task framing: context, goal, focus, action (student language).  
-3. Visible capability sets for the current stage + substep.  
-4. Mapping a student action to a required visible response class.  
-5. Feedback kinds: missing / inconsistent / think_again / blocked / loading / error — **from deterministic `failureKind` or gate results**.  
-6. Help availability bound to stage + substep + visible affordances.  
+3. The current `VisibleInteractionContext` (operable capabilities **and** mentionable references).  
+4. The **vocabulary and presentation** of action→response classes — not the domain outcome.  
+5. Feedback kinds: missing / inconsistent / think_again / blocked / loading / error — **mapped from** deterministic `failureKind` or Scene/evaluator/progression results.  
+6. Help availability bound to stage + substep + `VisibleInteractionContext`.  
 7. Navigation that reviews without regressing Progress.  
 8. Review/replay physics that cannot write Evidence or Progress.  
 9. Cognitive **trace** of process (what the student did in the UI), not L-level assignment.  
 10. Loading, blocked, retry, and system-error chrome.  
 11. One learner-facing help entry per Scene policy.
 
-The runtime MAY call Scene/model callbacks. It MUST NOT interpret official physics.
+The runtime MAY call Scene/model callbacks. It MUST NOT interpret official physics, decide commit/reject/advance, or invent a second evaluator or progression system.
 
 ---
 
@@ -103,22 +104,22 @@ The runtime MUST NOT:
 UPLP stage + Scene Interaction Plan
         ↓
 Learner Interaction Runtime
-  (frame, capabilities, help, navigation, feedback chrome)
+  (frame, VisibleInteractionContext, help, navigation, response chrome)
         ↓
 Presentation primitive / Scene task
         ↓
-student event
+student action
         ↓
 Scene handler
         ↓
-deterministic evaluator / physics updater   ← not runtime
+physics / evaluator / progression result   ← Scene / model / Evidence own this
         ↓
-Evidence accumulator / Progress advance     ← not runtime
+Interaction Runtime maps / presents the result
         ↓
-runtime maps gate / failureKind → visible response
+learner-visible response
 ```
 
-The runtime never reverses this direction.
+The runtime never reverses this direction. It does not decide whether a draft was committed, an attempt was rejected, Progress advanced, physics changed, or Evidence was written.
 
 ---
 
@@ -132,7 +133,7 @@ A Scene MAY declare **substeps** inside a stage. Substep identifiers are Scene-o
 currentStage          // display stage (view or progress)
 authoritativeStage    // progress
 currentSubstep        // opaque
-visibleCapabilities   // what the student can do now
+visibleContext        // capabilities + references (see §8)
 ```
 
 Same UPLP stage does not imply the same substep machine.
@@ -158,9 +159,19 @@ ENTRY, AI_OFF, and COMPLETE use their own UPLP-facing copy. AI_OFF must not add 
 
 ---
 
-## 8. Visible capability contract
+## 8. Visible interaction context
 
-A **visible capability** is a student-operable affordance that is on screen now.
+Help and framing are bound to more than operable controls.
+
+A **capability** is something the learner can operate or do now.  
+A **reference** is a learner-visible object or representation that may safely be mentioned now.
+
+```text
+VisibleInteractionContext
+  capabilities   what the learner can operate / do now
+  references     what learner-visible objects / representations
+                 may safely be mentioned now
+```
 
 Examples of capability *kinds* (neutral):
 
@@ -174,16 +185,29 @@ Examples of capability *kinds* (neutral):
 - `request-help`
 - `return-to-progress`
 
-Rules:
+Examples of reference *kinds* (visibility only — not Physics Truth):
+
+- a screen, image, ray, meter reading
+- a force arrow, cart motion, temperature display
+- a station mark the student can currently see
+
+`VisibleReference` describes **whether that cue is on screen / mentionable**. It must not store official values, formulas, or evaluator truth.
+
+Exact TypeScript shape is not mandated. A Scene-local context that preserves this split is enough.
+
+### 8.1 Rules
 
 1. If a control is enabled, it must produce a visible response (UI-04).  
 2. If an action is illegal in the current mode (review vs work), hide it or show a blocked reason. Never silent no-op.  
-3. Help intents may only mention capabilities that are currently visible.  
-4. AI_OFF: `request-help` is absent.
+3. A help hint must not refer to an action, control, object, representation, or physical cue that is unavailable or invisible in the current `VisibleInteractionContext`.  
+4. Help may mention a visible reference even when that object is not an operable control (for example a screen, image, or ray that is on the bench).  
+5. AI_OFF: `request-help` is absent; the context still exists for framing, not for help.
 
 ---
 
 ## 9. Action → visible response contract
+
+### 9.1 Vocabulary
 
 Every primary student action maps to one of:
 
@@ -200,7 +224,34 @@ review-applied    review/preview world changed; Progress/Evidence untouched
 discarded         review/preview thrown away on return-to-progress
 ```
 
-The runtime owns the **class**. The Scene owns the payload (what the bench did, which field is missing).
+### 9.2 Ownership
+
+The Interaction Runtime owns:
+
+- this response vocabulary;
+- presentation semantics (how the class is rendered);
+- loading / blocked / error chrome;
+- consistent learner-visible rendering.
+
+The Interaction Runtime does **not** decide domain outcomes.
+
+Scene / evaluator / progression remain authoritative for whether:
+
+- a draft was committed;
+- an attempt was rejected;
+- Progress advanced;
+- physics changed;
+- Evidence was written.
+
+```text
+student action
+  → Scene handler
+  → physics / evaluator / progression result
+  → Interaction Runtime maps / presents the result
+  → learner-visible response
+```
+
+Do not introduce a second progression or evaluator system inside the Interaction Runtime. The runtime may only map a result the Scene already produced.
 
 ---
 
@@ -247,10 +298,17 @@ Forbidden: hint-ladder button **and** “给我一点提示” as two unexplaine
 ### 11.2 Binding
 
 ```text
-availableHelp(stage, substep, visibleCapabilities) → HelpIntent[]
+availableHelp(stage, substep, VisibleInteractionContext) → HelpIntent[]
 ```
 
-An intent is illegal if it names a capability that is not visible.
+`visibleCapabilities` alone is too narrow. Help may refer to a currently visible physical representation, not only to an operable control.
+
+An intent or hint layer is illegal if it names:
+
+- an action or control that is not a current capability; or
+- an object, representation, or physical cue that is not a current reference.
+
+Invariant: a help hint must not refer to an action, control, object, representation, or physical cue that is unavailable or invisible in the current interaction context.
 
 Ladders stay H1–H5 in spirit (UPLP): attention → comparison → intermediate question → expression structure. Never the final answer.
 
@@ -262,7 +320,7 @@ No help intents, no Tutor controls, no leftover hint chrome, no Tutor network (U
 
 LLM, when used, is an **optional language engine** inside a bound intent. It does not unlock stages, grade MODEL, or write Evidence.
 
-Until a Scene can bind Tutor to stage + substep + intent + visible affordances, that Scene MAY hide Tutor (Scene 07 current policy). This is Scene policy, not a global Tutor deletion.
+Until a Scene can bind Tutor to stage + substep + intent + `VisibleInteractionContext`, that Scene MAY hide Tutor (Scene 07 current policy). This is Scene policy, not a global Tutor deletion.
 
 ---
 
@@ -394,7 +452,7 @@ A Scene that claims runtime v1 compliance MUST have tests for:
 
 1. Back / revisit / return does not change Progress or Evidence.  
 2. Review physics (if any) does not write authoritative Physics.  
-3. Help intents ⊆ visible capabilities for that stage/substep.  
+3. Help intents and hint text ⊆ current `VisibleInteractionContext` (capabilities **and** references).  
 4. AI_OFF has zero help / Tutor chrome and zero Tutor requests.  
 5. Uncommitted draft survives help / review-preview session writes.  
 6. Enabled control never silent-no-ops.  
@@ -413,13 +471,14 @@ Scene 07 `LensTaskFrame`, `LensHelpPanel`, `lens-revisit`, `lens-feedback` stay 
 
 Forbidden first step: `LensHelpPanel` → `UniversalHelpPanel`.
 
-### 20.2 Reference implementation (next coding phase, not this document pass)
+### 20.2 Reference implementation
 
-1. Keep Scene 07 as the first consumer.  
-2. Implement contract types in Scene-local or `lib/learning/interaction/` **only if** Scene 07 can adopt them without physics/evaluator moves.  
-3. Fit-test Scene 03, then Scene 06.  
+1. Scene 07 is the first reference consumer. Keep `Lens*` names.  
+2. Scene-local types may implement this contract. Do not extract `Universal*` modules from one Scene.  
+3. Fit-test Scene 03, then Scene 06, only after Scene 07 is internally compliant.  
 4. Freeze runtime v1 only after those three differ in MODEL grammar and still share behavior.  
-5. Then optional 04 / 05 / 02 / 01.
+5. Then optional 04 / 05 / 02 / 01.  
+6. Do not claim Scene 01–07 are runtime-v1 compliant.
 
 ### 20.3 Extraction rule
 
@@ -477,6 +536,16 @@ interface VisibleCapability {
   blockedReason?: string;
 }
 
+interface VisibleReference {
+  id: OpaqueId;
+  // visibility / mentionability only — no official value, formula, or Physics Truth
+}
+
+interface VisibleInteractionContext {
+  capabilities: VisibleCapability[];
+  references: VisibleReference[];
+}
+
 type InteractionResponseClass =
   | "applied"
   | "committed"
@@ -511,7 +580,7 @@ interface HelpIntent {
 interface HelpContext {
   stage: InteractionStage;
   substep?: OpaqueId;
-  visibleCapabilityIds: OpaqueId[];
+  interaction: VisibleInteractionContext;
 }
 
 interface ReviewPolicy {
@@ -526,7 +595,7 @@ interface InteractionPlan {
   stage: InteractionStage;
   substep?: OpaqueId;
   frame: CognitiveTaskFrame;
-  capabilities: VisibleCapability[];
+  interaction: VisibleInteractionContext;
   helpIntents: HelpIntent[];
   review: ReviewPolicy;
 }
@@ -540,14 +609,12 @@ interface LearnerInteractionState {
 }
 ```
 
-These types are a design proposal. This pass does not add them to `types/` or production code.
+These types are a design proposal. A Scene-local implementation may use equivalent names (`LensVisibleInteractionContext`, …). Do not add a generic `types/` runtime module until a second Scene fits without domain fields.
 
 ---
 
 ## 22. Current decision
 
-**Architecture is specified. Production code is unchanged.**
+**Contracts refined (help context + action-response ownership). Scene 07 is the authorized first reference consumer.**
 
-Next authorized coding request, if any:
-
-Scene 07 reference implementation of this contract, without renaming `Lens*` to `Universal*`, without Scene 01–06 migration, without DSL or lifecycle change.
+Not a universal runtime. Not learner-validated. Scene 01–06 remain unchanged and are not claimed compliant.

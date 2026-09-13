@@ -28,6 +28,20 @@ Scene, AI tutor, assessment, or exam-mapping change, read:
 
 These documents form an architecture contract.
 
+When work affects learner-facing navigation / Back / revisit,
+draft persistence or hydration, task framing, help / Tutor,
+feedback lifecycle, visible action behavior, or cognitive
+trace, also read:
+
+1. `spec/architecture/learner-interaction-runtime-contract.md`
+2. `spec/architecture/learner-interaction-state-contract.md`
+3. `spec/architecture/learner-interaction-design-template.md`
+   when implementing or rebuilding a Scene
+
+UPLP, Evidence Design, PRI, Interaction Shell, and Physics Model
+contracts still win in their domains. Do not claim Scene 01–07
+are runtime-v1 compliant.
+
 Canonical ownership:
 
 - `universal-physics-learning-protocol.md`
@@ -72,6 +86,19 @@ Canonical ownership:
   React chrome does not justify Scene DSL growth. Freeze:
   `SUFFICIENT_EVIDENCE_TO_FREEZE`. Do not extract more shells merely
   because duplication exists.
+
+- `architecture/learner-interaction-runtime-contract.md`
+  owns HOW UPLP stages, Physics Models, and Evidence claims appear
+  and behave in the learner UI: task framing, VisibleInteractionContext,
+  action→response chrome, help binding, revisit, cognitive trace.
+  It does not own physics correctness, L-levels, evaluators, Scene DSL,
+  or Interaction Shell freeze. Scene 01–07 are not claimed
+  runtime-v1 compliant as a set.
+
+- `architecture/learner-interaction-state-contract.md`
+  owns the Progress ≠ Draft ≠ View ≠ Review ≠ Evidence ≠ Physics
+  split for learner-facing interaction state. Evidence and Physics
+  remain owned by Evidence Design and Scene/model physics.
 
 - Scene-specific specs instantiate the canonical protocol and models.
   They must not redefine universal stages, hint semantics,

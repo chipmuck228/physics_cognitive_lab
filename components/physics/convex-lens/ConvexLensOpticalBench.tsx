@@ -1,5 +1,4 @@
 import type { CanonicalRayChoice } from "@/content/physics-models/convex-lens-imaging/construction";
-import { LENS_COPY } from "@/lib/content/convex-lens-optical-bench";
 import {
   officialBenchDisplay,
   type ConvexLensSceneState,
@@ -11,6 +10,7 @@ interface ConvexLensOpticalBenchProps {
   showOfficialImage?: boolean;
   studentRays?: CanonicalRayChoice[];
   hideOfficialRays?: boolean;
+  caption?: string;
 }
 
 const WIDTH = 640;
@@ -29,6 +29,7 @@ export function ConvexLensOpticalBench({
   showOfficialImage = true,
   studentRays = [],
   hideOfficialRays = false,
+  caption,
 }: ConvexLensOpticalBenchProps) {
   const display = officialBenchDisplay(state);
   const { geometry, imaging, screenReceive, cover } = display;
@@ -58,9 +59,9 @@ export function ConvexLensOpticalBench({
       data-cover-brightness={cover.brightness}
       data-frozen={frozen ? "true" : "false"}
     >
-      <p className="text-center text-sm text-[var(--ink-muted)]">
-        {frozen ? LENS_COPY.modelFrozenCaption : LENS_COPY.observeCaption}
-      </p>
+      {caption ? (
+        <p className="text-center text-sm text-[var(--ink-muted)]">{caption}</p>
+      ) : null}
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         role="img"

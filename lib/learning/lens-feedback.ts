@@ -1,4 +1,17 @@
-export type LensFeedbackKind = "missing" | "inconsistent" | "think_again";
+export type LensFeedbackKind =
+  | "missing"
+  | "inconsistent"
+  | "think_again"
+  | "blocked"
+  | "error";
+
+export function lensBlockedFeedback(message: string): LensFeedback {
+  return { kind: "blocked", message };
+}
+
+export function lensErrorFeedback(message: string): LensFeedback {
+  return { kind: "error", message };
+}
 
 export interface LensFeedback {
   kind: LensFeedbackKind;

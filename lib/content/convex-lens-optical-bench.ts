@@ -112,46 +112,54 @@ export const LENS_FOOTER: Record<LearningStage, string> = {
 };
 
 export const LENS_TASK_FRAMES: Partial<
-  Record<LearningStage, { context: string; focus: string; action: string }>
+  Record<LearningStage, { context: string; goal: string; focus: string; action: string }>
 > = {
   [LearningStage.OBSERVE]: {
     context: "光具座上，物体可以换位置，光屏也可以左右移。",
+    goal: "先看见变化，不解释五种成像。",
     focus: "先看光屏上有没有变化，再看透过透镜能不能看见像。",
     action: "先动手，再记下你看见的。",
   },
   [LearningStage.DESCRIBE]: {
     context: "你刚在光具座上动过物体或光屏。",
+    goal: "把装置上的几样东西分开说清楚。",
     focus: "对着图，把物体、透镜、F / 2F、像和光屏分开指认。",
-    action: "用自己的话写下你看见的装置，不要只写“变了”。",
+    action: "用自己的话写一句，不要只写“变了”。",
   },
   [LearningStage.PREDICT]: {
     context: "动手之前，先留下你的猜测。",
+    goal: "先猜物体换位置以后会看见什么。",
     focus: "想的是物体相对 F / 2F 换了位置以后，像或光屏会怎样。",
-    action: "选出预计结果，并写理由，然后锁定。",
+    action: "选出预计结果，写理由，然后锁定。",
   },
   [LearningStage.EXPERIMENT]: {
     context: "你已经有一个锁定的预测。",
+    goal: "用一次真实改变，对照你刚才的猜测。",
     focus: "看清楚这次改的是物体位置、光屏，还是透镜被遮住。",
     action: "按 预测 → 动手 → 看见 → 对照 → 想法 走完这一轮。",
   },
   [LearningStage.EXPLAIN]: {
     context: "你已经看见过几种不同的光屏结果。",
+    goal: "用自己的话说明光线怎样相遇。",
     focus: "先问光线是真的相交，还是只有延长线相交。",
-    action: "用自己的话写一段说明，不要背完整张表。",
+    action: "写一段说明，不要背完整张表。",
   },
   [LearningStage.MODEL]: {
     context: "现在要把物距、光线和像收成一条自己建构的关系。",
-    focus: "一次只做一步：先放物体，再装两条光线。",
-    action: "自己组装，不要去点一张已经画好的标准图。",
+    goal: "自己组装光线关系，不要点一张标准图。",
+    focus: "一次只做眼前这一步。",
+    action: "先放物体，再自己装两条光线。",
   },
   [LearningStage.TRANSFER]: {
     context: "器材换了，但还是一块凸透镜。",
+    goal: "先看新情境，再用刚才的会聚结构说明。",
     focus: "先看这个新情境里，物体相对焦点在哪里。",
-    action: "用刚才的会聚结构说明，不要只说“都有凸透镜”。",
+    action: "用会聚结构说明，不要只说“都有凸透镜”。",
   },
   [LearningStage.EXAM]: {
     context: "现在先不看光具座，只看题目。",
-    focus: "先判断这题在考什么，再选用关系。",
+    goal: "先判断这题在考什么，再选用关系。",
+    focus: "先读题干，选项最后才出现。",
     action: "最后才看选项，并写理由。",
   },
 };

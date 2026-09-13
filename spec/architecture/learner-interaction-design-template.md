@@ -56,6 +56,10 @@ Visible capabilities
   List only controls that will actually be on screen.
   Mark each: working-path | review-preview | hidden-in-review | blocked+reason
 
+Visible references
+  Learner-visible objects / representations that help may mention now
+  (screen, image, ray, meter, arrow, …). Visibility only — no Physics Truth.
+
 Student action
   The primary thing they do (manipulate, select, write, construct, return).
 
@@ -75,7 +79,8 @@ Feedback mapping
   Student sentence (no official choice).
 
 Help intents
-  Only intents that mention a visible capability.
+  Only intents whose actions/controls/objects/cues are in the current
+  VisibleInteractionContext (capabilities + references).
   AI_OFF / COMPLETE: none.
 
 Revisit behavior
@@ -158,7 +163,7 @@ Terminal. No mastery claim. No Tutor.
 
 - [ ] Progress and View are named separately if Back exists.  
 - [ ] No enabled control is a silent no-op.  
-- [ ] One help entry, bound to visible capabilities.  
+- [ ] One help entry, bound to VisibleInteractionContext (capabilities + references).  
 - [ ] Draft hydrate will not run on help/preview writes.  
 - [ ] Feedback kinds come from deterministic gates, not LLM.  
 - [ ] PRI-sensitive numbers are not redescribed in this template.  
