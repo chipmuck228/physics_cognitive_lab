@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import {
+  LENS_AI_OFF_COPY,
   LENS_COPY,
   LENS_OBSERVE_OPTIONS,
   LENS_OBSERVE_REQUIRED_IDS,
@@ -9,6 +10,13 @@ import {
 } from "../../lib/content/convex-lens-optical-bench";
 import { STUDENT_CHROME } from "../../lib/content/student-language";
 import { LearningStage } from "../../types/learning";
+import {
+  LENS_AI_OFF_CHALLENGE_IDS,
+  intendedLensAiOffAnswerId,
+  intendedLensAiOffPostCheckIds,
+  lensAiOffPostCheckOptions,
+  lensJudgmentLabelFor,
+} from "../../lib/learning/lens-ai-off";
 import {
   completeLensAiOff,
   completeLensDescribe,
@@ -363,5 +371,72 @@ test.describe("Scene 07 learner-visible flow", () => {
     await expect(page.getByTestId("lens-transfer-repair")).toHaveCount(0);
     await expect(page.getByTestId("lens-transfer-progress")).toHaveText("第 2 / 2 个新情境");
     await expect(page.getByText(LENS_COPY.transferFirstSaved)).toBeVisible();
+  });
+
+  test("AI_OFF precommit repair returns to the restored judgment", async ({ page }) => {
+    test.setTimeout(300_000);
+    const challengeId = LENS_AI_OFF_CHALLENGE_IDS[0]!;
+    await reachLensModel(page);
+    await completeLensModel(page);
+    await completeLensProjectorTransfer(page);
+    await completeLensMagnifierTransfer(page);
+    await completeLensExam(page);
+    await expect(page.getByTestId("lens-ai-off-task")).toHaveAttribute("data-challenge", challengeId);
+    await expect(page.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "response");
+
+    await fillImagingStructure(page, "beyond-2f", "lens-ai-off");
+    await page.getByTestId("lens-ai-off-meeting").getByRole("radio", { name: /出射光线散开/ }).click();
+    await page.getByTestId("lens-ai-off-reasoning").fill(
+      "窗外景物在 2F 以外，光线在另一侧真正会聚，所以成倒立缩小实像，白卡片是接收器，要放到像的位置才能接到。",
+    );
+    await page
+      .getByRole("radio", {
+        name: lensJudgmentLabelFor(challengeId, intendedLensAiOffAnswerId(challengeId)),
+      })
+      .click();
+    await page.getByTestId("lens-ai-off-commit").click();
+    await expect(page.getByTestId("lens-ai-off-post-check")).toBeVisible();
+
+    for (const option of lensAiOffPostCheckOptions(challengeId)) {
+      if (option.required && intendedLensAiOffPostCheckIds(challengeId).includes(option.id)) {
+        await page.getByRole("checkbox", { name: option.label }).click();
+      }
+    }
+    await page.getByRole("button", { name: LENS_AI_OFF_COPY.postCheckSubmit }).click();
+    await expect(page.getByTestId("lens-ai-off-repair")).toContainText(/判断和理由/);
+    await expect(page.getByRole("button", { name: LENS_AI_OFF_COPY.editJudgment })).toBeVisible();
+    await expect(page.getByTestId("lens-ai-off-task")).toHaveAttribute("data-challenge", challengeId);
+
+    await page.getByRole("button", { name: LENS_AI_OFF_COPY.editJudgment }).click();
+    await expect(page.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "response");
+    await expect(page.getByTestId("lens-ai-off-commit")).toBeVisible();
+    await expect(page.getByTestId("lens-ai-off-meeting").locator("input:checked")).toHaveAttribute(
+      "value",
+      "backward-extension",
+    );
+    await expect(page.getByTestId("lens-ai-off-station").locator("input:checked")).toHaveAttribute(
+      "value",
+      "beyond-2f",
+    );
+    await expect(page.getByTestId("lens-ai-off-reasoning")).toHaveValue(/窗外景物在 2F 以外/);
+
+    await page.getByTestId("lens-ai-off-meeting").getByRole("radio", { name: /出射光线真正会聚/ }).click();
+    await expect(page.getByTestId("lens-ai-off-station").locator("input:checked")).toHaveAttribute(
+      "value",
+      "beyond-2f",
+    );
+    await page.getByTestId("lens-ai-off-commit").click();
+    await expect(page.getByTestId("lens-ai-off-post-check")).toBeVisible();
+    for (const option of lensAiOffPostCheckOptions(challengeId)) {
+      if (option.required && intendedLensAiOffPostCheckIds(challengeId).includes(option.id)) {
+        await page.getByRole("checkbox", { name: option.label }).click();
+      }
+    }
+    await page.getByRole("button", { name: LENS_AI_OFF_COPY.postCheckSubmit }).click();
+    await expect(page.getByTestId("lens-ai-off-task")).toHaveAttribute(
+      "data-challenge",
+      LENS_AI_OFF_CHALLENGE_IDS[1]!,
+    );
+    await expect(page.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "response");
   });
 });

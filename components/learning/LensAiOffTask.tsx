@@ -16,6 +16,7 @@ import {
   canCommitLensAiOffResponse,
   lensAiOffChallenge,
   lensAiOffJudgments,
+  lensAiOffNeedsResponseEdit,
   lensAiOffPostCheckOptions,
   type LensAiOffDraft,
   type LensAiOffStep,
@@ -55,8 +56,15 @@ export function LensAiOffTask({
   const showPostCheck = step === "post-check" && Boolean(committed);
   const selectedFacts = new Set(draft.postCheckSelections);
   const canCommit = canCommitLensAiOffResponse(draft);
-  const showRetry =
-    showPostCheck && committed && committed.accepted === false && committed.postCheckIds.length > 0;
+  const showResponseEdit =
+    showPostCheck &&
+    committed &&
+    committed.accepted === false &&
+    lensAiOffNeedsResponseEdit(
+      draft.currentChallengeId,
+      draft.postCheckSelections,
+      committed.reasoningSignals.preCommitRelation === true,
+    );
 
   return (
     <div
@@ -186,9 +194,9 @@ export function LensAiOffTask({
             </ValidationMessage>
           ) : null}
           <div className="flex justify-end gap-2">
-            {showRetry ? (
-              <Button variant="secondary" onClick={onRetry}>
-                再改一改
+            {showResponseEdit ? (
+              <Button variant="secondary" onClick={onRetry} data-testid="lens-ai-off-edit-judgment">
+                {LENS_AI_OFF_COPY.editJudgment}
               </Button>
             ) : null}
             <Button onClick={onSubmitPostCheck} data-testid="lens-ai-off-post-check">

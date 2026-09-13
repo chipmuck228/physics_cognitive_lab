@@ -23,6 +23,7 @@ import {
   evaluateLensModelStep,
   officialOptionalFocalRay,
   withDerivedRequiredRay,
+  withRequiredRayKind,
   type LensModelDraft,
   type LensRayDraft,
 } from "@/lib/learning/lens-model";
@@ -358,7 +359,7 @@ function RayEditor({
         id={`${testId}-kind`}
         question={`${prefix}：先选一条要用的特殊光线。`}
         value={value.kind}
-        onChange={(kind) => onChange(withDerivedRequiredRay({ ...value, kind }))}
+        onChange={(kind) => onChange(withRequiredRayKind(value, kind))}
         options={[...LENS_REQUIRED_RAY_KIND_OPTIONS]}
       />
       <QuestionGroup

@@ -400,6 +400,7 @@ export const LENS_AI_OFF_COPY = {
     "对照事实已经勾好了。还要回到上面的判断和理由，把物距、光线怎样相遇、像的后果说清楚。",
   postCheckWrongChallenge: "这次对照和当前题目对不上。先回到这一题再勾一次。",
   postCheckSystem: "这次对照没能记下。请再试一次。",
+  editJudgment: "修改刚才的判断",
   structureTitle: "先写下这次的光路结构",
 } as const;
 

@@ -130,6 +130,18 @@ export function withDerivedRequiredRay(ray: LensRayDraft): LensRayDraft {
   return { ...ray, ...derived };
 }
 
+export function withRequiredRayKind(ray: LensRayDraft, kind: string): LensRayDraft {
+  if (ray.kind === kind) {
+    return withDerivedRequiredRay(ray);
+  }
+  return withDerivedRequiredRay({
+    kind,
+    beforeLens: "",
+    afterLens: "",
+    incidentPath: "",
+  });
+}
+
 export function officialOptionalFocalRay(
   station: ObjectStation,
 ): CanonicalRayChoice | null {

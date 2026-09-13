@@ -9,6 +9,7 @@ import {
   officialOptionalFocalRay,
   visibleLensStudentRays,
   withDerivedRequiredRay,
+  withRequiredRayKind,
   emptyLensModelDraft,
 } from "@/lib/learning/lens-model";
 
@@ -64,6 +65,35 @@ describe("Scene 07 required-ray derivation", () => {
       afterLens: "",
       incidentPath: "actual",
     });
+  });
+
+  it("clears afterLens when the required family changes", () => {
+    const switched = withRequiredRayKind(
+      withDerivedRequiredRay({
+        kind: "parallel-axis",
+        beforeLens: "",
+        afterLens: "through-far-focal-point",
+        incidentPath: "",
+      }),
+      "through-center",
+    );
+    expect(switched).toEqual({
+      kind: "through-center",
+      beforeLens: "toward-optical-center",
+      afterLens: "",
+      incidentPath: "actual",
+    });
+    const same = withRequiredRayKind(switched, "through-center");
+    expect(same.afterLens).toBe("");
+    const draft = {
+      ...emptyLensModelDraft(),
+      objectStation: "beyond-2f",
+      rayA: switched,
+    };
+    const check = evaluateLensModelStep(draft, 2);
+    expect(check.status).toBe("missing");
+    expect(check.status === "missing" && check.message).toMatch(/经过透镜后怎么走/);
+    expect(check.status === "missing" && check.message).not.toMatch(/走法还对不上/);
   });
 
   it("does not let optional focal replace the required pair", () => {

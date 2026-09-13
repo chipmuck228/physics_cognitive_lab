@@ -44,8 +44,8 @@ import {
 import { STUDENT_CHROME } from "@/lib/content/student-language";
 import {
   currentLensAiOffChallengeId,
-  hasAcceptedLensAiOffChallenge,
   isLensAiOffSessionOpen,
+  lensAiOffPostCheckRepair,
   retryLensAiOffDraft,
 } from "@/lib/learning/lens-ai-off";
 import { emptyLensDescribeInput } from "@/lib/learning/lens-describe";
@@ -298,7 +298,26 @@ export function ConvexLensOpticalBenchLab() {
         ? lensExamDraft(session)
         : emptyLensExamDraft(),
     );
-    setAiOffDraft(lensAiOffDraft(session));
+    const nextAiOffDraft = lensAiOffDraft(session);
+    setAiOffDraft(nextAiOffDraft);
+    const latestIndependent = [...(session.independentAssessment?.challengeAttempts ?? [])]
+      .reverse()
+      .find((attempt) => attempt.challengeId === nextAiOffDraft.currentChallengeId);
+    const restoreRepair =
+      session.stage === LearningStage.AI_OFF &&
+      latestIndependent &&
+      latestIndependent.accepted !== true &&
+      (latestIndependent.postCheckIds?.length ?? 0) > 0
+        ? lensAiOffPostCheckRepair(
+            latestIndependent.challengeId,
+            nextAiOffDraft.postCheckSelections.length > 0
+              ? nextAiOffDraft.postCheckSelections
+              : latestIndependent.postCheckIds,
+            false,
+            latestIndependent.reasoningSignals.preCommitRelation,
+          )
+        : null;
+    setAiOffRepair(restoreRepair?.message ?? null);
     // Help and review-preview writes must not rehydrate drafts.
   }, [hydrateKey]);
 
@@ -444,10 +463,7 @@ export function ConvexLensOpticalBenchLab() {
       .reverse()
       .find((attempt) => attempt.challengeId === aiOffChallengeId) ?? null;
   const aiOffStep =
-    latestAiOffAttempt &&
-    !hasAcceptedLensAiOffChallenge(session.independentAssessment, aiOffChallengeId)
-      ? "post-check"
-      : "response";
+    aiOffDraft.step === "post-check" && latestAiOffAttempt ? "post-check" : "response";
 
   const physicsState = lensPreviewPhysics(session);
   const studentRays = isModel ? visibleLensStudentRays(modelDraft) : [];
@@ -885,10 +901,13 @@ export function ConvexLensOpticalBenchLab() {
       }}
       repairMessage={aiOffRepair}
       onRetry={() => {
-        const next = retryLensAiOffDraft(aiOffDraft, aiOffChallengeId);
+        if (!latestAiOffAttempt) {
+          return;
+        }
+        const next = retryLensAiOffDraft(aiOffDraft, latestAiOffAttempt);
         setAiOffDraft(next);
         saveAiOffDraft(next);
-        presentAction({ kind: "committed", message: "可以再改一改这次判断。" });
+        setAiOffRepair(null);
       }}
     />
   ) : isComplete ? (

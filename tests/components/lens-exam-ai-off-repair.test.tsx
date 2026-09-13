@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -89,6 +89,7 @@ describe("Scene 07 EXAM diagram and AI_OFF post-check UI", () => {
     );
     expect(screen.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "post-check");
     expect(screen.queryByTestId("lens-action-response")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: LENS_AI_OFF_COPY.editJudgment })).not.toBeInTheDocument();
   });
 
   it("wrong post-check stays on the same challenge with one repair", async () => {
@@ -110,6 +111,7 @@ describe("Scene 07 EXAM diagram and AI_OFF post-check UI", () => {
     );
     expect(screen.queryByTestId("lens-action-response")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: LENS_AI_OFF_COPY.postCheckSubmit })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: LENS_AI_OFF_COPY.editJudgment })).not.toBeInTheDocument();
   });
 
   it("accepted first post-check shows challenge 2 with a clean draft", async () => {
@@ -191,5 +193,89 @@ describe("Scene 07 EXAM diagram and AI_OFF post-check UI", () => {
     expect(screen.queryByTestId("lens-ai-off-task")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: LENS_AI_OFF_COPY.postCheckSubmit })).not.toBeInTheDocument();
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.COMPLETE);
+  });
+
+  it("precommit failure offers an executable return to the restored response", async () => {
+    const user = userEvent.setup();
+    const invalid = {
+      ...completeLensAiOffDraft(LENS_AI_OFF_A),
+      meetingMode: "backward-extension",
+      postCheckSelections: [] as string[],
+      step: "response" as const,
+    };
+    const committed = applyLensAiOffCommit(
+      {
+        ...createSession(() => "t0", () => "lens-ai-off-precommit", CONVEX_LENS_SCENE_ID),
+        stage: LearningStage.AI_OFF,
+      },
+      invalid,
+    ).session;
+    replaceSession(committed);
+    render(<ConvexLensOpticalBenchLab />);
+    expect(screen.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "post-check");
+    for (const id of intendedLensAiOffPostCheckIds(LENS_AI_OFF_A)) {
+      const option = lensAiOffPostCheckOptions(LENS_AI_OFF_A).find((item) => item.id === id);
+      if (option) {
+        await user.click(screen.getByRole("checkbox", { name: option.label }));
+      }
+    }
+    await user.click(screen.getByRole("button", { name: LENS_AI_OFF_COPY.postCheckSubmit }));
+    expect(screen.getByTestId("lens-ai-off-repair")).toHaveTextContent(/判断和理由/);
+    expect(screen.getByTestId("lens-ai-off-task")).toHaveAttribute("data-challenge", LENS_AI_OFF_A);
+    expect(screen.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "post-check");
+    await user.click(screen.getByRole("button", { name: LENS_AI_OFF_COPY.editJudgment }));
+    expect(screen.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "response");
+    expect(screen.getByTestId("lens-ai-off-commit")).toBeInTheDocument();
+    expect(screen.queryByTestId("lens-ai-off-post-check")).not.toBeInTheDocument();
+    expect(screen.getByTestId("lens-ai-off-station").querySelector("input:checked")).toHaveAttribute(
+      "value",
+      "beyond-2f",
+    );
+    expect(screen.getByTestId("lens-ai-off-meeting").querySelector("input:checked")).toHaveAttribute(
+      "value",
+      "backward-extension",
+    );
+    expect(screen.getByTestId("lens-ai-off-side").querySelector("input:checked")).toHaveAttribute(
+      "value",
+      "other-side",
+    );
+    expect(screen.getByTestId("lens-ai-off-nature").querySelector("input:checked")).toHaveAttribute(
+      "value",
+      "real",
+    );
+    expect(screen.getByTestId("lens-ai-off-orientation").querySelector("input:checked")).toHaveAttribute(
+      "value",
+      "inverted",
+    );
+    expect(screen.getByTestId("lens-ai-off-size").querySelector("input:checked")).toHaveAttribute(
+      "value",
+      "reduced",
+    );
+    expect(screen.getByTestId("lens-ai-off-receive").querySelector("input:checked")).toHaveAttribute(
+      "value",
+      "true",
+    );
+    expect(screen.getByTestId("lens-ai-off-reasoning")).toHaveValue(invalid.reasoning);
+    expect(screen.queryByRole("checkbox", { name: /窗外景物在 2F 以外/ })).not.toBeInTheDocument();
+
+    await user.click(
+      within(screen.getByTestId("lens-ai-off-meeting")).getByRole("radio", {
+        name: /出射光线真正会聚/,
+      }),
+    );
+    await user.click(screen.getByTestId("lens-ai-off-commit"));
+    expect(screen.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "post-check");
+    expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).independentAssessment?.challengeAttempts).toHaveLength(
+      2,
+    );
+    for (const id of intendedLensAiOffPostCheckIds(LENS_AI_OFF_A)) {
+      const option = lensAiOffPostCheckOptions(LENS_AI_OFF_A).find((item) => item.id === id);
+      if (option) {
+        await user.click(screen.getByRole("checkbox", { name: option.label }));
+      }
+    }
+    await user.click(screen.getByRole("button", { name: LENS_AI_OFF_COPY.postCheckSubmit }));
+    expect(screen.getByTestId("lens-ai-off-task")).toHaveAttribute("data-challenge", LENS_AI_OFF_B);
+    expect(screen.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "response");
   });
 });

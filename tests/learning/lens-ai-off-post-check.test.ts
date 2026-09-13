@@ -12,8 +12,10 @@ import {
   hasAcceptedLensAiOffChallenges,
   hasCompletedLensAiOff,
   intendedLensAiOffPostCheckIds,
+  lensAiOffNeedsResponseEdit,
   nextLensAiOffDraft,
   postCheckMatchesRequired,
+  retryLensAiOffDraft,
 } from "@/lib/learning/lens-ai-off";
 import { LENS_AI_OFF_COPY } from "@/lib/content/convex-lens-optical-bench";
 import { LENS_AI_OFF_DRAFT_KEY, lensAiOffDraft } from "@/lib/learning/lens-scene-data";
@@ -35,6 +37,15 @@ function committedA() {
     step: "response",
   });
   return result.session;
+}
+
+function wrongMeetingDraft() {
+  return {
+    ...completeLensAiOffDraft(LENS_AI_OFF_A),
+    meetingMode: "backward-extension",
+    postCheckSelections: [] as string[],
+    step: "response" as const,
+  };
 }
 
 describe("Scene 07 AI_OFF post-check progression", () => {
@@ -210,5 +221,77 @@ describe("Scene 07 AI_OFF post-check progression", () => {
       lensAiOffDraft(committedB),
       LENS_AI_OFF_B,
     ).currentChallengeId).toBe(LENS_AI_OFF_B);
+  });
+
+  it("canonical post-check with invalid precommit stays on the same challenge", () => {
+    const session = applyLensAiOffCommit(aiOffSession(), wrongMeetingDraft()).session;
+    const required = intendedLensAiOffPostCheckIds(LENS_AI_OFF_A);
+    const result = applyLensAiOffPostCheckSave(session, {
+      challengeId: LENS_AI_OFF_A,
+      postCheckIds: required,
+    });
+    expect(result.outcome.kind).toBe("rejected");
+    expect(result.outcome.message).toBe(LENS_AI_OFF_COPY.postCheckPrecommit);
+    expect(lensAiOffNeedsResponseEdit(LENS_AI_OFF_A, required, false)).toBe(true);
+    expect(lensAiOffNeedsResponseEdit(LENS_AI_OFF_A, required.slice(0, 3), true)).toBe(false);
+    expect(lensAiOffNeedsResponseEdit(LENS_AI_OFF_A, [...required, "surface-slogan"], true)).toBe(
+      false,
+    );
+    expect(lensAiOffDraft(result.session).step).toBe("post-check");
+    expect(lensAiOffDraft(result.session).currentChallengeId).toBe(LENS_AI_OFF_A);
+  });
+
+  it("retry restores the committed response and clears only post-check", () => {
+    const session = applyLensAiOffCommit(aiOffSession(), wrongMeetingDraft()).session;
+    applyLensAiOffPostCheckSave(session, {
+      challengeId: LENS_AI_OFF_A,
+      postCheckIds: intendedLensAiOffPostCheckIds(LENS_AI_OFF_A),
+    });
+    const attempt = session.independentAssessment?.challengeAttempts?.at(-1);
+    expect(attempt).toBeTruthy();
+    const restored = retryLensAiOffDraft(
+      {
+        ...lensAiOffDraft(session),
+        postCheckSelections: intendedLensAiOffPostCheckIds(LENS_AI_OFF_A),
+        step: "post-check",
+      },
+      attempt!,
+    );
+    expect(restored.step).toBe("response");
+    expect(restored.currentChallengeId).toBe(LENS_AI_OFF_A);
+    expect(restored.objectStation).toBe("beyond-2f");
+    expect(restored.meetingMode).toBe("backward-extension");
+    expect(restored.side).toBe("other-side");
+    expect(restored.nature).toBe("real");
+    expect(restored.orientation).toBe("inverted");
+    expect(restored.size).toBe("reduced");
+    expect(restored.screenReceivable).toBe("true");
+    expect(restored.selectedAnswer).toBe("distant-object-real-reduced");
+    expect(restored.reasoning).toContain("窗外景物在 2F 以外");
+    expect(restored.postCheckSelections).toEqual([]);
+  });
+
+  it("resubmit appends a new attempt and post-check uses the latest", () => {
+    const first = applyLensAiOffCommit(aiOffSession(), wrongMeetingDraft()).session;
+    const restored = retryLensAiOffDraft(
+      lensAiOffDraft(first),
+      first.independentAssessment!.challengeAttempts![0]!,
+    );
+    const second = applyLensAiOffCommit(first, {
+      ...restored,
+      meetingMode: "actual-convergence",
+    }).session;
+    expect(second.independentAssessment?.challengeAttempts).toHaveLength(2);
+    expect(second.independentAssessment?.challengeAttempts?.[0]?.accepted).toBe(false);
+    const result = applyLensAiOffPostCheckSave(second, {
+      challengeId: LENS_AI_OFF_A,
+      postCheckIds: intendedLensAiOffPostCheckIds(LENS_AI_OFF_A),
+    });
+    const attempts = result.session.independentAssessment?.challengeAttempts ?? [];
+    expect(attempts).toHaveLength(2);
+    expect(attempts[0]?.accepted).toBe(false);
+    expect(attempts[1]?.accepted).toBe(true);
+    expect(attempts[1]?.preCommitEvidenceIds?.[1]).toBe("actual-convergence");
+    expect(lensAiOffDraft(result.session).currentChallengeId).toBe(LENS_AI_OFF_B);
   });
 });

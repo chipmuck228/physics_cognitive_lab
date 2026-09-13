@@ -13,7 +13,7 @@ Contract: [`../../interaction-alignment-audit.md`](../../interaction-alignment-a
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Follow-up re-audit 2026-09-13 of IA-07-06 (MODEL required-ray construction) and IA-07-09 (AI_OFF post-check correctness). Prior repaired IDs IA-07-01 / 04 / 05 / 07 / 08 were re-checked against current code and remain PASS. Not a learner-validation claim.
+Follow-up re-audit 2026-09-13 of IA-07-10 (MODEL kind change clears stale afterLens) and IA-07-11 (AI_OFF response-edit navigation). Prior repaired IDs IA-07-01 / 04 / 05 / 06 / 07 / 08 / 09 were re-checked against current code and remain PASS. Not a learner-validation claim.
 
 ---
 
@@ -38,7 +38,7 @@ Known prior defects checked against **current** code:
 
 ## Confirmed Alignment Defects
 
-None open after the 2026-09-13 MODEL-ray / AI_OFF post-check follow-up. Required-ray construction no longer asks the learner to fill `CanonicalRayChoice`. AI_OFF post-check repair names the actual failed class.
+None open after the 2026-09-13 AI_OFF response-edit / MODEL kind-invalidation follow-up. A precommit repair now returns to an editable restored response. Changing required-ray family clears stale outgoing.
 
 ### IA-07-01 — repaired PASS
 
@@ -154,7 +154,7 @@ None open after the 2026-09-13 MODEL-ray / AI_OFF post-check follow-up. Required
 | Stage | AI_OFF |
 | Audit Unit | Post-check action has no visible authoritative progression |
 | Invariant | **IA-2**, **IA-4**, **IA-5**, **IA-6** |
-| Current status | **PASS (repaired).** `记下这次对照` writes the attempt, then local draft is taken from the returned session via `nextLensAiOffDraft` / `lensAiOffDraft`. Accepted challenge 1 → challenge 2 response. Accepted pair → COMPLETE. Rejected post-check stays and shows one `lens-ai-off-repair`. Hydrate key includes accepted + postCheckIds so refresh restores the authoritative challenge. |
+| Current status | **PASS (repaired).** `记下这次对照` writes the attempt, then local draft is taken from the returned session via `nextLensAiOffDraft` / `lensAiOffDraft`. Accepted challenge 1 → challenge 2 response. Accepted pair → COMPLETE. Rejected post-check stays and shows one `lens-ai-off-repair`. View step follows `aiOffDraft.step`, not merely “an unaccepted attempt exists”. Hydrate key includes accepted + postCheckIds so refresh restores the authoritative challenge. |
 | Expected behavior | A valid enabled click produces a visible next state. React does not infer success. Evaluator still owns `accepted`. |
 | Implementation evidence | `applyLensAiOffPostCheckSave` returns missing/rejected when not accepted. Accepted pair calls `advanceIfReady` because `advanceLensLoop` now allows COMPLETE (chrome `LENS_PHASE_STAGES` still excludes COMPLETE). Lab `setAiOffDraft(lensAiOffDraft(getSessionSnapshot()))` after save. Visible step follows whether the current challenge is accepted. No Tutor/LLM on AI_OFF. |
 | Learner consequence | One click advances or names the repair. Post-check selections do not leak onto the next challenge. |
@@ -174,6 +174,36 @@ None open after the 2026-09-13 MODEL-ray / AI_OFF post-check follow-up. Required
 | Implementation evidence | Overlay IDs unchanged. `classifyLensAiOffPostCheck` + `lensAiOffDraftFromCommittedAttempt`. `evaluateConvexLensAiOff` still owns `official.ok`. L6 still requires accepted pair + LLM off. |
 | Learner consequence | The screenshot selection now advances when the independent response was valid. A distractor click stays on the same challenge with a distractor-specific reason. |
 | Repair boundary used | Scene07 AI_OFF post-check classification + committed-attempt reconstruction. Official answer key / L6 unchanged. |
+
+### IA-07-10 — repaired PASS
+
+| Field | Result |
+|---|---|
+| ID | IA-07-10 |
+| Severity | **P2** |
+| Stage | MODEL |
+| Audit Unit | Required-ray kind change / dependent draft |
+| Invariant | **IA-2**, **IA-5** |
+| Current status | **PASS (repaired).** Changing required `kind` writes `afterLens = ""` and re-derives `beforeLens` / `incidentPath=actual`. Incident remains visible; outgoing disappears. Local step is missing, not stale-inconsistent. |
+| Expected behavior | A new family does not keep the previous family's outgoing answer. The learner re-answers outgoing. Final evaluator unchanged. |
+| Implementation evidence | `withRequiredRayKind` in `lens-model.ts`. `LensRayConstruction` kind radio uses it. `evaluateLensModelStep` step 2/3 still requires kind + afterLens. `evaluateConvexLensModelConstruction` unchanged. |
+| Learner consequence | Switching 平行主光轴 → 过光心 does not immediately show “走法还对不上”. Next stays blocked as missing outgoing. |
+| Repair boundary used | Scene07 required-ray draft invalidation only. |
+
+### IA-07-11 — repaired PASS
+
+| Field | Result |
+|---|---|
+| ID | IA-07-11 |
+| Severity | **P1** |
+| Stage | AI_OFF |
+| Audit Unit | Post-check precommit repair → response edit |
+| Invariant | **IA-1**, **IA-4**, **IA-5**, **IA-6** |
+| Current status | **PASS (repaired).** View step is `aiOffDraft.step`, not “unaccepted attempt exists ⇒ post-check”. Precommit rejection shows “修改刚才的判断”, which restores the committed response and sets `step: "response"`. Missing/distractor stay on post-check with no response-edit CTA. |
+| Expected behavior | A learner-facing repair instruction names an action that is currently executable. Committed attempt is history; it does not lock View State. Resubmit appends a new attempt; post-check uses the latest. |
+| Implementation evidence | Lab `aiOffStep` matches Engine/other Scenes: `draft.step === "post-check" && latestAttempt`. `retryLensAiOffDraft` uses `lensAiOffDraftFromCommittedAttempt` and clears only `postCheckSelections`. `applyLensAiOffCommit` remains append-only. `applyLensAiOffPostCheckSave` still reverse-finds the latest challenge attempt. `evaluateConvexLensAiOff` / L6 unchanged. |
+| Learner consequence | The screenshot “对照事实已经勾好了…回到上面的判断” is paired with a working return to the prior answers. |
+| Repair boundary used | Scene07 AI_OFF View State + retry draft restore. Official evaluator / challenge content unchanged. |
 
 ---
 
@@ -698,11 +728,11 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 | Stage / Subtask | AI_OFF / structure + judgment + reasoning |
 | Cognitive task | Independent use without tutor |
 | Required capability | commit-ai-off |
-| Visible control / surface | `LensAiOffTask` pre-commit; Help/Tutor hidden |
+| Visible control / surface | `LensAiOffTask` response when `draft.step === "response"`; Help/Tutor hidden |
 | Semantic learner action | `applyLensAiOffCommit` |
-| Authoritative owner | Attempt stored `accepted: false` until post-check |
-| Expected state consequence | Challenge attempt opened |
-| Expected visible consequence | Post-check phase |
+| Authoritative owner | Attempt is history (`accepted: false` until post-check). View step is `aiOffDraft.step` |
+| Expected state consequence | Challenge attempt appended |
+| Expected visible consequence | Draft step becomes post-check; or response-edit after “修改刚才的判断” |
 | Blocked condition + visible reason | Incomplete / tutor-used blocked by policy |
 | Progression condition | Both challenges later accepted |
 | Evidence input / provenance | Pre-commit structured + authored. Post-check cannot manufacture (`post-check-cannot-manufacture`) |
@@ -720,12 +750,12 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 | Stage / Subtask | AI_OFF / post-check then COMPLETE |
 | Cognitive task | Confirm which structure was used; then stop |
 | Required capability | post-check commit |
-| Visible control / surface | post-check boxes + `记下这次对照`; then next challenge or `LensCompleteView` |
-| Semantic learner action | `applyLensAiOffPostCheckSave` |
-| Authoritative owner | `evaluateLensAiOffAttempt` / `evaluateRequiredAiOffPair` |
-| Expected state consequence | `accepted` only if official ok ∧ post-check ∧ !llm; draft from `nextLensAiOffDraft` |
-| Expected visible consequence | Challenge 2 response, or COMPLETE. One repair if not accepted |
-| Blocked condition + visible reason | Failed post-check stays; one `lens-ai-off-repair` from `classifyLensAiOffPostCheck` (empty / missing / distractor / precommit / wrong-challenge) |
+| Visible control / surface | post-check boxes + `记下这次对照`; precommit failure also `修改刚才的判断`; then next challenge or `LensCompleteView` |
+| Semantic learner action | `applyLensAiOffPostCheckSave` / `retryLensAiOffDraft` |
+| Authoritative owner | `evaluateLensAiOffAttempt` / `evaluateRequiredAiOffPair`. View step remains `aiOffDraft.step` |
+| Expected state consequence | `accepted` only if official ok ∧ post-check ∧ !llm; latest attempt for the challenge; draft from `nextLensAiOffDraft` or restored response |
+| Expected visible consequence | Challenge 2 response, COMPLETE, stay-on-post-check, or executable response-edit |
+| Blocked condition + visible reason | Failed post-check stays; one `lens-ai-off-repair`. Precommit repair is executable. Missing/distractor stay on checkboxes |
 | Progression condition | `hasCompletedLensAiOff` |
 | Evidence input / provenance | L6 flags only from accepted pair + LLM off |
 | IA-1 | PASS |
@@ -813,6 +843,6 @@ The dedicated OBSERVE E2E now submits checkboxes before any bench action and ass
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Re-audit of IA-07-01 / 02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 against current code: all PASS. This is not a learner-validation claim.
+Re-audit of IA-07-01 / 02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 / 10 / 11 against current code: all PASS. This is not a learner-validation claim.
 
 This is not learner validation.

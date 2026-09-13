@@ -98,6 +98,26 @@ describe("Scene 07 MODEL required-ray UI", () => {
     expect(screen.getByTestId("lens-model-next")).toBeDisabled();
   });
 
+  it("clears a stale outgoing path when the required family changes", async () => {
+    const user = userEvent.setup();
+    replaceSession(modelStep2Session());
+    render(<ConvexLensOpticalBenchLab />);
+    await user.click(screen.getByRole("radio", { name: /第一条光线：先选一条要用的特殊光线。 平行主光轴/ }));
+    await user.click(
+      screen.getByRole("radio", { name: /第一条光线：经过透镜后，它应该怎样走？ 过透镜后：经过另一侧焦点/ }),
+    );
+    expect(screen.getByTestId("ray-parallel-axis").querySelector('[data-ray-segment="outgoing-actual"]')).toBeTruthy();
+    await user.click(screen.getByRole("radio", { name: /第一条光线：先选一条要用的特殊光线。 过光心/ }));
+    expect(screen.queryByTestId("ray-parallel-axis")).not.toBeInTheDocument();
+    const ray = screen.getByTestId("ray-through-center");
+    expect(ray.querySelector('[data-ray-segment="incident"]')).toBeTruthy();
+    expect(ray.querySelector('[data-ray-segment="outgoing-actual"]')).toBeNull();
+    expect(screen.getByTestId("lens-model-next")).toBeDisabled();
+    expect(screen.getByTestId("lens-model-next-reason")).toHaveTextContent(/经过透镜后怎么走/);
+    expect(screen.queryByTestId("lens-model-next-reason")).not.toHaveTextContent(/走法还对不上/);
+    expect(screen.getByTestId("lens-ray-a-after").querySelector("input:checked")).toBeNull();
+  });
+
   it("renders through-center incident immediately", async () => {
     const user = userEvent.setup();
     replaceSession(modelStep2Session());

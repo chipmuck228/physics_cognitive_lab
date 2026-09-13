@@ -483,23 +483,27 @@ export function nextLensAiOffDraft(
   };
 }
 
+export function lensAiOffNeedsResponseEdit(
+  challengeId: string,
+  postCheckIds: readonly string[],
+  officialOk: boolean,
+): boolean {
+  const classified = classifyLensAiOffPostCheck({
+    challengeId,
+    postCheckIds,
+    officialOk,
+  });
+  return classified.kind === "rejected" && classified.message === LENS_AI_OFF_COPY.postCheckPrecommit;
+}
+
 export function retryLensAiOffDraft(
   previous: LensAiOffDraft,
-  challengeId: string,
+  attempt: IndependentChallengeAttempt,
 ): LensAiOffDraft {
   return {
-    ...previous,
-    currentChallengeId: challengeId,
+    ...lensAiOffDraftFromCommittedAttempt(attempt, previous),
+    currentChallengeId: attempt.challengeId,
     step: "response",
-    objectStation: "",
-    meetingMode: "",
-    side: "",
-    nature: "",
-    orientation: "",
-    size: "",
-    screenReceivable: "",
-    selectedAnswer: "",
-    reasoning: "",
     postCheckSelections: [],
   };
 }
