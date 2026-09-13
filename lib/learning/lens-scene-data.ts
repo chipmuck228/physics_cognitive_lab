@@ -319,6 +319,7 @@ export function lensAiOffDraft(session: LearningSession): LensAiOffDraft {
     screenReceivable: record.screenReceivable ?? "",
     selectedAnswer: record.selectedAnswer ?? "",
     reasoning: record.reasoning ?? "",
+    authoredInterpretation: record.authoredInterpretation ?? null,
     postCheckSelections: Array.isArray(record.postCheckSelections)
       ? record.postCheckSelections
       : [],

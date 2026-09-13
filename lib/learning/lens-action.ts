@@ -1,4 +1,4 @@
-import { LENS_COPY, LENS_PHASE_STAGES } from "@/lib/content/convex-lens-optical-bench";
+import { LENS_AI_OFF_COPY, LENS_COPY, LENS_PHASE_STAGES } from "@/lib/content/convex-lens-optical-bench";
 import { hasOwnWords } from "@/lib/learning/engine-describe";
 import { advanceIfReady } from "@/lib/learning/advance";
 import type { LensDomainOutcome } from "@/lib/learning/lens-action-response";
@@ -779,7 +779,7 @@ export function applyLensAiOffCommit(
   if (!canCommitLensAiOffResponse(draft)) {
     return {
       session,
-      outcome: { kind: "missing", message: "先选出判断，再写下理由。" },
+      outcome: { kind: "missing", message: LENS_AI_OFF_COPY.needCommit },
     };
   }
   const llmUsed = lensTutorUsedDuringIndependent(session);

@@ -1,5 +1,5 @@
 import { LENS_STEP6_UNCLEAR_MESSAGE } from "@/content/physics-models/convex-lens-imaging/construction";
-import { LENS_COPY } from "@/lib/content/convex-lens-optical-bench";
+import { LENS_AI_OFF_COPY, LENS_COPY } from "@/lib/content/convex-lens-optical-bench";
 import {
   applyLensStep6Parse,
   parseLensReasoningSemantic,
@@ -9,7 +9,12 @@ import {
   applyLensTransferParse,
   resolveLensTransferWithoutLlm,
 } from "@/lib/learning/lens-transfer-semantic";
+import {
+  applyLensAiOffParse,
+  resolveLensAiOffWithoutLlm,
+} from "@/lib/learning/lens-ai-off-semantic";
 import type { LensTransferDraft } from "@/lib/learning/lens-transfer";
+import type { LensAiOffDraft } from "@/lib/learning/lens-ai-off";
 import type { LensModelDraft, LensModelStepCheck } from "@/lib/learning/lens-model";
 import { normalizeLensStep6Text } from "@/content/physics-models/convex-lens-imaging/construction";
 import type { LensReasoningSemanticParse } from "@/content/physics-models/convex-lens-imaging/construction";
@@ -43,23 +48,83 @@ export async function requestLensStep6Parse(
     });
     const raw: unknown = await response.json();
     if (!response.ok || !raw || typeof raw !== "object") {
+      logClientParse({
+        semanticPath: "llm",
+        providerCalled: false,
+        providerHttpStatus: response.status,
+        parseResultStatus: "unavailable",
+        failureCategory: "provider_unavailable",
+      });
       return { ok: false, reason: "unavailable" };
     }
-    const record = raw as { ok?: boolean; parse?: unknown; reason?: string };
+    const record = raw as {
+      ok?: boolean;
+      parse?: unknown;
+      reason?: string;
+      failureCategory?: string;
+      providerCalled?: boolean;
+      providerHttpStatus?: number;
+    };
     if (!record.ok) {
+      logClientParse({
+        semanticPath: "llm",
+        providerCalled: record.providerCalled === true,
+        providerHttpStatus: record.providerHttpStatus ?? response.status,
+        parseResultStatus: record.reason === "invalid" ? "invalid" : "unavailable",
+        failureCategory: record.failureCategory ?? record.reason,
+      });
       return { ok: false, reason: record.reason === "invalid" ? "invalid" : "unavailable" };
     }
     const parse = parseLensReasoningSemantic(record.parse);
     if (!parse) {
+      logClientParse({
+        semanticPath: "llm",
+        providerCalled: true,
+        providerHttpStatus: response.status,
+        parseResultStatus: "invalid",
+        failureCategory: "schema_invalid",
+      });
       return { ok: false, reason: "invalid" };
     }
+    logClientParse({
+      semanticPath: "llm",
+      providerCalled: true,
+      providerHttpStatus: response.status,
+      parseResultStatus: "valid",
+      normalizedParseCategory: parse.meetingClaim,
+    });
     parseCache.set(key, parse);
     return { ok: true, parse };
-  } catch {
+  } catch (error) {
+    const aborted = error instanceof DOMException && error.name === "AbortError";
+    logClientParse({
+      semanticPath: "llm",
+      providerCalled: false,
+      parseResultStatus: "unavailable",
+      failureCategory: aborted ? "timeout" : "request_aborted",
+    });
     return { ok: false, reason: "unavailable" };
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function logClientParse(entry: {
+  semanticPath: "fast-path" | "llm";
+  providerCalled: boolean;
+  providerHttpStatus?: number;
+  parseResultStatus: "valid" | "invalid" | "unavailable";
+  normalizedParseCategory?: string;
+  failureCategory?: string;
+}) {
+  console.info("[lens-step6-parse]", {
+    semanticPath: entry.semanticPath,
+    providerCalled: entry.providerCalled,
+    providerHttpStatus: entry.providerHttpStatus ?? null,
+    parseResultStatus: entry.parseResultStatus,
+    normalizedParseCategory: entry.normalizedParseCategory ?? null,
+    failureCategory: entry.failureCategory ?? null,
+  });
 }
 
 export async function resolveLensStep6Check(
@@ -86,6 +151,14 @@ export async function resolveLensTransferCheck(
 ): Promise<{ draft: LensTransferDraft; check: LensModelStepCheck }> {
   const local = resolveLensTransferWithoutLlm(draft);
   if (local.handled) {
+    console.info("[lens-step6-parse]", {
+      semanticPath: "fast-path",
+      providerCalled: false,
+      providerHttpStatus: null,
+      parseResultStatus: local.check.status === "ready" ? "valid" : "unavailable",
+      normalizedParseCategory: local.draft.authoredInterpretation?.parse.meetingClaim ?? null,
+      failureCategory: local.check.status === "ready" ? null : "fast_path_handled",
+    });
     return { draft: local.draft, check: local.check };
   }
   const remote = await requestParse(draft.studentExplanation);
@@ -96,4 +169,30 @@ export async function resolveLensTransferCheck(
     };
   }
   return applyLensTransferParse(draft, remote.parse, "llm-semantic-parse");
+}
+
+export async function resolveLensAiOffCheck(
+  draft: LensAiOffDraft,
+  requestParse: typeof requestLensStep6Parse = requestLensStep6Parse,
+): Promise<{ draft: LensAiOffDraft; check: LensModelStepCheck }> {
+  const local = resolveLensAiOffWithoutLlm(draft);
+  if (local.handled) {
+    console.info("[lens-step6-parse]", {
+      semanticPath: "fast-path",
+      providerCalled: false,
+      providerHttpStatus: null,
+      parseResultStatus: local.check.status === "ready" ? "valid" : "unavailable",
+      normalizedParseCategory: local.draft.authoredInterpretation?.parse.meetingClaim ?? null,
+      failureCategory: local.check.status === "ready" ? null : "fast_path_handled",
+    });
+    return { draft: local.draft, check: local.check };
+  }
+  const remote = await requestParse(draft.reasoning);
+  if (!remote.ok) {
+    return {
+      draft,
+      check: { status: "missing", message: LENS_AI_OFF_COPY.unclear },
+    };
+  }
+  return applyLensAiOffParse(draft, remote.parse, "llm-semantic-parse");
 }

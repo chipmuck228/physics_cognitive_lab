@@ -995,6 +995,8 @@ export interface ConvexLensAiOffAttempt {
   meetingMode: MeetingMode;
   image: ImageConsequence;
   preCommitReasoning: string;
+  /** SYSTEM_DERIVED interpretation of preCommitReasoning. Not student-authored evidence. */
+  authoredInterpretation?: LensReasoningSemanticParse | null;
   judgmentId: string;
   postCheckIds?: string[];
   llmUsed: boolean;
@@ -1031,6 +1033,8 @@ function aiOffAuthoredOk(
   challengeId: AiOffChallengeId,
   text: string,
   meetingMode: MeetingMode,
+  image: Pick<ImageConsequence, "nature" | "screenReceivable">,
+  stored?: LensReasoningSemanticParse | null,
 ): boolean {
   const authored = analyzeConvexLensAuthored(text);
   if (
@@ -1041,20 +1045,25 @@ function aiOffAuthoredOk(
   ) {
     return false;
   }
-  if (
-    !authored.hasMeetingLanguage ||
-    !authored.hasConsequenceBind ||
-    !authoredMatchesMeeting(text, meetingMode)
-  ) {
+  const resolved = resolveLensStep6Parse(text, stored);
+  const semanticOk =
+    resolved.parse != null &&
+    evaluateLensAuthoredSemanticClaim(resolved.parse, meetingMode, image).status ===
+      "ready";
+  const lexicalOk =
+    authored.hasMeetingLanguage &&
+    authored.hasConsequenceBind &&
+    authoredMatchesMeeting(text, meetingMode);
+  if (!semanticOk && !lexicalOk) {
     return false;
   }
+  const compactText = compact(text);
   if (challengeId === "ai-off-boundary-magnifier-cannot-catch-virtual") {
-    const compactText = compact(text);
-    const rejectsVirtualOnScreen = /接不到|不能接到|虚像.*屏/.test(compactText);
+    const namesNoScreen = /接不到|不能接到|虚像.*屏/.test(compactText);
     const treatsFAsLimit = /焦点上|u=f|正好在[Ff]|有限远|不成完整/.test(compactText);
-    return rejectsVirtualOnScreen && treatsFAsLimit;
+    return namesNoScreen && treatsFAsLimit;
   }
-  return /接收|光屏|卡片|放到像/.test(compact(text));
+  return /接收|光屏|卡片|放到像|接到/.test(compactText);
 }
 
 export function evaluateConvexLensAiOff(
@@ -1072,6 +1081,8 @@ export function evaluateConvexLensAiOff(
       attempt.challengeId,
       attempt.preCommitReasoning,
       attempt.meetingMode,
+      attempt.image,
+      attempt.authoredInterpretation,
     );
   const judgmentOk = attempt.judgmentId === expected.judgmentId;
   const postCheckLooksComplete = (attempt.postCheckIds?.length ?? 0) >= 3;

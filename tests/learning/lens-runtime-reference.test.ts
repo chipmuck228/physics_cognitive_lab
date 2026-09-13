@@ -198,7 +198,7 @@ describe("Scene 07 VisibleInteractionContext help binding", () => {
     expect(lensContextLookableReference(transfer, "ray")).toBe(false);
     expect(isLensHelpTextLegal(lookAtRays, transfer)).toBe(false);
     expect(lensHelpLadder("how-image", transfer).join("\n")).not.toMatch(/先看两条光线/);
-    expect(lensHelpLadder("how-say", transfer).join("\n")).toMatch(/光线关系/);
+    expect(lensHelpLadder("how-say", transfer).join("\n")).toMatch(/光线怎样相遇/);
     expect(lensHelpLadder("how-say", transfer).join("\n")).not.toMatch(/光屏位置/);
   });
 

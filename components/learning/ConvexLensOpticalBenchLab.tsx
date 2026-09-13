@@ -47,7 +47,9 @@ import {
   isLensAiOffSessionOpen,
   lensAiOffPostCheckRepair,
   retryLensAiOffDraft,
+  withLensAiOffReasoning,
 } from "@/lib/learning/lens-ai-off";
+import { lensAiOffCanAdvanceToPostCheck } from "@/lib/learning/lens-ai-off-semantic";
 import { emptyLensDescribeInput } from "@/lib/learning/lens-describe";
 import {
   currentLensExamPatternId,
@@ -90,7 +92,11 @@ import {
   lensModelRepairStep,
   visibleLensStudentRays,
 } from "@/lib/learning/lens-model";
-import { resolveLensStep6Check, resolveLensTransferCheck } from "@/lib/learning/lens-step6-parse-client";
+import {
+  resolveLensAiOffCheck,
+  resolveLensStep6Check,
+  resolveLensTransferCheck,
+} from "@/lib/learning/lens-step6-parse-client";
 import {
   isLensRevisiting,
   lensDisplayStage,
@@ -212,6 +218,7 @@ export function ConvexLensOpticalBenchLab() {
   );
   const [aiOffNeedResponse, setAiOffNeedResponse] = useState(false);
   const [aiOffRepair, setAiOffRepair] = useState<string | null>(null);
+  const [aiOffChecking, setAiOffChecking] = useState(false);
   const [actionOutcome, setActionOutcome] = useState<LensDomainOutcome | null>(null);
 
   const hydrateKey = session
@@ -911,25 +918,56 @@ export function ConvexLensOpticalBenchLab() {
     />
   ) : isAiOff && aiOffOpen ? (
     <LensAiOffTask
+      key={aiOffChallengeId}
       draft={{ ...aiOffDraft, currentChallengeId: aiOffChallengeId }}
       questionIndex={aiOffQuestionIndex}
       totalCount={aiOffDraft.challengeIds.length}
       step={aiOffStep}
       committed={latestAiOffAttempt}
       needResponse={aiOffNeedResponse}
+      checking={aiOffChecking}
       onChange={(next) => {
-        setAiOffDraft(next);
-        saveAiOffDraft(next);
+        const revised =
+          next.reasoning !== aiOffDraft.reasoning
+            ? withLensAiOffReasoning(next, next.reasoning)
+            : next;
+        setAiOffDraft(revised);
+        saveAiOffDraft(revised);
         setAiOffRepair(null);
+        setAiOffNeedResponse(false);
       }}
       onCommit={() => {
-        const outcome = saveAiOffIndependentResponse({
-          ...aiOffDraft,
-          currentChallengeId: aiOffChallengeId,
-        });
-        setAiOffNeedResponse(outcome.kind === "missing");
-        setAiOffDraft(lensAiOffDraft(getSessionSnapshot(CONVEX_LENS_SCENE_ID)));
-        presentAction(outcome);
+        void (async () => {
+          if (aiOffChecking) {
+            return;
+          }
+          setAiOffChecking(true);
+          const resolved = await resolveLensAiOffCheck({
+            ...aiOffDraft,
+            currentChallengeId: aiOffChallengeId,
+          });
+          setAiOffChecking(false);
+          setAiOffDraft(resolved.draft);
+          saveAiOffDraft(resolved.draft);
+          if (
+            resolved.check.status !== "ready" &&
+            !lensAiOffCanAdvanceToPostCheck(resolved.draft)
+          ) {
+            const message = resolved.check.message;
+            setAiOffNeedResponse(resolved.check.status === "missing");
+            setAiOffRepair(message);
+            presentAction({
+              kind: resolved.check.status === "missing" ? "missing" : "rejected",
+              message,
+            });
+            return;
+          }
+          const outcome = saveAiOffIndependentResponse(resolved.draft);
+          setAiOffNeedResponse(outcome.kind === "missing");
+          setAiOffDraft(lensAiOffDraft(getSessionSnapshot(CONVEX_LENS_SCENE_ID)));
+          setAiOffRepair(outcome.kind === "missing" ? outcome.message ?? null : null);
+          presentAction(outcome);
+        })();
       }}
       onSubmitPostCheck={() => {
         const outcome = saveAiOffPostCheck({

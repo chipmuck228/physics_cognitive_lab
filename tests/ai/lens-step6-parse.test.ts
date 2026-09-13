@@ -9,9 +9,13 @@ import {
 } from "@/lib/ai/lens-step6-parse";
 import { completeChat } from "@/lib/ai/provider";
 
-vi.mock("@/lib/ai/provider", () => ({
-  completeChat: vi.fn(),
-}));
+vi.mock("@/lib/ai/provider", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/ai/provider")>();
+  return {
+    ...actual,
+    completeChat: vi.fn(),
+  };
+});
 
 const validParse = {
   meetingClaim: "actual-convergence",
@@ -72,6 +76,8 @@ describe("Scene 07 Step 6 LLM parse adapter", () => {
     expect(parseLensStep6ModelContent(JSON.stringify({ pass: true, score: 1 }))).toEqual({
       ok: false,
       reason: "invalid",
+      failureCategory: "schema_invalid",
+      providerCalled: true,
     });
   });
 
@@ -83,7 +89,12 @@ describe("Scene 07 Step 6 LLM parse adapter", () => {
         step: 6,
         text: "光线碰到一起，成实像。",
       }),
-    ).resolves.toEqual({ ok: false, reason: "unavailable" });
+    ).resolves.toEqual({
+      ok: false,
+      reason: "unavailable",
+      failureCategory: "provider_unavailable",
+      providerCalled: false,
+    });
   });
 
   it("does not let injected instructions become an official answer", async () => {

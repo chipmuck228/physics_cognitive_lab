@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -199,7 +199,7 @@ describe("Scene 07 EXAM diagram and AI_OFF post-check UI", () => {
     const user = userEvent.setup();
     const invalid = {
       ...completeLensAiOffDraft(LENS_AI_OFF_A),
-      meetingMode: "backward-extension",
+      selectedAnswer: "also-convex-lens",
       postCheckSelections: [] as string[],
       step: "response" as const,
     };
@@ -231,38 +231,12 @@ describe("Scene 07 EXAM diagram and AI_OFF post-check UI", () => {
       "value",
       "beyond-2f",
     );
-    expect(screen.getByTestId("lens-ai-off-meeting").querySelector("input:checked")).toHaveAttribute(
-      "value",
-      "backward-extension",
-    );
-    expect(screen.getByTestId("lens-ai-off-side").querySelector("input:checked")).toHaveAttribute(
-      "value",
-      "other-side",
-    );
-    expect(screen.getByTestId("lens-ai-off-nature").querySelector("input:checked")).toHaveAttribute(
-      "value",
-      "real",
-    );
-    expect(screen.getByTestId("lens-ai-off-orientation").querySelector("input:checked")).toHaveAttribute(
-      "value",
-      "inverted",
-    );
-    expect(screen.getByTestId("lens-ai-off-size").querySelector("input:checked")).toHaveAttribute(
-      "value",
-      "reduced",
-    );
-    expect(screen.getByTestId("lens-ai-off-receive").querySelector("input:checked")).toHaveAttribute(
-      "value",
-      "true",
-    );
+    expect(screen.getByRole("radio", { name: /只能透过透镜看到虚像/ })).toBeChecked();
     expect(screen.getByTestId("lens-ai-off-reasoning")).toHaveValue(invalid.reasoning);
-    expect(screen.queryByRole("checkbox", { name: /窗外景物在 2F 以外/ })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("lens-ai-off-meeting")).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: /物体相对 F/ })).not.toBeInTheDocument();
 
-    await user.click(
-      within(screen.getByTestId("lens-ai-off-meeting")).getByRole("radio", {
-        name: /出射光线真正会聚/,
-      }),
-    );
+    await user.click(screen.getByRole("radio", { name: /能在卡片上得到清晰的实像/ }));
     await user.click(screen.getByTestId("lens-ai-off-commit"));
     expect(screen.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "post-check");
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).independentAssessment?.challengeAttempts).toHaveLength(

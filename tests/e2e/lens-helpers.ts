@@ -261,6 +261,19 @@ export async function fillTransferCondition(
   await chooseGroupOption(page, "lens-transfer-station", stationLabel);
 }
 
+export async function fillAiOffCondition(
+  page: Page,
+  station: "beyond-2f" | "between-f-and-2f" | "inside-f",
+) {
+  const stationLabel =
+    station === "beyond-2f"
+      ? /物体在 2F 以外/
+      : station === "between-f-and-2f"
+        ? /物体在 F 和 2F 之间/
+        : /物体在焦点以内/;
+  await chooseGroupOption(page, "lens-ai-off-station", stationLabel);
+}
+
 export async function completeLensProjectorTransfer(page: Page) {
   await expect(page.getByTestId("lens-transfer-task")).toBeVisible();
   await expect(page.getByTestId("lens-transfer-progress")).toHaveText("第 1 / 2 个新情境");
@@ -382,12 +395,12 @@ export async function completeLensAiOff(page: Page) {
       challengeId,
     );
     if (challengeId === LENS_AI_OFF_CHALLENGE_IDS[0]) {
-      await fillImagingStructure(page, "beyond-2f", "lens-ai-off");
+      await fillAiOffCondition(page, "beyond-2f");
       await page.getByTestId("lens-ai-off-reasoning").fill(
         "窗外景物在 2F 以外，光线在另一侧真正会聚，所以成倒立缩小实像，白卡片是接收器，要放到像的位置才能接到。",
       );
     } else {
-      await fillImagingStructure(page, "inside-f", "lens-ai-off");
+      await fillAiOffCondition(page, "inside-f");
       await page.getByTestId("lens-ai-off-reasoning").fill(
         "邮票在焦点以内，光线散开，只有反向延长线相交，所以是虚像，白纸接不到。物体正好在焦点上时，折射后的光线彼此平行，有限远处不相交，所以光屏怎么移动都接不到清晰像。",
       );

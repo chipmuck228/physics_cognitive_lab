@@ -401,20 +401,31 @@ export const LENS_EXAM_COPY = {
 
 export const LENS_AI_OFF_COPY = {
   commit: "提交判断",
-  needCommit: "先选出物距、会聚方式和像的后果，再用自己的话写理由，最后选判断。",
-  postCheckTitle: "对照一下：你刚才判断时用到了哪些？",
+  checking: "正在看你写的理由…",
+  needCommit: "先判断物体相对 F / 2F 在哪里，选出最后会出现什么结果，再用自己的话写理由。",
+  needStation: "先判断这个情境里物体相对 F / 2F 在哪里。",
+  needJudgment: "先选出你认为最后会出现什么结果。",
+  needReason: "先写下理由：这里的条件让光线怎样走，最后为什么会得到这个结果。",
+  vague: "这句话还太笼统。再说具体一点：光线最后在哪里相遇？这会形成什么结果？",
+  unclear:
+    "这句话我还没看清你想表达的光线关系。可以再说具体一点：光线最后在哪里相遇？这会形成什么结果？",
+  inconsistent: "你写的光线关系和像的后果对不上。先看光线是会聚、反向延长还是平行，再接到对应的结果。",
+  judgmentDisagree: "你选的结果，和理由里的光线关系对不上。先对一下再提交。",
+  postCheckTitle: "刚才判断时，哪些关系真正起作用？",
   postCheckSubmit: "记下这次对照",
-  postCheckNeedFacts: "先勾出这次对照里你确认的事实。",
-  postCheckMissingRequired:
-    "还有一条关键事实没有对照到。再看看：物体位置、光线怎样相遇、像的性质、白卡片作用里，哪一项还没有核对？",
+  postCheckNeedFacts: "先勾出这次真正起作用的关系。",
+  postCheckMissingRequired: "还有一条关键关系没有对照到。再看看哪一项还没有核对？",
   postCheckDistractor:
-    "有一项只是表面上“也有凸透镜”，还不能说明模型相同。先去掉只看器材名称的那一项。",
+    "有一项只是表面上说得通，还不能说明这次真正起作用的关系。先去掉那一项。",
   postCheckPrecommit:
-    "对照事实已经勾好了。还要回到上面的判断和理由，把物距、光线怎样相遇、像的后果说清楚。",
+    "对照已经勾好了。还要回到上面的判断和理由，把条件、光线怎样走、最后结果说清楚。",
   postCheckWrongChallenge: "这次对照和当前题目对不上。先回到这一题再勾一次。",
   postCheckSystem: "这次对照没能记下。请再试一次。",
   editJudgment: "修改刚才的判断",
-  structureTitle: "先写下这次的光路结构",
+  structureTitle: "现在没有提示，先自己判断。",
+  conditionQuestion: "先判断这个情境里物体相对 F / 2F 在哪里。",
+  judgmentQuestion: "你认为最后会出现什么结果？",
+  reasonQuestion: "为什么？说说这里的条件让光线怎样走，最后为什么会得到这个结果。",
 } as const;
 
 export function lensExperimentTitle(id: LensExperimentId): string {

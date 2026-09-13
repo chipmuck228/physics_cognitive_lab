@@ -33,43 +33,30 @@ export const convexLensImagingAssessmentOverlay: AssessmentOverlay = {
       judgments: [
         {
           id: "distant-object-real-reduced",
-          label:
-            "窗外景物物距大于 2f，透镜后光线真正会聚，白卡片接到倒立、缩小的实像；卡片是接收器，必须放在像的位置。",
+          label: "能在卡片上得到清晰的实像。",
           correct: true,
         },
         {
           id: "also-convex-lens",
-          label: "这也有凸透镜，所以和课堂上完全一样，不必再说物距。",
+          label: "只能透过透镜看到虚像，卡片接不到。",
           correct: false,
         },
         {
           id: "image-on-card-is-the-image-itself",
-          label: "画面长在卡片里面，卡片就是像。",
+          label: "有限远处不能形成清晰的像。",
           correct: false,
         },
       ],
       postCheck: [
         {
-          id: "identifiesObjectRelativeToF",
-          label: "窗外景物在 2F 以外或至少在焦点以外且较远。",
+          id: "condition-determines-rays",
+          label: "物体相对 F / 2F 的位置，决定光线会不会真正会聚。",
           required: true,
           distractor: false,
         },
         {
-          id: "identifiesRayMeetingMode",
-          label: "透镜后的光线真正会聚。",
-          required: true,
-          distractor: false,
-        },
-        {
-          id: "identifiesImageNatureAndOrientation",
-          label: "这是倒立实像；实像和倒立不是同一个词。",
-          required: true,
-          distractor: false,
-        },
-        {
-          id: "checksScreenIsReceiver",
-          label: "白卡片是接收器，要放在像的位置才清晰。",
+          id: "meeting-determines-image",
+          label: "光线怎样相遇，决定像是实是虚、卡片能不能接到。",
           required: true,
           distractor: false,
         },
@@ -80,8 +67,8 @@ export const convexLensImagingAssessmentOverlay: AssessmentOverlay = {
           distractor: true,
         },
         {
-          id: "table-row-only",
-          label: "背出“缩小倒立实像”就够了。",
+          id: "screen-creates-image",
+          label: "画面是卡片自己造出来的。",
           required: false,
           distractor: true,
         },
@@ -91,55 +78,42 @@ export const convexLensImagingAssessmentOverlay: AssessmentOverlay = {
       judgments: [
         {
           id: "virtual-not-on-screen-and-f-is-limit",
-          label:
-            "邮票在焦点以内时，反向延长线相交，成虚像，白纸接不到；物体正好在 F 上时，有限远处不成完整的像，不是又一种普通成像。",
+          label: "白纸接不到这个像；物体在焦点上时，有限远处也得不到清晰像。",
           correct: true,
         },
         {
           id: "catch-virtual-on-paper",
-          label: "把白纸放到正确地方，就能接到放大镜里的虚像。",
+          label: "把白纸放到对的地方，就能接到这个像。",
           correct: false,
         },
         {
           id: "at-f-ordinary-row",
-          label: "u = f 也是五种普通有限远成像之一，只是光屏不好找。",
+          label: "焦点上也能成普通的像，只是光屏不好找。",
           correct: false,
         },
       ],
       postCheck: [
         {
-          id: "identifiesRayMeetingMode",
-          label: "焦点以内是反向延长线相交；在焦点上是有限远处不相交。",
+          id: "virtual-cannot-project",
+          label: "焦点以内出来的光还是散开的，往回延长才相交，所以纸接不到。",
           required: true,
           distractor: false,
         },
         {
-          id: "rejectsVirtualOnScreen",
-          label: "虚像不能用光屏接到。",
+          id: "f-is-not-ordinary",
+          label: "物体在焦点上时，有限远处不成完整的像。",
           required: true,
           distractor: false,
         },
         {
-          id: "rejectsObjectAtFAsOrdinaryImage",
-          label: "u = f 不是普通的有限远成像。",
-          required: true,
-          distractor: false,
-        },
-        {
-          id: "distinguishesNoScreenFromNoImage",
-          label: "光屏上看不到，不等于任何情况下都没有像。",
-          required: true,
-          distractor: false,
-        },
-        {
-          id: "no-image-if-no-screen",
-          label: "屏上没有就一定没有像。",
+          id: "project-virtual",
+          label: "虚像也可以投影到纸上。",
           required: false,
           distractor: true,
         },
         {
-          id: "need-thin-lens-equation",
-          label: "必须先用 1/f = 1/u + 1/v 才能回答。",
+          id: "no-image-if-no-screen",
+          label: "屏上看不到就一定没有像。",
           required: false,
           distractor: true,
         },

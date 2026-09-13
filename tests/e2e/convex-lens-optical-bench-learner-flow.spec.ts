@@ -29,7 +29,7 @@ import {
   completeLensPredictA,
   completeLensProjectorTransfer,
   expectNoTutorChrome,
-  fillImagingStructure,
+  fillAiOffCondition,
   fillOneRay,
   fillTransferCondition,
   lensStageHeading,
@@ -416,16 +416,41 @@ test.describe("Scene 07 learner-visible flow", () => {
     await expect(page.getByTestId("lens-ai-off-task")).toHaveAttribute("data-challenge", challengeId);
     await expect(page.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "response");
 
-    await fillImagingStructure(page, "beyond-2f", "lens-ai-off");
-    await page.getByTestId("lens-ai-off-meeting").getByRole("radio", { name: /出射光线散开/ }).click();
+    await fillAiOffCondition(page, "beyond-2f");
     await page.getByTestId("lens-ai-off-reasoning").fill(
-      "窗外景物在 2F 以外，光线在另一侧真正会聚，所以成倒立缩小实像，白卡片是接收器，要放到像的位置才能接到。",
+      "这些光穿过去以后在另一边碰到了一起，所以会形成能接到的像。",
     );
-    await page
-      .getByRole("radio", {
-        name: lensJudgmentLabelFor(challengeId, intendedLensAiOffAnswerId(challengeId)),
-      })
-      .click();
+    await page.getByRole("radio", { name: /只能透过透镜看到虚像/ }).click();
+    await page.route("**/api/lens-step6-parse", async (route) => {
+      const posted = route.request().postDataJSON() as { text?: string };
+      const text = posted?.text ?? "";
+      const virtual = /虚像|反向|散开|往回/.test(text);
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          ok: true,
+          parse: virtual
+            ? {
+                meetingClaim: "backward-extension",
+                imageNatureClaim: "virtual",
+                screenClaim: "not-receivable",
+                hasMeetingClaim: true,
+                hasConsequenceClaim: true,
+                hasCausalBind: true,
+                ambiguity: "none",
+              }
+            : {
+                meetingClaim: "actual-convergence",
+                imageNatureClaim: "real",
+                screenClaim: "receivable",
+                hasMeetingClaim: true,
+                hasConsequenceClaim: true,
+                hasCausalBind: true,
+                ambiguity: "none",
+              },
+        }),
+      });
+    });
     await page.getByTestId("lens-ai-off-commit").click();
     await expect(page.getByTestId("lens-ai-off-post-check")).toBeVisible();
 
@@ -442,17 +467,19 @@ test.describe("Scene 07 learner-visible flow", () => {
     await page.getByRole("button", { name: LENS_AI_OFF_COPY.editJudgment }).click();
     await expect(page.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "response");
     await expect(page.getByTestId("lens-ai-off-commit")).toBeVisible();
-    await expect(page.getByTestId("lens-ai-off-meeting").locator("input:checked")).toHaveAttribute(
-      "value",
-      "backward-extension",
-    );
     await expect(page.getByTestId("lens-ai-off-station").locator("input:checked")).toHaveAttribute(
       "value",
       "beyond-2f",
     );
-    await expect(page.getByTestId("lens-ai-off-reasoning")).toHaveValue(/窗外景物在 2F 以外/);
+    await expect(page.getByRole("radio", { name: /只能透过透镜看到虚像/ })).toBeChecked();
+    await expect(page.getByTestId("lens-ai-off-reasoning")).toHaveValue(/碰到了一起/);
+    await expect(page.getByTestId("lens-ai-off-meeting")).toHaveCount(0);
 
-    await page.getByTestId("lens-ai-off-meeting").getByRole("radio", { name: /出射光线真正会聚/ }).click();
+    await page
+      .getByRole("radio", {
+        name: lensJudgmentLabelFor(challengeId, intendedLensAiOffAnswerId(challengeId)),
+      })
+      .click();
     await expect(page.getByTestId("lens-ai-off-station").locator("input:checked")).toHaveAttribute(
       "value",
       "beyond-2f",
@@ -470,5 +497,26 @@ test.describe("Scene 07 learner-visible flow", () => {
       LENS_AI_OFF_CHALLENGE_IDS[1]!,
     );
     await expect(page.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "response");
+
+    const secondId = LENS_AI_OFF_CHALLENGE_IDS[1]!;
+    await fillAiOffCondition(page, "inside-f");
+    await page
+      .getByRole("radio", {
+        name: lensJudgmentLabelFor(secondId, intendedLensAiOffAnswerId(secondId)),
+      })
+      .click();
+    await page.getByTestId("lens-ai-off-reasoning").fill(
+      "出来以后还是散开的，往回画才碰到，所以只能看到虚像，白纸接不到。物体正好在焦点上时，有限远处不成完整的像。",
+    );
+    await page.getByTestId("lens-ai-off-commit").click();
+    await expect(page.getByTestId("lens-ai-off-post-check")).toBeVisible();
+    for (const option of lensAiOffPostCheckOptions(secondId)) {
+      if (option.required && intendedLensAiOffPostCheckIds(secondId).includes(option.id)) {
+        await page.getByRole("checkbox", { name: option.label }).click();
+      }
+    }
+    await page.getByRole("button", { name: LENS_AI_OFF_COPY.postCheckSubmit }).click();
+    await expect(page.getByTestId("lens-complete")).toBeVisible();
+    await expectNoTutorChrome(page);
   });
 });

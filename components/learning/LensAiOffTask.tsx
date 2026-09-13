@@ -4,20 +4,15 @@ import { QuestionGroup } from "@/components/learning/QuestionGroup";
 import { ValidationMessage } from "@/components/learning/ValidationMessage";
 import {
   LENS_AI_OFF_COPY,
-  LENS_MEETING_OPTIONS,
-  LENS_NATURE_OPTIONS,
-  LENS_ORIENTATION_OPTIONS,
-  LENS_RECEIVE_OPTIONS,
-  LENS_SIDE_OPTIONS,
-  LENS_SIZE_OPTIONS,
   LENS_STATION_OPTIONS,
 } from "@/lib/content/convex-lens-optical-bench";
 import {
-  canCommitLensAiOffResponse,
   lensAiOffChallenge,
   lensAiOffJudgments,
   lensAiOffNeedsResponseEdit,
   lensAiOffPostCheckOptions,
+  withLensAiOffReasoning,
+  withLensAiOffStation,
   type LensAiOffDraft,
   type LensAiOffStep,
 } from "@/lib/learning/lens-ai-off";
@@ -35,6 +30,7 @@ interface LensAiOffTaskProps {
   onSubmitPostCheck: () => void;
   onRetry: () => void;
   repairMessage?: string | null;
+  checking?: boolean;
 }
 
 export function LensAiOffTask({
@@ -49,13 +45,13 @@ export function LensAiOffTask({
   onSubmitPostCheck,
   onRetry,
   repairMessage = null,
+  checking = false,
 }: LensAiOffTaskProps) {
   const challenge = lensAiOffChallenge(draft.currentChallengeId);
   const judgments = lensAiOffJudgments(draft.currentChallengeId);
   const postCheckOptions = lensAiOffPostCheckOptions(draft.currentChallengeId);
   const showPostCheck = step === "post-check" && Boolean(committed);
   const selectedFacts = new Set(draft.postCheckSelections);
-  const canCommit = canCommitLensAiOffResponse(draft);
   const showResponseEdit =
     showPostCheck &&
     committed &&
@@ -87,85 +83,52 @@ export function LensAiOffTask({
 
       {!showPostCheck ? (
         <Card className="space-y-5 p-4">
-          <p className="text-sm font-medium">{LENS_AI_OFF_COPY.structureTitle}</p>
-          <QuestionGroup
-            id="lens-ai-off-station"
-            question="物体相对焦点在哪里？"
-            value={draft.objectStation}
-            onChange={(objectStation) => onChange({ ...draft, objectStation })}
-            options={[...LENS_STATION_OPTIONS]}
-          />
-          <QuestionGroup
-            id="lens-ai-off-meeting"
-            question="光线怎样相遇？"
-            value={draft.meetingMode}
-            onChange={(meetingMode) => onChange({ ...draft, meetingMode })}
-            options={[...LENS_MEETING_OPTIONS]}
-          />
-          <QuestionGroup
-            id="lens-ai-off-side"
-            question="像在哪一侧？"
-            value={draft.side}
-            onChange={(side) => onChange({ ...draft, side })}
-            options={[...LENS_SIDE_OPTIONS]}
-          />
-          <QuestionGroup
-            id="lens-ai-off-nature"
-            question="像的性质？"
-            value={draft.nature}
-            onChange={(nature) => onChange({ ...draft, nature })}
-            options={[...LENS_NATURE_OPTIONS]}
-          />
-          <QuestionGroup
-            id="lens-ai-off-orientation"
-            question="正立还是倒立？"
-            value={draft.orientation}
-            onChange={(orientation) => onChange({ ...draft, orientation })}
-            options={[...LENS_ORIENTATION_OPTIONS]}
-          />
-          <QuestionGroup
-            id="lens-ai-off-size"
-            question="大小怎样？"
-            value={draft.size}
-            onChange={(size) => onChange({ ...draft, size })}
-            options={[...LENS_SIZE_OPTIONS]}
-          />
-          <QuestionGroup
-            id="lens-ai-off-receive"
-            question="卡片或白纸能不能接到？"
-            value={draft.screenReceivable}
-            onChange={(screenReceivable) => onChange({ ...draft, screenReceivable })}
-            options={[...LENS_RECEIVE_OPTIONS]}
-          />
-          <fieldset className="space-y-3">
-            <legend className="text-sm font-medium">你的判断</legend>
-            {judgments.map((option) => (
-              <label key={option.id} className="flex cursor-pointer items-start gap-3 text-sm">
-                <input
-                  type="radio"
-                  name="lens-ai-off-judgment"
-                  checked={draft.selectedAnswer === option.id}
-                  onChange={() => onChange({ ...draft, selectedAnswer: option.id })}
-                />
-                <span>{option.label}</span>
-              </label>
-            ))}
-          </fieldset>
-          <label className="block space-y-2">
-            <span className="text-sm font-medium">先写下理由，再提交判断。</span>
-            <textarea
-              data-testid="lens-ai-off-reasoning"
-              className="min-h-28 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm"
-              value={draft.reasoning}
-              onChange={(event) => onChange({ ...draft, reasoning: event.target.value })}
+          <fieldset disabled={checking} className="space-y-5 border-0 p-0">
+            <p className="text-sm font-medium">{LENS_AI_OFF_COPY.structureTitle}</p>
+            <QuestionGroup
+              id="lens-ai-off-station"
+              question={LENS_AI_OFF_COPY.conditionQuestion}
+              value={draft.objectStation}
+              onChange={(objectStation) => onChange(withLensAiOffStation(draft, objectStation))}
+              options={[...LENS_STATION_OPTIONS]}
             />
-          </label>
-          {needResponse || !canCommit ? (
-            <ValidationMessage kind="missing">{LENS_AI_OFF_COPY.needCommit}</ValidationMessage>
+            <fieldset className="space-y-3">
+              <legend className="text-sm font-medium">{LENS_AI_OFF_COPY.judgmentQuestion}</legend>
+              {judgments.map((option) => (
+                <label key={option.id} className="flex cursor-pointer items-start gap-3 text-sm">
+                  <input
+                    type="radio"
+                    name="lens-ai-off-judgment"
+                    checked={draft.selectedAnswer === option.id}
+                    onChange={() => onChange({ ...draft, selectedAnswer: option.id })}
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </fieldset>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium">{LENS_AI_OFF_COPY.reasonQuestion}</span>
+              <textarea
+                data-testid="lens-ai-off-reasoning"
+                className="min-h-28 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm"
+                value={draft.reasoning}
+                onChange={(event) =>
+                  onChange(withLensAiOffReasoning(draft, event.target.value))
+                }
+              />
+            </label>
+          </fieldset>
+          {needResponse || repairMessage ? (
+            <ValidationMessage
+              kind={needResponse ? "missing" : "incorrect"}
+              testId={repairMessage ? "lens-ai-off-repair" : undefined}
+            >
+              {repairMessage ?? LENS_AI_OFF_COPY.needCommit}
+            </ValidationMessage>
           ) : null}
           <div className="flex justify-end">
-            <Button onClick={onCommit} disabled={!canCommit} data-testid="lens-ai-off-commit">
-              {LENS_AI_OFF_COPY.commit}
+            <Button onClick={onCommit} disabled={checking} data-testid="lens-ai-off-commit">
+              {checking ? LENS_AI_OFF_COPY.checking : LENS_AI_OFF_COPY.commit}
             </Button>
           </div>
         </Card>

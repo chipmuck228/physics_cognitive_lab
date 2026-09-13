@@ -1,6 +1,6 @@
 # Scene 07 — Interaction Alignment Audit
 
-> Date: 2026-09-13  
+> Date: 2026-09-14  
 > Scene: `convex-lens-optical-bench`  
 > Model: `convex-lens-imaging`  
 > Kind: Scene07-local audit. **Not** an architecture owner.  
@@ -13,7 +13,7 @@ Contract: [`../../interaction-alignment-audit.md`](../../interaction-alignment-a
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Follow-up re-audit 2026-09-13 of the Scene07 TRANSFER learning-experience pilot (minimal structured condition + authored causal bind + Step 6 semantic adapter). Prior repaired IDs IA-07-01 / 04 / 06 / 07 / 08 / 09 / 10 / 11 remain PASS. IA-07-03 and IA-07-05 were re-checked against the new TRANSFER surface. Not a learner-validation claim.
+Follow-up re-audit 2026-09-14 of the Scene07 AI_OFF independent-use pilot (one structured condition + one integrated judgment + authored causal bind + Step 6 semantic adapter + simplified post-check). Prior repaired IDs IA-07-01 / 04 / 06 / 07 / 08 / 09 / 10 / 11 remain PASS. Units 23–24 were re-checked against the new AI_OFF surface. Not a learner-validation claim.
 
 ---
 
@@ -725,17 +725,17 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 
 | Field | Result |
 |---|---|
-| Stage / Subtask | AI_OFF / structure + judgment + reasoning |
+| Stage / Subtask | AI_OFF / condition + integrated judgment + authored reason |
 | Cognitive task | Independent use without tutor |
 | Required capability | commit-ai-off |
-| Visible control / surface | `LensAiOffTask` response when `draft.step === "response"`; Help/Tutor hidden |
-| Semantic learner action | `applyLensAiOffCommit` |
-| Authoritative owner | Attempt is history (`accepted: false` until post-check). View step is `aiOffDraft.step` |
-| Expected state consequence | Challenge attempt appended |
-| Expected visible consequence | Draft step becomes post-check; or response-edit after “修改刚才的判断” |
-| Blocked condition + visible reason | Incomplete / tutor-used blocked by policy |
+| Visible control / surface | `LensAiOffTask` response when `draft.step === "response"`; station + one judgment + reason; Help/Tutor hidden; parser checking visible |
+| Semantic learner action | `resolveLensAiOffCheck` then `applyLensAiOffCommit` |
+| Authoritative owner | Attempt is history (`accepted: false` until post-check). View step is `aiOffDraft.step`. `evaluateConvexLensAiOff` owns correctness |
+| Expected state consequence | Challenge attempt appended after a derived pre-commit tuple exists |
+| Expected visible consequence | Draft step becomes post-check; or stay-on-response for vague / parser-unavailable; or response-edit after “修改刚才的判断” |
+| Blocked condition + visible reason | Missing station / judgment / reason, vague text, or parser unavailable each have one repair |
 | Progression condition | Both challenges later accepted |
-| Evidence input / provenance | Pre-commit structured + authored. Post-check cannot manufacture (`post-check-cannot-manufacture`) |
+| Evidence input / provenance | PRE_COMMIT_STRUCTURED station+judgment, PRE_COMMIT_AUTHORED reason, SYSTEM_DERIVED parse/image fields. Post-check cannot manufacture |
 | IA-1 | PASS |
 | IA-2 | PASS |
 | IA-3 | PASS |
@@ -750,7 +750,7 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 | Stage / Subtask | AI_OFF / post-check then COMPLETE |
 | Cognitive task | Confirm which structure was used; then stop |
 | Required capability | post-check commit |
-| Visible control / surface | post-check boxes + `记下这次对照`; precommit failure also `修改刚才的判断`; then next challenge or `LensCompleteView` |
+| Visible control / surface | 2 required diagnostic relations + 2 distractors; `记下这次对照`; precommit failure also `修改刚才的判断`; then next challenge or `LensCompleteView` |
 | Semantic learner action | `applyLensAiOffPostCheckSave` / `retryLensAiOffDraft` |
 | Authoritative owner | `evaluateLensAiOffAttempt` / `evaluateRequiredAiOffPair`. View step remains `aiOffDraft.step` |
 | Expected state consequence | `accepted` only if official ok ∧ post-check ∧ !llm; latest attempt for the challenge; draft from `nextLensAiOffDraft` or restored response |
@@ -796,7 +796,7 @@ Read: `tests/e2e/convex-lens-optical-bench-learner-flow.spec.ts`, `happy-path.sp
 | MODEL incoherent ray cannot Next | All `failureKind` → repair mappings in the browser |
 | MODEL wrong official size → reject → step 5 | That leftover is a learner-clarity problem (it is an IA-allowed cross-step) |
 | TRANSFER: one station + natural paraphrase (mocked parser) accepts projector then magnifier; slogan stays on target 1 with one repair | Unprompted first-time wording without the mock |
-| EXAM diagram on “如图”; AI_OFF `记下这次对照` advances or repairs; AI_OFF has no Help | Wrong EXAM still leaving the stage; EXAM is not L6 |
+| EXAM diagram on “如图”; AI_OFF condition+judgment+paraphrase then simplified post-check; repair restores response; AI_OFF has no Help / Tutor | Wrong EXAM still leaving the stage; EXAM is not L6 |
 | Back/revisit does not mutate experiment progress | Pedagogical understanding |
 
 The dedicated OBSERVE E2E now submits checkboxes before any bench action and asserts the interaction reason. Happy-path helpers still manipulate first.
@@ -837,19 +837,20 @@ The dedicated OBSERVE E2E now submits checkboxes before any bench action and ass
 
 ---
 
-## TRANSFER-only LX / SR re-audit
+## AI_OFF LX / SR re-audit
 
-This pilot does **not** mark the whole Scene fixed. AI_OFF still restates the 7-field form.
+This pilot does **not** mark the whole Scene fixed. EXPLAIN / EXAM lexical floors are unchanged.
 
-| ID | Scope | Status after TRANSFER pilot |
+| ID | Scope | Status after AI_OFF pilot |
 |---|---|---|
-| LX-07-01 | Cross-stage redundant model-field restatement | **IMPROVED for TRANSFER.** TRANSFER no longer re-asks side / nature / orientation / size / screen / meeting radios. MODEL and AI_OFF still use the imaging tuple. |
-| LX-07-02 | Internal Physics Model schema exposed as learner form | **IMPROVED for TRANSFER.** Learner sees situation → distinctive station → model link → one causal sentence. Derived fields are not radios. |
-| SR-07-01 | Correct natural-language physics rejected by lexical gate | **IMPROVED for TRANSFER.** Fast path or Step 6 parser normalizes paraphrases; the deterministic evaluator still decides. |
-| SR-07-03 | Equivalent claim interpreted inconsistently between MODEL Step 6 and TRANSFER | **IMPROVED for TRANSFER.** Same `classifyLensStep6FastPath` / `LensReasoningSemanticParse` / `/api/lens-step6-parse` path. Meaning consistency ≠ correctness consistency. |
-| SR-07-02 | EXPLAIN / EXAM authorship floors | Unchanged. Outside this pilot. |
+| LX-07-01 | Cross-stage redundant model-field restatement | **IMPROVED for AI_OFF.** AI_OFF no longer re-asks meeting / side / nature / orientation / size / screen radios. MODEL still uses the imaging tuple. |
+| LX-07-02 | Internal Physics Model schema exposed as learner form | **IMPROVED for AI_OFF.** Learner sees challenge → one station → one consequence judgment → one causal sentence. Derived fields are not radios. |
+| LX-07-03 | AI_OFF restates fields / post-check repetition | **IMPROVED.** Post-check is 2 diagnostic relations + 2 distractors, not a restatement of the 7-field tuple. |
+| SR-07-01 | Correct natural-language physics rejected by lexical gate | **IMPROVED for AI_OFF.** Same fast path / Step 6 parser as MODEL and TRANSFER; `evaluateConvexLensAiOff` still decides. |
+| SR-07-02 | Weak authored language accepted without meaningful relation | **Unchanged as a pass.** Vague “变了。” remains insufficient. Challenge B still requires the F-limit bind. |
+| SR-07-03 | Equivalent semantic claims interpreted differently across MODEL / TRANSFER / AI_OFF | **IMPROVED.** Same `classifyLensStep6FastPath` / `LensReasoningSemanticParse` / `/api/lens-step6-parse`. Meaning consistency ≠ challenge correctness. |
 
-Remaining outside TRANSFER: AI_OFF still exposes the 7-field tuple; EXPLAIN / EXAM lexical floors are unchanged.
+Remaining outside AI_OFF: EXPLAIN / EXAM lexical floors are unchanged. MODEL still uses the 7-field construction form by design.
 
 ---
 

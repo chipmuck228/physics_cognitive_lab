@@ -39,6 +39,11 @@ function beyondDraft(text: string) {
 }
 
 describe("Scene 07 Step 6 semantic layer", () => {
+  it("sends the live TRANSFER paraphrase to the LLM path, not insufficient", () => {
+    const text = "这些光穿过去以后在另一边碰到了一起，所以会形成能接到的像。";
+    expect(classifyLensStep6FastPath(text).kind).toBe("needs-llm");
+  });
+
   it("maps the learner sentence on the deterministic fast path", () => {
     const fast = classifyLensStep6FastPath(LEARNER_SENTENCE);
     expect(fast.kind).toBe("sufficient");

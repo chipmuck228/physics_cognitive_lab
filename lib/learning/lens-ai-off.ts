@@ -3,15 +3,22 @@ import { independentChallenges } from "@/content/physics-models/convex-lens-imag
 import { convexLensImagingAssessmentOverlay } from "@/content/physics-models/convex-lens-imaging/assessment-overlay";
 import { PRODUCTION_AI_OFF_IDS } from "@/content/physics-models/convex-lens-imaging/implementation-contract";
 import {
+  classifyLensStep6FastPath,
   evaluateConvexLensAiOff,
   evaluateRequiredAiOffPair,
+  meetingModeFromClaim,
   officialImageConsequence,
+  officialMeetingMode,
   type AiOffChallengeId,
   type ConvexLensAiOffAttempt,
   type ImageConsequence,
+  type LensReasoningSemanticParse,
   type MeetingMode,
 } from "@/content/physics-models/convex-lens-imaging/construction";
+import { normalizeLensStep6Text } from "@/content/physics-models/convex-lens-imaging/construction";
 import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
+import { parseLensReasoningSemantic } from "@/lib/learning/lens-step6-semantic";
+import type { LensStep6Interpretation } from "@/lib/learning/lens-model";
 import type {
   IndependentJudgmentOption,
   IndependentPostCheckOption,
@@ -30,6 +37,46 @@ export const LENS_AI_OFF_A = "ai-off-unfamiliar-window-card-projection" as const
 export const LENS_AI_OFF_B = "ai-off-boundary-magnifier-cannot-catch-virtual" as const;
 export const LENS_AI_OFF_DRAFT_KIND = "lens-ai-off-draft";
 
+/**
+ * Pilot metric: committed learner-facing units per AI_OFF challenge.
+ * BEFORE: 7 imaging radios + judgment + authored + post-check facts.
+ * AFTER: 1 station + 1 integrated judgment + 1 authored causal bind + simplified post-check.
+ */
+export const LENS_AI_OFF_UNITS_BEFORE_PER_CHALLENGE = 10;
+export const LENS_AI_OFF_LEARNER_OWNED_FIELDS = [
+  "objectStation",
+  "selectedAnswer",
+  "reasoning",
+] as const;
+export const LENS_AI_OFF_SYSTEM_DERIVED_FIELDS = [
+  "meetingMode",
+  "side",
+  "nature",
+  "orientation",
+  "size",
+  "screenReceivable",
+] as const;
+
+export type LensAiOffFieldProvenance = {
+  objectStation: "pre-commit-structured";
+  selectedAnswer: "pre-commit-structured";
+  reasoning: "pre-commit-authored";
+  authoredInterpretation: "system-derived";
+  meetingMode: "system-derived";
+  image: "system-derived";
+  postCheck: "post-commit-confirmation";
+};
+
+export const LENS_AI_OFF_FIELD_PROVENANCE: LensAiOffFieldProvenance = {
+  objectStation: "pre-commit-structured",
+  selectedAnswer: "pre-commit-structured",
+  reasoning: "pre-commit-authored",
+  authoredInterpretation: "system-derived",
+  meetingMode: "system-derived",
+  image: "system-derived",
+  postCheck: "post-commit-confirmation",
+};
+
 export type LensAiOffStep = "response" | "post-check";
 
 export interface LensAiOffDraft {
@@ -46,6 +93,7 @@ export interface LensAiOffDraft {
   screenReceivable: string;
   selectedAnswer: string;
   reasoning: string;
+  authoredInterpretation?: LensStep6Interpretation | null;
   postCheckSelections: string[];
   retiredChallengeIds: string[];
 }
@@ -117,30 +165,273 @@ export function emptyLensAiOffDraft(
     screenReceivable: "",
     selectedAnswer: "",
     reasoning: "",
+    authoredInterpretation: null,
     postCheckSelections: [],
     retiredChallengeIds: [],
   };
+}
+
+export function withLensAiOffStation(
+  draft: LensAiOffDraft,
+  objectStation: string,
+): LensAiOffDraft {
+  if (objectStation === draft.objectStation) {
+    return draft;
+  }
+  return {
+    ...draft,
+    objectStation,
+    meetingMode: "",
+    side: "",
+    nature: "",
+    orientation: "",
+    size: "",
+    screenReceivable: "",
+  };
+}
+
+export function withLensAiOffReasoning(
+  draft: LensAiOffDraft,
+  reasoning: string,
+): LensAiOffDraft {
+  if (reasoning === draft.reasoning) {
+    return draft;
+  }
+  return {
+    ...draft,
+    reasoning,
+    authoredInterpretation: null,
+    meetingMode: "",
+    side: "",
+    nature: "",
+    orientation: "",
+    size: "",
+    screenReceivable: "",
+  };
+}
+
+function isObjectStationValue(value: string): value is ObjectStation {
+  return (
+    value === "beyond-2f" ||
+    value === "at-2f" ||
+    value === "between-f-and-2f" ||
+    value === "at-f" ||
+    value === "inside-f"
+  );
+}
+
+export function deriveLensAiOffInternalFields(
+  objectStation: ObjectStation,
+  parse: LensReasoningSemanticParse,
+): { meetingMode: MeetingMode; image: ImageConsequence } | null {
+  const official = officialImageConsequence(objectStation);
+  const officialMeeting = officialMeetingMode(objectStation);
+  let meetingMode = meetingModeFromClaim(parse.meetingClaim);
+  if (!meetingMode) {
+    const natureOk =
+      parse.imageNatureClaim === "unclear" || parse.imageNatureClaim === official.nature;
+    const screenOk =
+      parse.screenClaim === "unclear" ||
+      (parse.screenClaim === "receivable") === official.screenReceivable;
+    if (
+      natureOk &&
+      screenOk &&
+      (parse.hasMeetingClaim || parse.hasConsequenceClaim)
+    ) {
+      meetingMode = officialMeeting;
+    } else {
+      return null;
+    }
+  }
+  const claimedNature =
+    parse.imageNatureClaim === "real" ||
+    parse.imageNatureClaim === "virtual" ||
+    parse.imageNatureClaim === "none"
+      ? parse.imageNatureClaim
+      : meetingMode === "actual-convergence"
+        ? "real"
+        : meetingMode === "backward-extension"
+          ? "virtual"
+          : "none";
+  const claimedScreen =
+    parse.screenClaim === "receivable"
+      ? true
+      : parse.screenClaim === "not-receivable"
+        ? false
+        : claimedNature === "real";
+  if (
+    meetingMode === officialMeeting &&
+    claimedNature === official.nature &&
+    claimedScreen === official.screenReceivable
+  ) {
+    return { meetingMode, image: official };
+  }
+  return {
+    meetingMode,
+    image: imageFamilyFromClaim(claimedNature, claimedScreen, official.size),
+  };
+}
+
+function imageFamilyFromClaim(
+  nature: ImageConsequence["nature"],
+  screenReceivable: boolean,
+  size: ImageConsequence["size"],
+): ImageConsequence {
+  if (nature === "real") {
+    return {
+      side: "other-side",
+      nature: "real",
+      orientation: "inverted",
+      size: size === "none" ? "enlarged" : size,
+      screenReceivable,
+    };
+  }
+  if (nature === "virtual") {
+    return {
+      side: "same-side",
+      nature: "virtual",
+      orientation: "upright",
+      size: size === "none" ? "enlarged" : size,
+      screenReceivable,
+    };
+  }
+  return {
+    side: "none",
+    nature: "none",
+    orientation: "none",
+    size: "none",
+    screenReceivable: false,
+  };
+}
+
+export function applyDerivedAiOffFields(
+  draft: LensAiOffDraft,
+  parse: LensReasoningSemanticParse,
+  source: LensStep6Interpretation["source"],
+): LensAiOffDraft {
+  const interpretation: LensStep6Interpretation = {
+    provenance: "system-derived",
+    source,
+    textNormalized: normalizeLensStep6Text(draft.reasoning),
+    parse,
+  };
+  if (!isObjectStationValue(draft.objectStation)) {
+    return { ...draft, authoredInterpretation: interpretation };
+  }
+  const derived = deriveLensAiOffInternalFields(draft.objectStation, parse);
+  return {
+    ...draft,
+    meetingMode: derived?.meetingMode ?? "",
+    side: derived?.image.side ?? "",
+    nature: derived?.image.nature ?? "",
+    orientation: derived?.image.orientation ?? "",
+    size: derived?.image.size ?? "",
+    screenReceivable:
+      derived == null ? "" : derived.image.screenReceivable ? "true" : "false",
+    authoredInterpretation: interpretation,
+  };
+}
+
+export function aiOffParseFromDraft(
+  draft: LensAiOffDraft,
+): LensReasoningSemanticParse | null {
+  const stored = draft.authoredInterpretation;
+  if (
+    stored &&
+    stored.provenance === "system-derived" &&
+    stored.textNormalized === normalizeLensStep6Text(draft.reasoning)
+  ) {
+    return stored.parse;
+  }
+  const fast = classifyLensStep6FastPath(draft.reasoning);
+  return fast.kind === "sufficient" ? fast.parse : null;
+}
+
+export function hasLensAiOffDerivedStructure(draft: LensAiOffDraft): boolean {
+  return (
+    Boolean(draft.meetingMode) &&
+    Boolean(draft.side) &&
+    Boolean(draft.nature) &&
+    Boolean(draft.orientation) &&
+    Boolean(draft.size) &&
+    (draft.screenReceivable === "true" || draft.screenReceivable === "false")
+  );
+}
+
+export function isLensAiOffLearnerReady(draft: LensAiOffDraft): boolean {
+  return (
+    Boolean(draft.objectStation) &&
+    draft.selectedAnswer.trim().length > 0 &&
+    draft.reasoning.trim().length > 0
+  );
+}
+
+export function lensAiOffJudgmentImplication(judgmentId: string): {
+  meetingMode?: MeetingMode;
+  nature?: ImageConsequence["nature"];
+  screenReceivable?: boolean;
+} | null {
+  if (judgmentId === "distant-object-real-reduced") {
+    return { meetingMode: "actual-convergence", nature: "real", screenReceivable: true };
+  }
+  if (judgmentId === "also-convex-lens" || judgmentId === "virtual-not-on-screen-and-f-is-limit") {
+    return { meetingMode: "backward-extension", nature: "virtual", screenReceivable: false };
+  }
+  if (judgmentId === "image-on-card-is-the-image-itself") {
+    return { meetingMode: "no-finite-meeting", nature: "none", screenReceivable: false };
+  }
+  if (judgmentId === "catch-virtual-on-paper") {
+    return { screenReceivable: true };
+  }
+  if (judgmentId === "at-f-ordinary-row") {
+    return { meetingMode: "actual-convergence", nature: "real" };
+  }
+  return null;
+}
+
+function encodeAiOffParse(parse: LensReasoningSemanticParse | null | undefined): string[] {
+  return parse ? [JSON.stringify(parse)] : [];
+}
+
+function decodeAiOffParse(parts: readonly string[]): LensReasoningSemanticParse | null {
+  if (parts.length < 8 || !parts[7]) {
+    return null;
+  }
+  try {
+    return parseLensReasoningSemantic(JSON.parse(parts[7]));
+  } catch {
+    return null;
+  }
 }
 
 export function draftToLensAiOffAttempt(
   draft: LensAiOffDraft,
   llmUsed: boolean,
 ): ConvexLensAiOffAttempt | null {
-  if (
-    !isLensAiOffId(draft.currentChallengeId) ||
-    !draft.objectStation ||
-    !draft.meetingMode ||
-    !draft.side ||
-    !draft.nature ||
-    !draft.orientation ||
-    !draft.size ||
-    (draft.screenReceivable !== "true" && draft.screenReceivable !== "false")
-  ) {
+  if (!isLensAiOffId(draft.currentChallengeId) || !isObjectStationValue(draft.objectStation)) {
+    return null;
+  }
+  const parse = aiOffParseFromDraft(draft);
+  const derived = parse ? deriveLensAiOffInternalFields(draft.objectStation, parse) : null;
+  if (derived) {
+    return {
+      challengeId: draft.currentChallengeId,
+      objectStation: draft.objectStation,
+      meetingMode: derived.meetingMode,
+      image: derived.image,
+      preCommitReasoning: draft.reasoning,
+      authoredInterpretation: parse,
+      judgmentId: draft.selectedAnswer,
+      postCheckIds: draft.postCheckSelections,
+      llmUsed,
+    };
+  }
+  if (!hasLensAiOffDerivedStructure(draft)) {
     return null;
   }
   return {
     challengeId: draft.currentChallengeId,
-    objectStation: draft.objectStation as ObjectStation,
+    objectStation: draft.objectStation,
     meetingMode: draft.meetingMode as MeetingMode,
     image: {
       side: draft.side as ImageConsequence["side"],
@@ -150,6 +441,7 @@ export function draftToLensAiOffAttempt(
       screenReceivable: draft.screenReceivable === "true",
     },
     preCommitReasoning: draft.reasoning,
+    authoredInterpretation: parse,
     judgmentId: draft.selectedAnswer,
     postCheckIds: draft.postCheckSelections,
     llmUsed,
@@ -172,17 +464,7 @@ export function postCheckMatchesRequired(
 }
 
 export function canCommitLensAiOffResponse(draft: LensAiOffDraft): boolean {
-  return (
-    Boolean(draft.objectStation) &&
-    Boolean(draft.meetingMode) &&
-    Boolean(draft.side) &&
-    Boolean(draft.nature) &&
-    Boolean(draft.orientation) &&
-    Boolean(draft.size) &&
-    (draft.screenReceivable === "true" || draft.screenReceivable === "false") &&
-    draft.selectedAnswer.trim().length > 0 &&
-    draft.reasoning.trim().length >= 12
-  );
+  return isLensAiOffLearnerReady(draft);
 }
 
 export function evaluateLensAiOffAttempt(input: {
@@ -247,6 +529,7 @@ export function buildLensAiOffAttempt(
           structured.image.orientation,
           structured.image.size,
           String(structured.image.screenReceivable),
+          ...encodeAiOffParse(structured.authoredInterpretation),
         ]
       : [],
     timestamp,
@@ -261,12 +544,21 @@ export function lensAiOffDraftFromCommittedAttempt(
   fallback: LensAiOffDraft,
 ): LensAiOffDraft {
   const parts = attempt.preCommitEvidenceIds ?? [];
+  const parse = decodeAiOffParse(parts);
   if (parts.length < 7) {
     return {
       ...fallback,
       currentChallengeId: attempt.challengeId,
       selectedAnswer: attempt.selectedAnswer,
       reasoning: attempt.studentReasoning ?? "",
+      authoredInterpretation: parse
+        ? {
+            provenance: "system-derived",
+            source: "deterministic-fast-path",
+            textNormalized: normalizeLensStep6Text(attempt.studentReasoning ?? ""),
+            parse,
+          }
+        : fallback.authoredInterpretation ?? null,
     };
   }
   return {
@@ -281,6 +573,14 @@ export function lensAiOffDraftFromCommittedAttempt(
     screenReceivable: parts[6] === "true" ? "true" : "false",
     selectedAnswer: attempt.selectedAnswer,
     reasoning: attempt.studentReasoning ?? "",
+    authoredInterpretation: parse
+      ? {
+          provenance: "system-derived",
+          source: "deterministic-fast-path",
+          textNormalized: normalizeLensStep6Text(attempt.studentReasoning ?? ""),
+          parse,
+        }
+      : null,
   };
 }
 
@@ -365,6 +665,7 @@ export function reconstructLensAiOffAttempts(
       return [];
     }
     const station = parts[0] as ObjectStation;
+    const parse = decodeAiOffParse(parts);
     return [
       {
         challengeId: attempt.challengeId,
@@ -378,6 +679,7 @@ export function reconstructLensAiOffAttempts(
           screenReceivable: parts[6] === "true",
         },
         preCommitReasoning: attempt.studentReasoning,
+        authoredInterpretation: parse,
         judgmentId: attempt.selectedAnswer,
         postCheckIds: attempt.postCheckIds,
         llmUsed: assessment?.llmUsed === true,
@@ -534,23 +836,32 @@ export function buildLensAiOffAssessment(
 export function completeLensAiOffDraft(challengeId: string): LensAiOffDraft {
   const station = challengeId === LENS_AI_OFF_A ? "beyond-2f" : "inside-f";
   const image = officialImageConsequence(station);
-  return {
+  const reasoning =
+    challengeId === LENS_AI_OFF_A
+      ? "窗外景物在 2F 以外，光线在另一侧真正会聚，所以成倒立缩小实像，白卡片是接收器，要放到像的位置才能接到。"
+      : "邮票在焦点以内，光线散开，只有反向延长线相交，所以是虚像，白纸接不到。物体正好在焦点上时，折射后的光线彼此平行，有限远处不相交，所以光屏怎么移动都接不到清晰像。";
+  const base: LensAiOffDraft = {
     ...emptyLensAiOffDraft(),
     currentChallengeId: challengeId,
     objectStation: station,
+    selectedAnswer: intendedLensAiOffAnswerId(challengeId),
+    reasoning,
+    postCheckSelections: intendedLensAiOffPostCheckIds(challengeId),
+  };
+  const withOfficial: LensAiOffDraft = {
+    ...base,
     meetingMode: station === "beyond-2f" ? "actual-convergence" : "backward-extension",
     side: image.side,
     nature: image.nature,
     orientation: image.orientation,
     size: image.size,
     screenReceivable: image.screenReceivable ? "true" : "false",
-    selectedAnswer: intendedLensAiOffAnswerId(challengeId),
-    reasoning:
-      challengeId === LENS_AI_OFF_A
-        ? "窗外景物在 2F 以外，光线在另一侧真正会聚，所以成倒立缩小实像，白卡片是接收器，要放到像的位置才能接到。"
-        : "邮票在焦点以内，光线散开，只有反向延长线相交，所以是虚像，白纸接不到。物体正好在焦点上时，折射后的光线彼此平行，有限远处不相交，所以光屏怎么移动都接不到清晰像。",
-    postCheckSelections: intendedLensAiOffPostCheckIds(challengeId),
   };
+  const parse = aiOffParseFromDraft(withOfficial);
+  if (parse && deriveLensAiOffInternalFields(station, parse)) {
+    return applyDerivedAiOffFields(withOfficial, parse, "deterministic-fast-path");
+  }
+  return withOfficial;
 }
 
 function isLensAiOffId(value: string): value is AiOffChallengeId {
