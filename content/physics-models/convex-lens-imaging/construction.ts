@@ -204,32 +204,208 @@ function compact(text: string): string {
   return text.replace(/\s+/g, "");
 }
 
-function hasActualConvergenceLanguage(text: string): boolean {
-  return /真正会聚|实际会聚|真的交|真正交|会聚在|光线交在一起|出射光线会聚/.test(
-    text,
+type AuthoredMeetingKind = MeetingMode | "mixed" | null;
+type AuthoredConsequenceKind = "real" | "virtual" | "none" | "mixed" | null;
+export type LensAuthoredMissingKind =
+  | "meeting"
+  | "consequence"
+  | "relation"
+  | "contradiction"
+  | "generic"
+  | null;
+
+interface TextSpan {
+  start: number;
+  end: number;
+}
+
+interface MeetingSpan extends TextSpan {
+  kind: MeetingMode;
+}
+
+interface ConsequenceSpan extends TextSpan {
+  kind: "real" | "virtual" | "none";
+}
+
+const MEETING_PATTERNS: ReadonlyArray<{ kind: MeetingMode; source: string }> = [
+  { kind: "backward-extension", source: "反向延长.{0,8}(相交|交在一起)" },
+  { kind: "backward-extension", source: "延长线.{0,6}(相交|交在一起)" },
+  { kind: "backward-extension", source: "光线发散" },
+  { kind: "backward-extension", source: "出射光线散开" },
+  { kind: "backward-extension", source: "散开.{0,6}相交" },
+  { kind: "no-finite-meeting", source: "没有在有限.{0,8}相交" },
+  { kind: "no-finite-meeting", source: "有限远.{0,8}不相交" },
+  { kind: "no-finite-meeting", source: "彼此平行" },
+  { kind: "no-finite-meeting", source: "出射光线平行" },
+  { kind: "no-finite-meeting", source: "折射后.{0,12}平行" },
+  { kind: "no-finite-meeting", source: "光线彼此平行" },
+  { kind: "no-finite-meeting", source: "光线平行" },
+  { kind: "no-finite-meeting", source: "没有交点" },
+  { kind: "no-finite-meeting", source: "不成有限远" },
+  { kind: "actual-convergence", source: "真正[会汇]聚" },
+  { kind: "actual-convergence", source: "实际[会汇]聚" },
+  { kind: "actual-convergence", source: "真的交" },
+  { kind: "actual-convergence", source: "真正相交" },
+  { kind: "actual-convergence", source: "真正交" },
+  { kind: "actual-convergence", source: "[会汇]聚在一起" },
+  { kind: "actual-convergence", source: "聚到一起" },
+  { kind: "actual-convergence", source: "聚在一起" },
+  { kind: "actual-convergence", source: "光线交在一起" },
+  { kind: "actual-convergence", source: "出射光线[会汇]聚" },
+  { kind: "actual-convergence", source: "[会汇]聚在" },
+  { kind: "actual-convergence", source: "(光线|折射后).{0,12}[会汇]聚" },
+  { kind: "actual-convergence", source: "(光线|折射后).{0,12}相交" },
+  { kind: "actual-convergence", source: "交在一起" },
+];
+
+const CONSEQUENCE_PATTERNS: ReadonlyArray<{
+  kind: "real" | "virtual" | "none";
+  source: string;
+}> = [
+  { kind: "none", source: "接不到清晰像" },
+  { kind: "none", source: "不能形成清晰像" },
+  { kind: "none", source: "有限远.{0,12}(接不到|不能形成|没有).{0,6}(清晰|完整)" },
+  { kind: "real", source: "(成|形成).{0,8}实像" },
+  { kind: "real", source: "接到实像" },
+  { kind: "real", source: "(光屏|幕布).{0,10}(能接到|可以接到)" },
+  { kind: "real", source: "就能接到" },
+  { kind: "real", source: "这是实像" },
+  { kind: "real", source: "是实像" },
+  { kind: "virtual", source: "(成|形成).{0,8}虚像" },
+  { kind: "virtual", source: "这是虚像" },
+  { kind: "virtual", source: "是虚像" },
+  { kind: "virtual", source: "(光屏|幕布|屏).{0,6}接不到" },
+];
+
+const CAUSAL_BIND = /所以|因此|于是|因而|从而|便|才会|才能接到|就能接到|就能|就成|就会/;
+
+function collectSpans<K extends string>(
+  text: string,
+  patterns: ReadonlyArray<{ kind: K; source: string }>,
+): Array<TextSpan & { kind: K }> {
+  const occupied = Array.from({ length: text.length }, () => false);
+  const spans: Array<TextSpan & { kind: K }> = [];
+  for (const pattern of patterns) {
+    const matcher = new RegExp(pattern.source, "g");
+    let match: RegExpExecArray | null;
+    while ((match = matcher.exec(text))) {
+      const start = match.index;
+      const end = start + match[0].length;
+      if (occupied.slice(start, end).some(Boolean)) {
+        continue;
+      }
+      for (let index = start; index < end; index += 1) {
+        occupied[index] = true;
+      }
+      spans.push({ kind: pattern.kind, start, end });
+    }
+  }
+  return spans;
+}
+
+function findMeetingSpans(text: string): MeetingSpan[] {
+  return collectSpans(text, MEETING_PATTERNS);
+}
+
+function findConsequenceSpans(text: string): ConsequenceSpan[] {
+  return collectSpans(text, CONSEQUENCE_PATTERNS);
+}
+
+function uniqueKinds<T extends string>(spans: ReadonlyArray<{ kind: T }>): T[] {
+  return [...new Set(spans.map((span) => span.kind))];
+}
+
+function resolveKind<T extends string>(kinds: readonly T[]): T | "mixed" | null {
+  if (kinds.length === 0) {
+    return null;
+  }
+  return kinds.length === 1 ? kinds[0]! : "mixed";
+}
+
+function meetingConsequenceCompatible(
+  meetingKind: MeetingMode,
+  consequenceKind: "real" | "virtual" | "none",
+): boolean {
+  if (meetingKind === "actual-convergence") {
+    return consequenceKind === "real";
+  }
+  if (meetingKind === "backward-extension") {
+    return consequenceKind === "virtual" || consequenceKind === "none";
+  }
+  return consequenceKind === "none" || consequenceKind === "virtual";
+}
+
+function hasCompatibleMeetingConsequence(
+  meetingKinds: readonly MeetingMode[],
+  consequenceKinds: ReadonlyArray<"real" | "virtual" | "none">,
+): boolean {
+  return meetingKinds.some((meetingKind) =>
+    consequenceKinds.some((consequenceKind) =>
+      meetingConsequenceCompatible(meetingKind, consequenceKind),
+    ),
   );
 }
 
-function hasBackwardExtensionLanguage(text: string): boolean {
-  return /反向延长|延长线相交|光线发散|出射光线散开|散开.*相交/.test(text);
+function hasLocallyContradictoryBind(
+  meetingKinds: readonly MeetingMode[],
+  consequenceKinds: ReadonlyArray<"real" | "virtual" | "none">,
+): boolean {
+  if (meetingKinds.length === 0 || consequenceKinds.length === 0) {
+    return false;
+  }
+  if (consequenceKinds.includes("real") && !meetingKinds.includes("actual-convergence")) {
+    return true;
+  }
+  if (
+    meetingKinds.includes("actual-convergence") &&
+    !consequenceKinds.includes("real") &&
+    (consequenceKinds.includes("virtual") || consequenceKinds.includes("none"))
+  ) {
+    return true;
+  }
+  if (
+    meetingKinds.length === 1 &&
+    meetingKinds[0] === "no-finite-meeting" &&
+    consequenceKinds.includes("virtual") &&
+    !consequenceKinds.includes("none")
+  ) {
+    return true;
+  }
+  return !hasCompatibleMeetingConsequence(meetingKinds, consequenceKinds);
 }
 
-function hasNoFiniteMeetingLanguage(text: string): boolean {
-  return /有限远.*不相交|不相交|出射光线平行|不成有限远|没有交点|不成完整的像/.test(
-    text,
+function hasCausalOrSequentialBind(
+  text: string,
+  meetings: readonly MeetingSpan[],
+  consequences: readonly ConsequenceSpan[],
+): boolean {
+  if (meetings.length === 0 || consequences.length === 0) {
+    return false;
+  }
+  if (CAUSAL_BIND.test(text)) {
+    return true;
+  }
+  return meetings.some((meeting) =>
+    consequences.some((consequence) => {
+      if (consequence.start < meeting.end) {
+        return false;
+      }
+      const gap = text.slice(meeting.end, consequence.start);
+      return gap.length <= 16;
+    }),
   );
+}
+
+function looksLikeTokenSandwich(text: string): boolean {
+  const compactText = compact(text);
+  const stripped = compactText
+    .replace(/倒立|正立|缩小|放大|实像|虚像|光屏|光线|会聚|汇聚|相交|焦点|物距|像距|透镜/g, "")
+    .replace(/[。，、,.\s的和与]/g, "");
+  return compactText.length >= 4 && stripped.length === 0;
 }
 
 function hasMeetingLanguage(text: string): boolean {
-  return (
-    hasActualConvergenceLanguage(text) ||
-    hasBackwardExtensionLanguage(text) ||
-    hasNoFiniteMeetingLanguage(text)
-  );
-}
-
-function hasConsequenceBind(text: string): boolean {
-  return /所以|因此|于是|才会|才能接到|接不到|不成/.test(text);
+  return findMeetingSpans(compact(text)).length > 0 && !looksLikeTokenSandwich(text);
 }
 
 function looksLikeTableRowOnly(text: string): boolean {
@@ -250,38 +426,127 @@ function looksLikeGeneric(text: string): boolean {
 }
 
 function looksLikeNounSandwich(text: string): boolean {
+  if (looksLikeTokenSandwich(text)) {
+    return true;
+  }
   const compactText = compact(text);
   const nouns = (compactText.match(/物距|焦距|像距|实像|虚像|倒立|正立|光屏|焦点/g) ??
     []).length;
   return nouns >= 4 && !hasMeetingLanguage(compactText);
 }
 
-function authoredMatchesMeeting(text: string, meetingMode: MeetingMode): boolean {
-  const compactText = compact(text);
-  if (meetingMode === "actual-convergence") {
-    return hasActualConvergenceLanguage(compactText);
-  }
-  if (meetingMode === "backward-extension") {
-    return hasBackwardExtensionLanguage(compactText);
-  }
-  return hasNoFiniteMeetingLanguage(compactText);
-}
-
-export function analyzeConvexLensAuthored(text: string): {
+export interface ConvexLensAuthoredAnalysis {
   hasMeetingLanguage: boolean;
+  hasConsequenceLanguage: boolean;
   hasConsequenceBind: boolean;
   tableRowOnly: boolean;
   generic: boolean;
   nounSandwich: boolean;
-} {
+  contradictory: boolean;
+  meetingKind: AuthoredMeetingKind;
+  consequenceKind: AuthoredConsequenceKind;
+  missingKind: LensAuthoredMissingKind;
+}
+
+export function analyzeConvexLensAuthored(text: string): ConvexLensAuthoredAnalysis {
   const compactText = compact(text);
+  const generic = looksLikeGeneric(text);
+  const nounSandwich = looksLikeNounSandwich(text);
+  const tableRowOnly = looksLikeTableRowOnly(text);
+  if (generic || nounSandwich || tableRowOnly || looksLikeTokenSandwich(text)) {
+    return {
+      hasMeetingLanguage: false,
+      hasConsequenceLanguage: false,
+      hasConsequenceBind: false,
+      tableRowOnly,
+      generic,
+      nounSandwich: nounSandwich || looksLikeTokenSandwich(text),
+      contradictory: false,
+      meetingKind: null,
+      consequenceKind: null,
+      missingKind: "generic",
+    };
+  }
+
+  const meetings = findMeetingSpans(compactText);
+  const consequences = findConsequenceSpans(compactText);
+  const meetingKinds = uniqueKinds(meetings);
+  const consequenceKinds = uniqueKinds(consequences);
+  const meetingKind = resolveKind(meetingKinds);
+  const consequenceKind = resolveKind(consequenceKinds);
+  const hasMeeting = meetings.length > 0;
+  const hasConsequence = consequences.length > 0;
+  const bound = hasCausalOrSequentialBind(compactText, meetings, consequences);
+  const contradictory = hasLocallyContradictoryBind(meetingKinds, consequenceKinds);
+  const hasConsequenceBind =
+    hasMeeting &&
+    hasConsequence &&
+    bound &&
+    !contradictory &&
+    hasCompatibleMeetingConsequence(meetingKinds, consequenceKinds);
+
+  let missingKind: LensAuthoredMissingKind = null;
+  if (contradictory) {
+    missingKind = "contradiction";
+  } else if (!hasMeeting && !hasConsequence) {
+    missingKind = "meeting";
+  } else if (!hasMeeting) {
+    missingKind = "meeting";
+  } else if (!hasConsequence) {
+    missingKind = "consequence";
+  } else if (!bound) {
+    missingKind = "relation";
+  }
+
   return {
-    hasMeetingLanguage: hasMeetingLanguage(compactText),
-    hasConsequenceBind: hasConsequenceBind(compactText),
-    tableRowOnly: looksLikeTableRowOnly(text),
-    generic: looksLikeGeneric(text),
-    nounSandwich: looksLikeNounSandwich(text),
+    hasMeetingLanguage: hasMeeting,
+    hasConsequenceLanguage: hasConsequence,
+    hasConsequenceBind,
+    tableRowOnly,
+    generic,
+    nounSandwich,
+    contradictory,
+    meetingKind,
+    consequenceKind,
+    missingKind: hasConsequenceBind ? null : missingKind,
   };
+}
+
+export function lensAuthoredBindMissingMessage(
+  authored: ConvexLensAuthoredAnalysis,
+): string {
+  if (authored.generic || authored.nounSandwich || authored.tableRowOnly) {
+    return "这句话还只是在背表或堆名词。先写出光线怎样相遇，再接到像的后果。";
+  }
+  if (authored.missingKind === "contradiction") {
+    return "你写的相遇方式和像的后果对不上。先看光线是会聚、反向延长还是平行，再接到对应的像。";
+  }
+  if (authored.missingKind === "meeting") {
+    return authored.hasConsequenceLanguage
+      ? "还要写出光线怎样相遇：是会聚到一起、反向延长后相交，还是彼此平行。"
+      : "先写出光线怎样相遇，再接到像的后果。";
+  }
+  if (authored.missingKind === "consequence") {
+    return "还要写出这样相遇之后，像会怎样，比如成实像还是光屏接不到。";
+  }
+  if (authored.missingKind === "relation") {
+    return "相遇方式和像的后果都有了。还要用一句话把这两件事连起来。";
+  }
+  return "先写出光线怎样相遇，再接到像的后果。";
+}
+
+function authoredMatchesMeeting(text: string, meetingMode: MeetingMode): boolean {
+  const authored = analyzeConvexLensAuthored(text);
+  if (!authored.hasMeetingLanguage) {
+    return false;
+  }
+  if (authored.meetingKind === meetingMode) {
+    return true;
+  }
+  return (
+    authored.meetingKind === "mixed" &&
+    findMeetingSpans(compact(text)).some((span) => span.kind === meetingMode)
+  );
 }
 
 function evaluateRayConstruction(

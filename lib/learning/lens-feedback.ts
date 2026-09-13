@@ -65,7 +65,7 @@ export function lensFeedbackForFailureKind(
   if (failureKind === "authored-missing-meeting-bind") {
     return {
       kind: "think_again",
-      message: "先写出光线是真正相交还是只有延长线相交，再接到像的后果。",
+      message: "还要用自己的话把光线怎样相遇和像的后果连起来。不要只堆性质词。",
     };
   }
   if (failureKind === "u-equals-f-as-ordinary-image") {

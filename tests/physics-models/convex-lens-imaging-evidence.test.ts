@@ -117,6 +117,14 @@ describe("convex-lens-imaging evidence contract", () => {
         }),
       ).ok,
     ).toBe(true);
+    expect(
+      evaluateConvexLensModelConstruction(
+        coherentAttempt({
+          modelReasoning:
+            "我改变了物体位置，看见光线在光屏上真正汇聚，成实像。",
+        }),
+      ).ok,
+    ).toBe(true);
   });
 
   it("fails L4 weakest-pass probes", () => {

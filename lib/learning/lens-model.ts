@@ -1,5 +1,6 @@
 import {
   analyzeConvexLensAuthored,
+  lensAuthoredBindMissingMessage,
   evaluateConvexLensModelConstruction,
   isCanonicalRayGeometricallyCoherent,
   officialImageConsequence,
@@ -435,16 +436,10 @@ export function evaluateLensModelStep(
       };
     }
     const authored = analyzeConvexLensAuthored(draft.studentReasoning);
-    if (authored.generic || authored.nounSandwich || authored.tableRowOnly) {
+    if (!authored.hasConsequenceBind) {
       return {
         status: "inconsistent",
-        message: "这句话还只是在背表或堆名词。先写出光线怎样相遇，再接到像的后果。",
-      };
-    }
-    if (!authored.hasMeetingLanguage || !authored.hasConsequenceBind) {
-      return {
-        status: "inconsistent",
-        message: "先写出光线是真正相交、反向延长还是彼此平行，再接到像的后果。",
+        message: lensAuthoredBindMissingMessage(authored),
       };
     }
     return { status: "ready" };

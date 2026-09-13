@@ -13,7 +13,7 @@ Contract: [`../../interaction-alignment-audit.md`](../../interaction-alignment-a
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Repair re-audit 2026-09-13: IA-07-01 / 02 / 03 are PASS. The previous complete audit had no other blocking findings.
+Repair re-audit 2026-09-13: IA-07-01 / 02 / 03 / 04 are PASS. The previous complete audit had no other blocking findings besides these repaired units.
 
 ---
 
@@ -38,7 +38,7 @@ Known prior defects checked against **current** code:
 
 ## Confirmed Alignment Defects
 
-None open after the 2026-09-13 repair pass.
+None open after the 2026-09-13 OBSERVE / TRANSFER repair and the MODEL Step 6 semantic repair.
 
 ### IA-07-01 — repaired PASS
 
@@ -85,11 +85,28 @@ None open after the 2026-09-13 repair pass.
 | Learner consequence | Learner can see which target they are on and that two are required. |
 | Repair boundary used | Scene07 TRANSFER chrome only. Transfer targets / evaluator unchanged. |
 
+### IA-07-04 — repaired PASS
+
+| Field | Result |
+|---|---|
+| ID | IA-07-04 |
+| Severity | **P1** |
+| Stage | MODEL |
+| Audit Unit | Step 6 authored causal relation |
+| Invariant | **IA-3** (also IA-5: blocked reason repeated “真正相交” after the learner wrote “真正汇聚”) |
+| Current status | **PASS (repaired).** Same `analyzeConvexLensAuthored` relation grammar for local Step 6 and the final construction evaluator. Accepts Grade-9 meeting/consequence synonyms plus natural causal / sequential bind. Rejects sandwiches, unbound tokens, and locally contradictory binds. |
+| Expected behavior | Step 6 claims only that the learner bound meeting behavior to an image consequence. It must not require one canonical sentence. Visible reject reasons name the missing piece. |
+| Implementation evidence | Learner sentence “我改变了物体位置，看见光线在光屏上真正汇聚，成实像。” now has `hasMeetingLanguage` + `hasConsequenceBind`. `tests/learning/lens-model-step6-authored.test.ts` accept/reject table. Final `evaluateConvexLensModelConstruction` uses the same analysis. |
+| Learner consequence | A natural 汇聚 → 成实像 sentence can advance. A leftover “真正相交” prompt is not shown when equivalent meeting language is already present. |
+| Repair boundary used | Scene07 authored analyzer only. No LLM judge. Physics Truth / L4 meaning / seven-step structure unchanged. |
+
 ---
 
 ## Audit matrix
 
-IA-3 on MODEL steps 5–6: official image **size** vs station, and authored text vs selected `meetingMode`, are **cross-step** leftovers. Local step 5 claims meeting-compatible image (size vs official not in that claim). Local step 6 claims a sufficient bind (not “matches this meetingMode”). The IA contract allows the final evaluator to reject those. Repair path exists. **Not** logged as IA-3 FAIL.
+IA-3 on MODEL step 5: official image **size** vs station remains a **cross-step** leftover. Local step 5 claims meeting-compatible image (size vs official not in that claim). The IA contract allows the final evaluator to reject that. Repair path exists. **Not** logged as IA-3 FAIL.
+
+IA-07-04 closed the Step 6 lexical leftover: local and final authored checks now share one relation grammar. Selected `meetingMode` vs authored meeting kind can still wait for final submit (allowed cross-step + repair → 6).
 
 ### 1. ENTRY / start lesson
 
@@ -476,15 +493,15 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 | Required capability | author-bind |
 | Visible control / surface | `lens-model-reasoning` |
 | Semantic learner action | draft `studentReasoning` |
-| Authoritative owner | `analyzeConvexLensAuthored` (empty / slogan / meeting language + consequence). Does **not** call `authoredMatchesMeeting` |
-| Expected state consequence | Ready if bind is relation-like |
+| Authoritative owner | `analyzeConvexLensAuthored` relation grammar (meeting phrase + consequence phrase + bind). Same source as the final construction evaluator. Does **not** require the word 所以 or 会聚. |
+| Expected state consequence | Ready if the authored sentence binds meeting behavior to an image consequence |
 | Expected visible consequence | Next to review |
-| Blocked condition + visible reason | Empty / slogan / missing meeting language |
-| Progression condition | Local authored sufficiency |
-| Evidence input / provenance | Draft. Final may reject meeting-mismatch (cross-step + repair → 6) |
+| Blocked condition + visible reason | Empty / sandwich / missing meeting / missing consequence / unbound pair / contradictory pair. Reasons are specific. Never “先写出真正相交” after equivalent meeting language. |
+| Progression condition | `hasConsequenceBind` |
+| Evidence input / provenance | Draft. Final may still reject authored-vs-selected `meetingMode` (allowed cross-step + repair → 6). Same sentence cannot fail a stricter lexical rule. |
 | IA-1 | PASS |
 | IA-2 | PASS |
-| IA-3 | PASS (cross-step leftover allowed) |
+| IA-3 | PASS |
 | IA-4 | PASS |
 | IA-5 | PASS |
 | IA-6 | N/A |
@@ -699,6 +716,6 @@ The dedicated OBSERVE E2E now submits checkboxes before any bench action and ass
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Re-audit of IA-07-01 / 02 / 03 after the Scene07-local repair: all PASS. The previous complete audit had no other blocking findings.
+Re-audit of IA-07-01 / 02 / 03 / 04 after the Scene07-local repairs: all PASS. This is not a learner-validation claim.
 
 This is not learner validation.
