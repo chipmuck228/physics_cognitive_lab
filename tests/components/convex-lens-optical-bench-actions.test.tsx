@@ -238,6 +238,58 @@ describe("Scene 07 enabled-action contract", () => {
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.OBSERVE);
   });
 
+  it("OBSERVE demo plus checkboxes still cannot reach DESCRIBE", async () => {
+    const user = userEvent.setup();
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-observe-demo-only", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.OBSERVE,
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    const required = new Set<string>(LENS_OBSERVE_REQUIRED_IDS);
+    for (const option of LENS_OBSERVE_OPTIONS) {
+      if (required.has(option.id)) {
+        await user.click(screen.getByLabelText(option.label));
+      }
+    }
+    await user.click(screen.getByTestId("lens-play-demo"));
+    await user.click(screen.getByRole("button", { name: LENS_COPY.observeSubmit }));
+    expect(screen.getByTestId("lens-observe-need-more")).toHaveTextContent(
+      LENS_COPY.observeNeedInteraction,
+    );
+    expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.OBSERVE);
+    expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).sceneData.watchedObserveDemo).toBe(true);
+    expect(
+      getSessionSnapshot(CONVEX_LENS_SCENE_ID).sceneData.learnerManipulatedObserveBench,
+    ).not.toBe(true);
+  });
+
+  it("OBSERVE move-object plus record reaches DESCRIBE and refresh keeps it", async () => {
+    const user = userEvent.setup();
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-observe-move", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.OBSERVE,
+    });
+    const first = render(<ConvexLensOpticalBenchLab />);
+    const required = new Set<string>(LENS_OBSERVE_REQUIRED_IDS);
+    for (const option of LENS_OBSERVE_OPTIONS) {
+      if (required.has(option.id)) {
+        await user.click(screen.getByLabelText(option.label));
+      }
+    }
+    await user.click(screen.getByTestId("station-hit-between-f-and-2f"));
+    await user.click(screen.getByRole("button", { name: LENS_COPY.observeSubmit }));
+    expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.DESCRIBE);
+    expect(
+      getSessionSnapshot(CONVEX_LENS_SCENE_ID).sceneData.learnerManipulatedObserveBench,
+    ).toBe(true);
+    first.unmount();
+    render(<ConvexLensOpticalBenchLab />);
+    expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.DESCRIBE);
+    expect(screen.getByTestId("lens-task-context")).toHaveTextContent(
+      "你刚在光具座上动过物体或光屏",
+    );
+  });
+
   it("TRANSFER progress chrome shows 1 / 2 then 2 / 2", () => {
     replaceSession({
       ...createSession(() => "t0", () => "lens-transfer-progress-1", CONVEX_LENS_SCENE_ID),
@@ -343,7 +395,7 @@ describe("Scene 07 enabled-action contract", () => {
     render(<ConvexLensOpticalBenchLab />);
     await user.click(screen.getByRole("button", { name: LENS_COPY.transferSubmit }));
     expect(screen.getByTestId("lens-transfer-repair")).toHaveTextContent(
-      LENS_COPY.transferStructureInconsistent,
+      LENS_COPY.transferMismatchMeeting,
     );
     expect(screen.queryByTestId("lens-action-response")).not.toBeInTheDocument();
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).transferAttempts[0]?.accepted).toBe(false);
@@ -429,6 +481,12 @@ describe("Scene 07 enabled-action contract", () => {
     expect(figure).toHaveAttribute("data-object-station", "beyond-2f");
     expect(figure).toHaveAttribute("data-shows-image", "false");
     expect(figure).toHaveAttribute("data-shows-rays", "false");
+    expect(figure).toHaveAttribute("data-screen-region", "between-f-and-2f");
+    const objectX = Number(figure.getAttribute("data-object-x"));
+    const screenX = Number(figure.getAttribute("data-screen-x"));
+    expect(objectX).toBeLessThan(196);
+    expect(screenX).toBeGreaterThan(322);
+    expect(screenX).toBeLessThan(364);
     expect(figure).toHaveTextContent("物体");
     expect(figure).toHaveTextContent("凸透镜");
     expect(figure).toHaveTextContent("2F");

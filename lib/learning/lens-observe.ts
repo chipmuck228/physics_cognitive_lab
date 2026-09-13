@@ -1,5 +1,5 @@
 import { LENS_COPY, LENS_OBSERVE_OPTIONS } from "@/lib/content/convex-lens-optical-bench";
-import { lensWatchedObserveDemo } from "@/lib/learning/lens-scene-data";
+import { lensLearnerManipulatedObserveBench } from "@/lib/learning/lens-scene-data";
 import type { LearningSession, ObservationEvidence } from "@/types/learning";
 
 export type LensObserveMissingKind = "interaction" | "record";
@@ -46,7 +46,7 @@ export function evaluateLensObservationEligibility(
 }
 
 export function lensPerformedObserveInteraction(session: LearningSession): boolean {
-  return lensWatchedObserveDemo(session);
+  return lensLearnerManipulatedObserveBench(session);
 }
 
 export function lensObserveMissingMessage(

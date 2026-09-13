@@ -40,7 +40,7 @@ describe("Scene 07 TRANSFER authored explanation repair", () => {
     );
   });
 
-  it("B. complete but wrong structure points to the selections", () => {
+  it("B. complete but wrong structure names the first concrete field", () => {
     const accepted = completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]);
     const draft = {
       ...accepted,
@@ -51,13 +51,14 @@ describe("Scene 07 TRANSFER authored explanation repair", () => {
     };
     const repair = lensTransferRepairFeedback(draft);
     expect(repair?.kind).toBe("inconsistent");
-    expect(repair?.message).toBe(LENS_COPY.transferStructureInconsistent);
+    expect(repair?.message).toBe(LENS_COPY.transferMismatchMeeting);
     expect(repair?.message).not.toMatch(/连起来/);
     expect(repair?.message).not.toMatch(/怎样相遇的/);
+    expect(repair?.message).not.toMatch(/物体位置、光线关系和像的结果还对不上/);
     const result = applyLensTransferSubmit(transferSession(), draft);
     expect(result.outcome.kind).toBe("rejected");
     expect(result.outcome.kind === "rejected" && result.outcome.message).toBe(
-      LENS_COPY.transferStructureInconsistent,
+      LENS_COPY.transferMismatchMeeting,
     );
   });
 
@@ -161,6 +162,55 @@ describe("Scene 07 TRANSFER authored explanation repair", () => {
     });
     expect(lines.join("\n")).toMatch(/光线关系/);
     expect(lines.join("\n")).not.toMatch(/改的是物体位置还是光屏/);
+  });
+
+  it("only object station wrong uses the projector station repair", () => {
+    const draft = {
+      ...completeLensTransferDraft("near-projector-real-enlarged"),
+      objectStation: "beyond-2f",
+    };
+    const repair = lensTransferRepairFeedback(draft);
+    expect(repair?.message).toBe(LENS_COPY.transferMismatchStationProjector);
+    expect(repair?.message).not.toMatch(/正确答案是/);
+    expect(repair?.message).not.toMatch(/F 和 2F 之间/);
+  });
+
+  it("station correct and meeting wrong uses the meeting repair", () => {
+    const draft = {
+      ...completeLensTransferDraft("near-projector-real-enlarged"),
+      meetingMode: "backward-extension",
+    };
+    expect(lensTransferRepairFeedback(draft)?.message).toBe(LENS_COPY.transferMismatchMeeting);
+  });
+
+  it("station and meeting correct, size wrong uses the size repair", () => {
+    const draft = {
+      ...completeLensTransferDraft("near-projector-real-enlarged"),
+      size: "reduced",
+    };
+    expect(lensTransferRepairFeedback(draft)?.message).toBe(LENS_COPY.transferMismatchSize);
+  });
+
+  it("only screen wrong uses the screen repair", () => {
+    const draft = {
+      ...completeLensTransferDraft("near-projector-real-enlarged"),
+      screenReceivable: "false",
+    };
+    expect(lensTransferRepairFeedback(draft)?.message).toBe(LENS_COPY.transferMismatchScreen);
+  });
+
+  it("multiple wrong fields return exactly the first mismatch", () => {
+    const draft = {
+      ...completeLensTransferDraft("near-projector-real-enlarged"),
+      objectStation: "beyond-2f",
+      meetingMode: "backward-extension",
+      size: "reduced",
+      screenReceivable: "false",
+    };
+    const repair = lensTransferRepairFeedback(draft);
+    expect(repair?.message).toBe(LENS_COPY.transferMismatchStationProjector);
+    expect(repair?.message).not.toMatch(/大小/);
+    expect(repair?.message).not.toMatch(/光屏接到/);
   });
 
   it("prompt no longer asks to restate object station", () => {

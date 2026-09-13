@@ -339,6 +339,7 @@ export async function completeLensExam(page: Page) {
       await expect(page.getByTestId("lens-exam-stem")).toContainText("如图");
       await expect(figure).toHaveAttribute("data-shows-image", "false");
       await expect(figure).toHaveAttribute("data-shows-rays", "false");
+      await expect(figure).toHaveAttribute("data-screen-region", "between-f-and-2f");
       await expect(figure).toContainText("物体");
       await expect(figure).toContainText("光屏");
     } else {

@@ -27,6 +27,7 @@ import type { LensExperimentId } from "@/lib/physics/convex-lens-optical-bench";
 import type { LearningSession } from "@/types/learning";
 
 export const LENS_WATCHED_DEMO_KEY = "watchedObserveDemo";
+export const LENS_MANIPULATED_BENCH_KEY = "learnerManipulatedObserveBench";
 export const LENS_OBSERVE_DRAFT_KEY = "observeDraft";
 export const LENS_PREDICT_DRAFT_KEY = "predictDraft";
 export const LENS_EXPERIMENT_FORM_KEY = "experimentFormDraft";
@@ -44,12 +45,20 @@ export interface LensTrialGate {
 }
 
 export function emptyLensSceneData(): Record<string, unknown> {
-  return { [LENS_WATCHED_DEMO_KEY]: false };
+  return {
+    [LENS_WATCHED_DEMO_KEY]: false,
+    [LENS_MANIPULATED_BENCH_KEY]: false,
+  };
 }
 
-/** True after an OBSERVE-stage bench action: demo, object station, or screen. Trace ≠ Evidence. */
+/** True after the learner plays the OBSERVE demo. Distinct from bench manipulation. */
 export function lensWatchedObserveDemo(session: LearningSession): boolean {
   return session.sceneData[LENS_WATCHED_DEMO_KEY] === true;
+}
+
+/** True after the learner moved the object or screen during OBSERVE. Trace ≠ Evidence. */
+export function lensLearnerManipulatedObserveBench(session: LearningSession): boolean {
+  return session.sceneData[LENS_MANIPULATED_BENCH_KEY] === true;
 }
 
 export function lensObserveDraft(session: LearningSession): string[] | null {
@@ -163,6 +172,13 @@ export function withLensWatchedDemo(
   watched: boolean,
 ): Record<string, unknown> {
   return { ...sceneData, [LENS_WATCHED_DEMO_KEY]: watched };
+}
+
+export function withLensManipulatedObserveBench(
+  sceneData: Record<string, unknown>,
+  manipulated: boolean,
+): Record<string, unknown> {
+  return { ...sceneData, [LENS_MANIPULATED_BENCH_KEY]: manipulated };
 }
 
 export function lensDescribeDraft(session: LearningSession): LensDescribeInput | null {

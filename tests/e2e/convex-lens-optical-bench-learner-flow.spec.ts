@@ -53,8 +53,17 @@ test.describe("Scene 07 learner-visible flow", () => {
     await page.getByTestId("lens-play-demo").click();
     await page.getByRole("button", { name: LENS_COPY.observeSubmit }).click();
     await expect(
+      page.getByRole("heading", { name: lensStageHeading(LearningStage.OBSERVE) }),
+    ).toBeVisible();
+    await expect(page.getByTestId("lens-observe-need-more")).toContainText(
+      LENS_COPY.observeNeedInteraction,
+    );
+    await page.getByTestId("lens-move-screen").click();
+    await page.getByRole("button", { name: LENS_COPY.observeSubmit }).click();
+    await expect(
       page.getByRole("heading", { name: lensStageHeading(LearningStage.DESCRIBE) }),
     ).toBeVisible();
+    await expect(page.getByText("你刚在光具座上动过物体或光屏")).toBeVisible();
   });
 
   test("a first-time learner can finish PREDICT through COMPLETE from visible UI only", async ({

@@ -5,13 +5,22 @@ import {
   applyLensDescriptionSave,
   applyLensObjectStationChange,
   applyLensObservationSave,
+  applyLensObserveDemoCycle,
+  applyLensScreenChange,
 } from "@/lib/learning/lens-action";
 import { accumulateConvexLensSceneEvidence } from "@/lib/learning/lens-evidence";
 import {
   evaluateLensObservationEligibility,
   hasSufficientLensObservation,
+  lensPerformedObserveInteraction,
 } from "@/lib/learning/lens-observe";
 import { lensInteractionTraces } from "@/lib/learning/lens-interaction-trace";
+import {
+  LENS_MANIPULATED_BENCH_KEY,
+  LENS_WATCHED_DEMO_KEY,
+  lensLearnerManipulatedObserveBench,
+  lensWatchedObserveDemo,
+} from "@/lib/learning/lens-scene-data";
 import { createSession } from "@/lib/learning/session";
 import {
   LENS_TRANSFER_REQUIRED_IDS,
@@ -69,6 +78,55 @@ describe("Scene 07 OBSERVE provenance", () => {
     expect(result.session.stage).toBe(LearningStage.OBSERVE);
     expect(result.session.observations[0]?.sufficient).toBe(false);
     expect(hasSufficientLensObservation(result.session.observations)).toBe(false);
+  });
+
+  it("demo plus complete checkboxes still cannot leave OBSERVE", () => {
+    const demoed = applyLensObserveDemoCycle(observeSession()).session;
+    expect(lensWatchedObserveDemo(demoed)).toBe(true);
+    expect(lensLearnerManipulatedObserveBench(demoed)).toBe(false);
+    expect(lensPerformedObserveInteraction(demoed)).toBe(false);
+    const result = applyLensObservationSave(demoed, [...LENS_OBSERVE_REQUIRED_IDS]);
+    expect(result.outcome.kind).toBe("missing");
+    expect(result.outcome.kind === "missing" && result.outcome.message).toBe(
+      LENS_COPY.observeNeedInteraction,
+    );
+    expect(result.session.stage).toBe(LearningStage.OBSERVE);
+    expect(result.session.observations[0]?.sufficient).toBe(false);
+    expect(result.session.observations[0]?.watchedFullCycle).toBe(false);
+    expect(hasSufficientLensObservation(result.session.observations)).toBe(false);
+  });
+
+  it("demo only writes no observation evidence and no manipulation provenance", () => {
+    const demoed = applyLensObserveDemoCycle(observeSession()).session;
+    expect(demoed.observations).toHaveLength(0);
+    expect(demoed.sceneData[LENS_WATCHED_DEMO_KEY]).toBe(true);
+    expect(demoed.sceneData[LENS_MANIPULATED_BENCH_KEY]).not.toBe(true);
+    expect(accumulateConvexLensSceneEvidence(demoed).observedPhenomenon).toBeUndefined();
+  });
+
+  it("move-screen plus complete record accepts OBSERVE", () => {
+    const moved = applyLensScreenChange(observeSession(), false).session;
+    expect(lensLearnerManipulatedObserveBench(moved)).toBe(true);
+    expect(lensWatchedObserveDemo(moved)).toBe(false);
+    const result = applyLensObservationSave(moved, [...LENS_OBSERVE_REQUIRED_IDS]);
+    expect(result.outcome.kind).toBe("committed");
+    expect(result.session.stage).toBe(LearningStage.DESCRIBE);
+    expect(hasSufficientLensObservation(result.session.observations)).toBe(true);
+  });
+
+  it("refresh keeps learner-manipulation provenance, not demo-only", () => {
+    const moved = applyLensObjectStationChange(observeSession(), "between-f-and-2f").session;
+    const restored = {
+      ...moved,
+      sceneData: { ...moved.sceneData },
+    };
+    expect(lensPerformedObserveInteraction(restored)).toBe(true);
+    const demoed = applyLensObserveDemoCycle(observeSession()).session;
+    const restoredDemo = {
+      ...demoed,
+      sceneData: { ...demoed.sceneData },
+    };
+    expect(lensPerformedObserveInteraction(restoredDemo)).toBe(false);
   });
 
   it("C: interaction plus record accepts OBSERVE and can later accumulate L1", () => {

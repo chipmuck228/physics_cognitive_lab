@@ -88,6 +88,22 @@ export const LENS_COPY = {
   transferStructureIncomplete: "还有几项没有选完，先把这个情境搭完整。",
   transferStructureInconsistent:
     "你选的物体位置、光线关系和像的结果还对不上。先回到前面的选择看看。",
+  transferMismatchStationProjector:
+    "先看看物体位置。题目里说幻灯片在焦点以外、二倍焦距以内，你现在选的位置和这个条件还没对上。",
+  transferMismatchStationMagnifier:
+    "先看看物体位置。题目里说邮票在焦点以内，你现在选的位置和这个条件还没对上。",
+  transferMismatchMeeting:
+    "物体位置已经对上了。再看看这个位置下，出射光线是真的会聚、只有反向延长线相交，还是在有限距离内不相交。",
+  transferMismatchSide:
+    "物体位置和光线关系已经对上了。再看看像在哪一侧。",
+  transferMismatchNature:
+    "前面的物体位置和光线关系已经对上了。再看看像是实像还是虚像。",
+  transferMismatchOrientation:
+    "前面的物体位置和成像关系已经对上了。再看看像是正立还是倒立。",
+  transferMismatchSize:
+    "前面的物体位置和成像关系已经对上了。再看看像的大小这一项。",
+  transferMismatchScreen:
+    "前面的成像判断已经对上了。再想一想这种像能不能被光屏接到。",
   transferMeetingMissing: "还要说清楚光线是怎样相遇的。",
   transferConsequenceMissing: "还要接着说，这样相遇后会形成什么样的像。",
   transferBindMissing:

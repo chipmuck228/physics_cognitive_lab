@@ -75,6 +75,7 @@ import {
   withLensExplainDraft,
   withLensModelDraft,
   withLensObserveDraft,
+  withLensManipulatedObserveBench,
   withLensTransferDraft,
   withLensTrialGate,
   withLensWatchedDemo,
@@ -1035,7 +1036,7 @@ export function applyLensObjectStationChange(
   const next = appendLensInteractionTrace(
     {
       ...session,
-      sceneData: withLensWatchedDemo(session.sceneData, true),
+      sceneData: withLensManipulatedObserveBench(session.sceneData, true),
       physicsState: wrapConvexLensPhysicsState(nextState),
     },
     {
@@ -1083,7 +1084,7 @@ export function applyLensScreenChange(
     session: appendLensInteractionTrace(
       {
         ...session,
-        sceneData: withLensWatchedDemo(session.sceneData, true),
+        sceneData: withLensManipulatedObserveBench(session.sceneData, true),
         physicsState: wrapConvexLensPhysicsState(nextState),
       },
       {

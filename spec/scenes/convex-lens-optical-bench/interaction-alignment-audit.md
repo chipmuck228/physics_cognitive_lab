@@ -13,7 +13,7 @@ Contract: [`../../interaction-alignment-audit.md`](../../interaction-alignment-a
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Repair re-audit 2026-09-13: IA-07-01 / 02 / 03 / 04 / 05 / 07 / 08 are PASS. IA-07-07 is the EXAM diagram representation. IA-07-08 is AI_OFF post-check progression. Not a universal diagram DSL or AI_OFF engine.
+Follow-up re-audit 2026-09-13 of IA-07-01 / 05 / 07 after the previous verdict was withdrawn. Demo is no longer a substitute for bench manipulation. TRANSFER complete-structure repair names one field. EXAM screen sits between right F and 2F. Not a learner-validation claim.
 
 ---
 
@@ -38,7 +38,7 @@ Known prior defects checked against **current** code:
 
 ## Confirmed Alignment Defects
 
-None open after the 2026-09-13 Scene07-local repairs, including EXAM diagram and AI_OFF post-check progression.
+None open after the 2026-09-13 follow-up: demo ≠ bench manipulation, TRANSFER first-mismatch repair, EXAM screen between F and 2F.
 
 ### IA-07-01 — repaired PASS
 
@@ -49,11 +49,11 @@ None open after the 2026-09-13 Scene07-local repairs, including EXAM diagram and
 | Stage | OBSERVE |
 | Audit Unit | Submit observation |
 | Invariant | **IA-6** (also drives DESCRIBE frame mismatch) |
-| Current status | **PASS (repaired).** Bench interaction (demo / station / screen) sets `watchedObserveDemo`. Eligibility = interaction + record. Checkbox-only cannot accept OBSERVE or set L1. |
-| Expected behavior | L1 “noticed the bench changed” requires an attributable bench action, then a record of what was seen. Evidence Claim Design lists “watching only” as an invalid L1 shortcut. Scene07 repair spec also said submit should block without required seen changes. |
-| Implementation evidence | `evaluateLensObservationEligibility` + `hasSufficientLensObservation` (`sufficient` ∧ `watchedFullCycle`). Working OBSERVE demo / station / screen set `watchedObserveDemo`. `applyLensObservationSave` accepts only when both are true. L1 still also needs DESCRIBE. Frame action: “先换物体位置或移动光屏…再勾你看见的。” |
-| Learner consequence | Cannot skip the intended observe action. DESCRIBE frame is now true. Interaction trace alone still does not set L1. |
-| Repair boundary used | Scene07 OBSERVE gate only. Reused `watchedObserveDemo`. No universal observe engine. L1 meaning unchanged. |
+| Current status | **PASS (repaired).** `demoViewed` (`watchedObserveDemo`) ≠ `learnerManipulatedObserveBench`. Eligibility requires a real move-object or move-screen plus the observation record. Demo + checkboxes stay blocked. |
+| Expected behavior | L1 “noticed the bench changed” requires an attributable learner bench action, then a record of what was seen. Watching the demo is not that action. DESCRIBE copy “你刚在光具座上动过物体或光屏” is only reachable after that action. |
+| Implementation evidence | `lensPerformedObserveInteraction` reads `learnerManipulatedObserveBench` only. Demo sets `watchedObserveDemo` only. `applyLensObjectStationChange` / `applyLensScreenChange` set the manipulation flag. `applyLensObservationSave` accepts only when both flags are true. L1 still also needs DESCRIBE. |
+| Learner consequence | Play-demo cannot manufacture OBSERVE evidence. DESCRIBE frame is actually true. Interaction trace alone still does not set L1. |
+| Repair boundary used | Scene07 OBSERVE provenance field only. Did not overload `watchedObserveDemo`. L1 meaning unchanged. |
 
 ### IA-07-02 — repaired PASS
 
@@ -109,11 +109,11 @@ None open after the 2026-09-13 Scene07-local repairs, including EXAM diagram and
 | Stage | TRANSFER |
 | Audit Unit | Authored explanation after structured model construction |
 | Invariant | **IA-1**, **IA-3**, **IA-5**, **IA-6** |
-| Current status | **PASS (repaired).** Structured radios own station / meeting / image. The textarea asks only “光线怎样相遇，为什么会得到这样的像？”. One submit shows one primary repair. Incomplete fields are not called “wrong”. `studentExplanation` stays learner-authored. |
-| Expected behavior | Authored language measures the meeting→image bind. Feedback names the next repair. Surface checkbox does not rewrite the sentence. Completing TRANSFER still does not write L5 without valid MODEL + both targets. |
-| Implementation evidence | `LENS_COPY.transferOwnWords`; `lens-transfer-recap` mirrors draft labels; `lensTransferRepairFeedback` first-match priority; `LensTransferTask` `lens-transfer-repair` is the only fail surface; action chrome hidden on TRANSFER missing/rejected; `draftToLensTransferAttempt` no longer appends `都有凸透镜`. `evaluateConvexLensTransfer` acceptance unchanged. |
-| Learner consequence | After correct radios, a restatement is repaired as missing consequence/bind, not as “先选出物距站点”. One orange block. Recap shows the learner’s current choices, including wrong ones. |
-| Repair boundary used | Scene07 TRANSFER copy, recap, feedback ownership, and adapter provenance only. No LLM. No evaluator / L5 / pair-semantics change. |
+| Current status | **PASS (repaired).** Structured radios own station / meeting / image. Complete wrong structure names the first mismatched field. The textarea still asks only “光线怎样相遇，为什么会得到这样的像？”. One submit shows one primary repair. Incomplete fields are not called “wrong”. `studentExplanation` stays learner-authored. |
+| Expected behavior | Authored language measures the meeting→image bind. Complete-structure repair names one concrete field in station → meeting → side → nature → orientation → size → screen order. Surface checkbox does not rewrite the sentence. Completing TRANSFER still does not write L5 without valid MODEL + both targets. |
+| Implementation evidence | `firstLensTransferStructuredMismatch` vs `officialLensTransferStructure`. Projector station copy restates the scenario condition, not “正确答案是 F 和 2F 之间”. `evaluateConvexLensTransfer` still owns accept/reject. Authored failure kinds unchanged. |
+| Learner consequence | Only-station-wrong no longer says every field is wrong. One orange block. Recap still shows the learner’s current choices. |
+| Repair boundary used | Scene07 TRANSFER repair-feedback classifier only. No LLM. No evaluator / L5 / pair-semantics change. |
 
 ### IA-07-07 — repaired PASS
 
@@ -124,11 +124,11 @@ None open after the 2026-09-13 Scene07-local repairs, including EXAM diagram and
 | Stage | EXAM |
 | Audit Unit | Diagram representation integrity |
 | Invariant | **IA-1**, **IA-2** |
-| Current status | **PASS (repaired).** `format === "diagram"` and stem “如图” now render `LensExamDiagram`. Given condition only: axis, lens, F/2F, object beyond 2F, screen on the other side. No image, no rays, not the experiment bench. |
-| Expected behavior | The learner can see the figure the stem refers to, then still infer meeting → image. Text/experimental patterns stay text-only. |
-| Implementation evidence | `lensExamDiagramSpec` is Scene07-local and keyed by pattern id + format. `data-shows-image="false"` `data-shows-rays="false"`. Caption is `pattern.representation`, not the official image row. |
-| Learner consequence | “如图” is no longer an imaginary action. The figure does not give away 倒立缩小实像. |
-| Repair boundary used | Scene07 exam representation only. No universal diagram DSL. Physics Truth / L-levels unchanged. Exam still does not write L6. |
+| Current status | **PASS (repaired).** `format === "diagram"` and stem “如图” render `LensExamDiagram`. Object is beyond left 2F. Screen is between right F and 2F (`screenRegion: "between-f-and-2f"`), matching “光屏放在另一侧像的位置” for \(u > 2f\). No image, no rays. |
+| Expected behavior | The learner can see the given setup, then still infer meeting → inverted reduced real image. Text/experimental patterns stay text-only. Stem and figure do not contradict Physics Truth. |
+| Implementation evidence | `LENS_EXAM_BEYOND_2F_LAYOUT` + `lensExamScreenIsBetweenRightFAnd2F`. Screen x=343 sits in (322, 364). `data-shows-image="false"` `data-shows-rays="false"`. Caption is `pattern.representation`. |
+| Learner consequence | “如图” has a physically consistent given-condition sketch. The figure does not give away 倒立缩小实像. |
+| Repair boundary used | Scene07 exam representation coordinates only. No universal diagram DSL. Physics Truth / L-levels unchanged. Exam still does not write L6. |
 
 ### IA-07-08 — repaired PASS
 
@@ -181,11 +181,11 @@ IA-07-04: Step 6 now uses one normalized claim (`evaluateLensAuthoredSemanticCla
 |---|---|
 | Stage / Subtask | OBSERVE / manipulate |
 | Cognitive task | Change object station or screen; see a physical change |
-| Required capability | move-object, move-screen, play-demo |
+| Required capability | move-object, move-screen; play-demo is optional support |
 | Visible control / surface | station hits; `lens-play-demo`; `lens-move-screen` |
 | Semantic learner action | `applyLensObjectStationChange` / `applyLensScreenChange` / `applyLensObserveDemoCycle` |
 | Authoritative owner | Scene lens-action + deterministic physics |
-| Expected state consequence | `physicsState` / `watchedObserveDemo` |
+| Expected state consequence | `physicsState`; demo → `watchedObserveDemo`; move-object/screen → `learnerManipulatedObserveBench` |
 | Expected visible consequence | Bench attrs / object / screen change; response class `applied` |
 | Blocked condition + visible reason | Wrong stage: “现在不能换物体位置 / 移光屏” |
 | Progression condition | **Not required** to leave OBSERVE (see unit 3) |
@@ -206,12 +206,12 @@ IA-07-04: Step 6 now uses one normalized claim (`evaluateLensAuthoredSemanticCla
 | Required capability | select observation fragments + commit |
 | Visible control / surface | checkboxes + “提交观察” |
 | Semantic learner action | `saveObservation` → `applyLensObservationSave` |
-| Authoritative owner | `evaluateLensObservationEligibility` (interaction + record) |
+| Authoritative owner | `evaluateLensObservationEligibility` (learner bench action + record) |
 | Expected state consequence | `observations[]`; advance if both flags |
 | Expected visible consequence | DESCRIBE, or the matching missing reason |
-| Blocked condition + visible reason | No bench action → `observeNeedInteraction`. Incomplete checkboxes after action → `observeNeedRecord` |
-| Progression condition | `watchedObserveDemo` (demo / station / screen) ∧ required record IDs |
-| Evidence input / provenance | `sufficient` only when `watchedFullCycle` and record complete. L1 still also needs DESCRIBE |
+| Blocked condition + visible reason | No move-object/screen → `observeNeedInteraction` (demo does not count). Incomplete checkboxes after action → `observeNeedRecord` |
+| Progression condition | `learnerManipulatedObserveBench` ∧ required record IDs |
+| Evidence input / provenance | `sufficient` only when `watchedFullCycle` (now = bench manipulation) and record complete. L1 still also needs DESCRIBE |
 | IA-1 | PASS |
 | IA-2 | PASS |
 | IA-3 | N/A |
@@ -241,7 +241,7 @@ IA-07-04: Step 6 now uses one normalized claim (`evaluateLensAuthoredSemanticCla
 | IA-5 | PASS |
 | IA-6 | PASS |
 
-DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guaranteed by the OBSERVE gate.
+DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guaranteed by `learnerManipulatedObserveBench`, not by demo play.
 
 ### 5. PREDICT / lock prediction
 
@@ -730,7 +730,7 @@ Read: `tests/e2e/convex-lens-optical-bench-learner-flow.spec.ts`, `happy-path.sp
 |---|---|
 | Scripted visible path can reach COMPLETE | A first-time learner knows what to do unprompted |
 | No `runExperiment` button | Pedagogical understanding of the observe items |
-| OBSERVE checkboxes without bench action stay blocked | Cover is perceptually obvious at Grade-9 glance |
+| OBSERVE checkboxes and demo+checkboxes stay blocked; move-screen then DESCRIBE | Cover is perceptually obvious at Grade-9 glance |
 | Trial-1 wrong station blocked with reason | Trial-4 wrong action (move when cover required) |
 | Cover testid / attrs after click | That leftover is a learner-clarity problem (it is an IA-allowed cross-step) |
 | MODEL incoherent ray cannot Next | All `failureKind` → repair mappings in the browser |
@@ -752,8 +752,8 @@ The dedicated OBSERVE E2E now submits checkboxes before any bench action and ass
 | 3 | Locally invalid structure marked complete? | No for same-step rays. Cross-step size / authored-vs-mode can reach step 7 by design |
 | 4 | Blocked without why? | No silent no-op confirmed. OBSERVE missing reasons now match the gate |
 | 5 | Hidden progression work? | TRANSFER shows 第 N / 2 个新情境 |
-| 6 | Evidence without intended action? | No after repair (OBSERVE requires interaction + record) |
-| 7 | UI ≠ authoritative physics? | Cover: no. DESCRIBE frame is now gated by OBSERVE interaction |
+| 6 | Evidence without intended action? | No after repair (OBSERVE requires learner move + record; demo is not the move) |
+| 7 | UI ≠ authoritative physics? | Cover: no. EXAM screen now between F and 2F. DESCRIBE frame gated by bench manipulation |
 | 8 | React infers success vs evaluator? | No confirmed on MODEL/TRANSFER/AI_OFF |
 | 9 | System does the learner action? | Auto-run **removed**. Internal `applyLensRunExperiment` only after validated learner intervention |
 | 10 | E2E pass while first-timer lost? | OBSERVE shortcut now has an anti-false-confidence E2E |
@@ -783,6 +783,6 @@ The dedicated OBSERVE E2E now submits checkboxes before any bench action and ass
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Re-audit of IA-07-01 / 02 / 03 / 04 / 05 / 07 / 08 after the Scene07-local repairs: all PASS. This is not a learner-validation claim.
+Re-audit of IA-07-01 / 02 / 03 / 04 / 05 / 07 / 08 after the follow-up: all PASS against current code. This is not a learner-validation claim.
 
 This is not learner validation.

@@ -2,7 +2,9 @@ import { analyzeConvexLensAuthored } from "@/content/physics-models/convex-lens-
 import { LENS_COPY } from "@/lib/content/convex-lens-optical-bench";
 import {
   draftToLensTransferAttempt,
+  firstLensTransferStructuredMismatch,
   type LensTransferDraft,
+  type LensTransferStructuredMismatch,
 } from "@/lib/learning/lens-transfer";
 import { evaluateConvexLensTransfer } from "@/content/physics-models/convex-lens-imaging/construction";
 
@@ -98,6 +100,47 @@ export function lensFeedbackForFailureKind(
   };
 }
 
+export function lensTransferStructuredMismatchMessage(
+  draft: LensTransferDraft,
+): string {
+  const mismatch = firstLensTransferStructuredMismatch(draft);
+  return lensTransferMismatchCopy(draft.targetId, mismatch);
+}
+
+function lensTransferMismatchCopy(
+  targetId: string,
+  mismatch: LensTransferStructuredMismatch | null,
+): string {
+  if (mismatch === "object-station") {
+    if (targetId === "near-projector-real-enlarged") {
+      return LENS_COPY.transferMismatchStationProjector;
+    }
+    if (targetId === "far-magnifying-glass-virtual") {
+      return LENS_COPY.transferMismatchStationMagnifier;
+    }
+    return LENS_COPY.transferStructureInconsistent;
+  }
+  if (mismatch === "meeting-mode") {
+    return LENS_COPY.transferMismatchMeeting;
+  }
+  if (mismatch === "image-side") {
+    return LENS_COPY.transferMismatchSide;
+  }
+  if (mismatch === "image-nature") {
+    return LENS_COPY.transferMismatchNature;
+  }
+  if (mismatch === "orientation") {
+    return LENS_COPY.transferMismatchOrientation;
+  }
+  if (mismatch === "size") {
+    return LENS_COPY.transferMismatchSize;
+  }
+  if (mismatch === "screen-receivable") {
+    return LENS_COPY.transferMismatchScreen;
+  }
+  return LENS_COPY.transferStructureInconsistent;
+}
+
 export function lensTransferRepairFeedback(draft: LensTransferDraft): LensFeedback | null {
   const structured = draftToLensTransferAttempt(draft);
   if (!structured) {
@@ -110,10 +153,13 @@ export function lensTransferRepairFeedback(draft: LensTransferDraft): LensFeedba
   if (evaluation.ok) {
     return null;
   }
-  if (
-    evaluation.failureKind === "wrong-target-structure" ||
-    evaluation.failureKind === "unknown-or-unrequired-target"
-  ) {
+  if (evaluation.failureKind === "wrong-target-structure") {
+    return {
+      kind: "inconsistent",
+      message: lensTransferStructuredMismatchMessage(draft),
+    };
+  }
+  if (evaluation.failureKind === "unknown-or-unrequired-target") {
     return {
       kind: "inconsistent",
       message: LENS_COPY.transferStructureInconsistent,

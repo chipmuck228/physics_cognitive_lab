@@ -44,6 +44,7 @@ describe("convex-lens-optical-bench adapter", () => {
   it("persists physicsState, sceneData, and failed attempts", () => {
     const session = createSession(() => "t", () => "persist-lens", CONVEX_LENS_SCENE_ID);
     session.sceneData.watchedObserveDemo = true;
+    session.sceneData.learnerManipulatedObserveBench = true;
     session.modelAttempts = [
       {
         nodes: ["station:beyond-2f"],
@@ -68,6 +69,7 @@ describe("convex-lens-optical-bench adapter", () => {
     const restored = loadSession(CONVEX_LENS_SCENE_ID);
     expect(restored?.sceneId).toBe(CONVEX_LENS_SCENE_ID);
     expect(restored?.sceneData.watchedObserveDemo).toBe(true);
+    expect(restored?.sceneData.learnerManipulatedObserveBench).toBe(true);
     expect(restored?.modelAttempts[0]?.correctStructure).toBe(false);
     expect(restored?.examAttempts[0]?.selectedAnswer).not.toBe(
       restored?.examAttempts[0]?.reasoning,

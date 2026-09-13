@@ -3,6 +3,7 @@ import {
   evaluateConvexLensTransfer,
   evaluateRequiredTransferPair,
   officialImageConsequence,
+  officialMeetingMode,
   type ConvexLensTransferAttempt,
   type ImageConsequence,
   type MeetingMode,
@@ -92,6 +93,73 @@ export function draftToLensTransferAttempt(
 
 export function isLensTransferDraftComplete(draft: LensTransferDraft): boolean {
   return draftToLensTransferAttempt(draft) !== null;
+}
+
+export const LENS_TRANSFER_MISMATCH_ORDER = [
+  "object-station",
+  "meeting-mode",
+  "image-side",
+  "image-nature",
+  "orientation",
+  "size",
+  "screen-receivable",
+] as const;
+
+export type LensTransferStructuredMismatch =
+  (typeof LENS_TRANSFER_MISMATCH_ORDER)[number];
+
+export function officialLensTransferStructure(targetId: string): {
+  objectStation: ObjectStation;
+  meetingMode: MeetingMode;
+  image: ImageConsequence;
+} | null {
+  const objectStation =
+    targetId === "near-projector-real-enlarged"
+      ? "between-f-and-2f"
+      : targetId === "far-magnifying-glass-virtual"
+        ? "inside-f"
+        : null;
+  if (!objectStation) {
+    return null;
+  }
+  return {
+    objectStation,
+    meetingMode: officialMeetingMode(objectStation),
+    image: officialImageConsequence(objectStation),
+  };
+}
+
+/** First complete-structure mismatch vs the target-required row. Repair only. */
+export function firstLensTransferStructuredMismatch(
+  draft: LensTransferDraft,
+): LensTransferStructuredMismatch | null {
+  const expected = officialLensTransferStructure(draft.targetId);
+  const structured = draftToLensTransferAttempt(draft);
+  if (!expected || !structured) {
+    return null;
+  }
+  if (structured.objectStation !== expected.objectStation) {
+    return "object-station";
+  }
+  if (structured.meetingMode !== expected.meetingMode) {
+    return "meeting-mode";
+  }
+  if (structured.image.side !== expected.image.side) {
+    return "image-side";
+  }
+  if (structured.image.nature !== expected.image.nature) {
+    return "image-nature";
+  }
+  if (structured.image.orientation !== expected.image.orientation) {
+    return "orientation";
+  }
+  if (structured.image.size !== expected.image.size) {
+    return "size";
+  }
+  if (structured.image.screenReceivable !== expected.image.screenReceivable) {
+    return "screen-receivable";
+  }
+  return null;
 }
 
 function optionLabel(
