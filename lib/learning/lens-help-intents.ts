@@ -98,7 +98,7 @@ const LADDERS: Record<LensHelpIntentId, readonly string[]> = {
   ],
   "how-rays": [
     "先选一条你能说清楚的光线，不要同时想三条。",
-    "到达透镜前怎么走，和过透镜后怎么走，要说的是同一条光线。",
+    "先选出这条特殊光线，再说它经过透镜后该怎么走。",
     QUESTION,
     "实线表示光真的这样走；虚线只表示把光线反方向延长。",
   ],

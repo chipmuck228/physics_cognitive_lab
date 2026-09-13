@@ -195,9 +195,7 @@ test.describe("Scene 07 learner-visible flow", () => {
     await page.getByRole("radio", { name: /物体在 2F 以外/ }).click();
     await page.getByTestId("lens-model-next").click();
     await fillOneRay(page, "第一条光线", {
-      kind: "平行主光轴的光线",
-      incident: "这是实际光线（实线）",
-      before: "到达透镜前：平行主光轴",
+      kind: "平行主光轴",
       after: "过透镜后：方向不变",
     });
     await expect(page.getByTestId("lens-model-next")).toBeDisabled();
@@ -205,16 +203,12 @@ test.describe("Scene 07 learner-visible flow", () => {
     await expect(page.getByTestId("lens-model-next-reason")).not.toContainText("经过另一侧焦点");
 
     await fillOneRay(page, "第一条光线", {
-      kind: "平行主光轴的光线",
-      incident: "这是实际光线（实线）",
-      before: "到达透镜前：平行主光轴",
+      kind: "平行主光轴",
       after: "过透镜后：经过另一侧焦点",
     });
     await page.getByTestId("lens-model-next").click();
     await fillOneRay(page, "第二条光线", {
-      kind: "过光心的光线",
-      incident: "这是实际光线（实线）",
-      before: "到达透镜前：朝向光心",
+      kind: "过光心",
       after: "过透镜后：方向不变",
     });
     await page.getByTestId("lens-model-next").click();
@@ -265,16 +259,12 @@ test.describe("Scene 07 learner-visible flow", () => {
     await page.getByRole("radio", { name: /物体在 2F 以外/ }).click();
     await page.getByTestId("lens-model-next").click();
     await fillOneRay(page, "第一条光线", {
-      kind: "平行主光轴的光线",
-      incident: "这是实际光线（实线）",
-      before: "到达透镜前：平行主光轴",
+      kind: "平行主光轴",
       after: "过透镜后：经过另一侧焦点",
     });
     await page.getByTestId("lens-model-next").click();
     await fillOneRay(page, "第二条光线", {
-      kind: "过光心的光线",
-      incident: "这是实际光线（实线）",
-      before: "到达透镜前：朝向光心",
+      kind: "过光心",
       after: "过透镜后：方向不变",
     });
     await page.getByTestId("lens-model-next").click();
@@ -301,16 +291,12 @@ test.describe("Scene 07 learner-visible flow", () => {
     await page.getByRole("radio", { name: /物体在 2F 以外/ }).click();
     await page.getByTestId("lens-model-next").click();
     await fillOneRay(page, "第一条光线", {
-      kind: "平行主光轴的光线",
-      incident: "这是实际光线（实线）",
-      before: "到达透镜前：平行主光轴",
+      kind: "平行主光轴",
       after: "过透镜后：经过另一侧焦点",
     });
     await page.getByTestId("lens-model-next").click();
     await fillOneRay(page, "第二条光线", {
-      kind: "过光心的光线",
-      incident: "这是实际光线（实线）",
-      before: "到达透镜前：朝向光心",
+      kind: "过光心",
       after: "过透镜后：方向不变",
     });
     await page.getByTestId("lens-model-next").click();

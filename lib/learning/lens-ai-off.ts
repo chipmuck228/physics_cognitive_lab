@@ -256,24 +256,80 @@ export function buildLensAiOffAttempt(
   };
 }
 
+export function lensAiOffDraftFromCommittedAttempt(
+  attempt: IndependentChallengeAttempt,
+  fallback: LensAiOffDraft,
+): LensAiOffDraft {
+  const parts = attempt.preCommitEvidenceIds ?? [];
+  if (parts.length < 7) {
+    return {
+      ...fallback,
+      currentChallengeId: attempt.challengeId,
+      selectedAnswer: attempt.selectedAnswer,
+      reasoning: attempt.studentReasoning ?? "",
+    };
+  }
+  return {
+    ...fallback,
+    currentChallengeId: attempt.challengeId,
+    objectStation: parts[0] ?? "",
+    meetingMode: parts[1] ?? "",
+    nature: parts[2] ?? "",
+    side: parts[3] ?? "",
+    orientation: parts[4] ?? "",
+    size: parts[5] ?? "",
+    screenReceivable: parts[6] === "true" ? "true" : "false",
+    selectedAnswer: attempt.selectedAnswer,
+    reasoning: attempt.studentReasoning ?? "",
+  };
+}
+
+export function classifyLensAiOffPostCheck(input: {
+  challengeId: string;
+  postCheckIds: readonly string[];
+  officialOk: boolean;
+}): { kind: "missing" | "rejected"; message: string } | { kind: "ok" } {
+  if (input.postCheckIds.length === 0) {
+    return { kind: "missing", message: LENS_AI_OFF_COPY.postCheckNeedFacts };
+  }
+  const options = lensAiOffPostCheckOptions(input.challengeId);
+  if (options.length === 0) {
+    return { kind: "rejected", message: LENS_AI_OFF_COPY.postCheckSystem };
+  }
+  const ownIds = new Set(options.map((option) => option.id));
+  if (input.postCheckIds.some((id) => !ownIds.has(id))) {
+    return { kind: "rejected", message: LENS_AI_OFF_COPY.postCheckWrongChallenge };
+  }
+  const selected = new Set(input.postCheckIds);
+  const required = options.filter((option) => option.required && !option.distractor);
+  const distractors = options.filter((option) => option.distractor);
+  if (distractors.some((option) => selected.has(option.id))) {
+    return { kind: "rejected", message: LENS_AI_OFF_COPY.postCheckDistractor };
+  }
+  if (required.some((option) => !selected.has(option.id))) {
+    return { kind: "rejected", message: LENS_AI_OFF_COPY.postCheckMissingRequired };
+  }
+  if (!input.officialOk) {
+    return { kind: "rejected", message: LENS_AI_OFF_COPY.postCheckPrecommit };
+  }
+  return { kind: "ok" };
+}
+
 export function lensAiOffPostCheckRepair(
   challengeId: string,
   postCheckIds: readonly string[],
   accepted: boolean,
+  officialOk = false,
 ): { kind: "missing" | "rejected"; message: string } | null {
   if (accepted) {
     return null;
   }
-  if (postCheckIds.length === 0) {
-    return {
-      kind: "missing",
-      message: LENS_AI_OFF_COPY.postCheckNeedFacts,
-    };
-  }
-  return {
-    kind: "rejected",
-    message: LENS_AI_OFF_COPY.postCheckMismatch,
-  };
+  const classified = classifyLensAiOffPostCheck({
+    challengeId,
+    postCheckIds,
+    officialOk,
+  });
+  return classified.kind === "ok" ? { kind: "rejected", message: LENS_AI_OFF_COPY.postCheckSystem } : classified;
 }
 
 export function applyLensAiOffPostCheck(
@@ -283,7 +339,7 @@ export function applyLensAiOffPostCheck(
   llmUsed = false,
 ): IndependentChallengeAttempt {
   const evaluation = evaluateLensAiOffAttempt({
-    draft: { ...draft, selectedAnswer: attempt.selectedAnswer, reasoning: attempt.studentReasoning },
+    draft: lensAiOffDraftFromCommittedAttempt(attempt, draft),
     postCheckIds,
     llmUsed,
   });

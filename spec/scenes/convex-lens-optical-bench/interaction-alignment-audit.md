@@ -13,7 +13,7 @@ Contract: [`../../interaction-alignment-audit.md`](../../interaction-alignment-a
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Follow-up re-audit 2026-09-13 of IA-07-01 / 05 / 07 after the previous verdict was withdrawn. Demo is no longer a substitute for bench manipulation. TRANSFER complete-structure repair names one field. EXAM screen sits between right F and 2F. Not a learner-validation claim.
+Follow-up re-audit 2026-09-13 of IA-07-06 (MODEL required-ray construction) and IA-07-09 (AI_OFF post-check correctness). Prior repaired IDs IA-07-01 / 04 / 05 / 07 / 08 were re-checked against current code and remain PASS. Not a learner-validation claim.
 
 ---
 
@@ -38,7 +38,7 @@ Known prior defects checked against **current** code:
 
 ## Confirmed Alignment Defects
 
-None open after the 2026-09-13 follow-up: demo ≠ bench manipulation, TRANSFER first-mismatch repair, EXAM screen between F and 2F.
+None open after the 2026-09-13 MODEL-ray / AI_OFF post-check follow-up. Required-ray construction no longer asks the learner to fill `CanonicalRayChoice`. AI_OFF post-check repair names the actual failed class.
 
 ### IA-07-01 — repaired PASS
 
@@ -115,6 +115,21 @@ None open after the 2026-09-13 follow-up: demo ≠ bench manipulation, TRANSFER 
 | Learner consequence | Only-station-wrong no longer says every field is wrong. One orange block. Recap still shows the learner’s current choices. |
 | Repair boundary used | Scene07 TRANSFER repair-feedback classifier only. No LLM. No evaluator / L5 / pair-semantics change. |
 
+### IA-07-06 — repaired PASS
+
+| Field | Result |
+|---|---|
+| ID | IA-07-06 |
+| Severity | **P1** |
+| Stage | MODEL |
+| Audit Unit | required-ray construction, Steps 2–3 |
+| Invariant | **IA-1**, **IA-2**, **IA-3**, **IA-5**, **IA-6** |
+| Current status | **PASS (repaired).** Learner owns `kind` + `afterLens` for the required pair. `beforeLens` and `incidentPath=actual` are system-derived. Optional focal is a station-legal reference, not a required slot. Kind immediately draws the incident actual segment. Wrong outgoing is drawn and locally rejected without official repair. |
+| Expected behavior | Construct two special rays by choosing the family and predicting the after-lens path. Do not fill the internal 4-tuple. Backward extension is not a per-ray type. |
+| Implementation evidence | `LensRayConstruction` required editor has two radios. `withDerivedRequiredRay` / `officialOptionalFocalRay`. `visibleLensStudentRays` uses `asVisibleLensRay` (kind-only is enough to draw). `projectLearnerRay` omits the left-hand dashed tail except at `inside-f`. Final `evaluateConvexLensModelConstruction` unchanged. Derived support fields alone do not set L4. |
+| Learner consequence | Selecting “平行主光轴” shows a solid incident ray at once. Duplicate “到达透镜前：平行主光轴” and “实际或反向延长” radios are gone. |
+| Repair boundary used | Scene07 MODEL ray UI + local step check + projection only. Physics Truth / L4 / final evaluator unchanged. |
+
 ### IA-07-07 — repaired PASS
 
 | Field | Result |
@@ -144,6 +159,21 @@ None open after the 2026-09-13 follow-up: demo ≠ bench manipulation, TRANSFER 
 | Implementation evidence | `applyLensAiOffPostCheckSave` returns missing/rejected when not accepted. Accepted pair calls `advanceIfReady` because `advanceLensLoop` now allows COMPLETE (chrome `LENS_PHASE_STAGES` still excludes COMPLETE). Lab `setAiOffDraft(lensAiOffDraft(getSessionSnapshot()))` after save. Visible step follows whether the current challenge is accepted. No Tutor/LLM on AI_OFF. |
 | Learner consequence | One click advances or names the repair. Post-check selections do not leak onto the next challenge. |
 | Repair boundary used | Scene07 AI_OFF draft sync + outcome kind only. `evaluateConvexLensAiOff` / L6 derivation unchanged. |
+
+### IA-07-09 — repaired PASS
+
+| Field | Result |
+|---|---|
+| ID | IA-07-09 |
+| Severity | **P1** |
+| Stage | AI_OFF |
+| Audit Unit | Post-check selections vs deterministic required/distractor evaluation |
+| Invariant | **IA-2**, **IA-3**, **IA-4**, **IA-5**, **IA-6** |
+| Current status | **PASS (repaired).** Challenge 1 required IDs are exactly the four screenshot facts. `postCheckMatchesRequired` accepts that set with no distractor. Rejection no longer uses one “不要勾这也有凸透镜” line for every failure. Official evaluation reads the committed attempt (`preCommitEvidenceIds`), not a possibly empty live draft. |
+| Expected behavior | Four canonical required facts + no distractor + valid pre-commit → accepted and advance. Missing required / distractor / failed pre-commit / wrong-challenge each have one concrete repair. |
+| Implementation evidence | Overlay IDs unchanged. `classifyLensAiOffPostCheck` + `lensAiOffDraftFromCommittedAttempt`. `evaluateConvexLensAiOff` still owns `official.ok`. L6 still requires accepted pair + LLM off. |
+| Learner consequence | The screenshot selection now advances when the independent response was valid. A distractor click stays on the same challenge with a distractor-specific reason. |
+| Repair boundary used | Scene07 AI_OFF post-check classification + committed-attempt reconstruction. Official answer key / L6 unchanged. |
 
 ---
 
@@ -446,22 +476,22 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 | Field | Result |
 |---|---|
 | Stage / Subtask | MODEL step 2 |
-| Cognitive task | Fully specify one required ray, internally coherent |
-| Required capability | construct-ray |
-| Visible control / surface | `lens-ray-a` pickers; learner SVG via `projectLearnerRay` |
-| Semantic learner action | draft `rayA` |
-| Authoritative owner | `rayDraftComplete` + `isCanonicalRayGeometricallyCoherent` |
-| Expected state consequence | Coherent ray A or blocked |
-| Expected visible consequence | Learner segments; no official-ray correction |
-| Blocked condition + visible reason | Missing fields or “名字…走法对不上” (does not fill the canonical after-path) |
+| Cognitive task | Choose one required special-ray family and predict its after-lens path |
+| Required capability | construct-required-ray |
+| Visible control / surface | `lens-ray-a` kind + after radios; incident drawn immediately |
+| Semantic learner action | learner-owned `rayA.kind` + `rayA.afterLens` |
+| Authoritative owner | `evaluateLensModelStep(..., 2)` + derived support + `isCanonicalRayGeometricallyCoherent` |
+| Expected state consequence | Coherent required ray A, or blocked |
+| Expected visible consequence | Kind → solid incident; after → learner-selected outgoing; no official repair |
+| Blocked condition + visible reason | Missing kind/after, or “名字和经过透镜后的走法还对不上” (does not name the official after-path) |
 | Progression condition | `status === ready` |
-| Evidence input / provenance | Draft |
+| Evidence input / provenance | Learner `kind` + `afterLens`. `beforeLens` / `incidentPath` are SYSTEM_DERIVED |
 | IA-1 | PASS |
 | IA-2 | PASS |
 | IA-3 | PASS |
 | IA-4 | PASS |
 | IA-5 | PASS |
-| IA-6 | N/A |
+| IA-6 | PASS (derived fields are not independent L4) |
 
 ### 15. MODEL / construct ray B + required pair
 
@@ -469,21 +499,21 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 |---|---|
 | Stage / Subtask | MODEL step 3 |
 | Cognitive task | Second required ray; pair = parallel-axis + through-center |
-| Required capability | construct-ray |
-| Visible control / surface | `lens-ray-b`; optional focal checkbox |
-| Semantic learner action | draft `rayB` / optional focal |
+| Required capability | construct-required-ray |
+| Visible control / surface | `lens-ray-b`; optional-focal checkbox only where station-legal |
+| Semantic learner action | learner-owned `rayB.kind` + `rayB.afterLens`; optional reference is system-drawn |
 | Authoritative owner | coherence + required-pair check |
-| Expected state consequence | Ready only if pair structure holds |
-| Expected visible consequence | Second learner ray |
-| Blocked condition + visible reason | “还没有组成当前模型要求的两条必做光线” (does not name both answers as the key) |
+| Expected state consequence | Ready only if the required pair holds |
+| Expected visible consequence | Second learner ray; optional focal marked `data-optional-reference` |
+| Blocked condition + visible reason | “还没有组成当前模型要求的两条必做光线” (does not name both answers) |
 | Progression condition | `status === ready` |
-| Evidence input / provenance | Draft |
+| Evidence input / provenance | Same as step 2. Optional focal cannot satisfy the pair or create L4 |
 | IA-1 | PASS |
 | IA-2 | PASS |
 | IA-3 | PASS |
 | IA-4 | PASS |
 | IA-5 | PASS |
-| IA-6 | N/A |
+| IA-6 | PASS |
 
 ### 16. MODEL / classify meeting
 
@@ -492,7 +522,7 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 | Stage / Subtask | MODEL step 4 |
 | Cognitive task | Name how the constructed rays meet |
 | Required capability | classify-meeting |
-| Visible control / surface | meeting radios |
+| Visible control / surface | meeting radios; real-image copy “两条出射的实际光线怎样？”; virtual-image copy names reverse extension as a relation |
 | Semantic learner action | draft `meetingMode` |
 | Authoritative owner | `officialMeetingMode(station) === meetingMode` |
 | Expected state consequence | Ready if meeting matches station (hence required-pair geometry) |
@@ -695,7 +725,7 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 | Authoritative owner | `evaluateLensAiOffAttempt` / `evaluateRequiredAiOffPair` |
 | Expected state consequence | `accepted` only if official ok ∧ post-check ∧ !llm; draft from `nextLensAiOffDraft` |
 | Expected visible consequence | Challenge 2 response, or COMPLETE. One repair if not accepted |
-| Blocked condition + visible reason | Failed post-check stays; `lens-ai-off-repair` |
+| Blocked condition + visible reason | Failed post-check stays; one `lens-ai-off-repair` from `classifyLensAiOffPostCheck` (empty / missing / distractor / precommit / wrong-challenge) |
 | Progression condition | `hasCompletedLensAiOff` |
 | Evidence input / provenance | L6 flags only from accepted pair + LLM off |
 | IA-1 | PASS |
@@ -783,6 +813,6 @@ The dedicated OBSERVE E2E now submits checkboxes before any bench action and ass
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Re-audit of IA-07-01 / 02 / 03 / 04 / 05 / 07 / 08 after the follow-up: all PASS against current code. This is not a learner-validation claim.
+Re-audit of IA-07-01 / 02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 against current code: all PASS. This is not a learner-validation claim.
 
 This is not learner validation.

@@ -51,6 +51,23 @@ describe("Scene 07 learner ray geometry projection", () => {
     expect(
       projectedSegmentPassesThrough(outgoing!, { x: LENS_FAR_F_X, y: 0 }),
     ).toBe(true);
+    expect(segment(drawn, "backward-extension")).toBeUndefined();
+  });
+
+  it("draws an incident-only segment when outgoing is not chosen yet", () => {
+    const drawn = projectLearnerRay(
+      {
+        kind: "parallel-axis",
+        beforeLens: "parallel-to-principal-axis",
+        afterLens: "",
+        incidentPath: "actual",
+      },
+      "beyond-2f",
+    );
+    expect(drawn.representable).toBe(true);
+    expect(segment(drawn, "incident")).toBeTruthy();
+    expect(segment(drawn, "outgoing-actual")).toBeUndefined();
+    expect(segment(drawn, "backward-extension")).toBeUndefined();
   });
 
   it("draws through-center undeviated through the optical center", () => {

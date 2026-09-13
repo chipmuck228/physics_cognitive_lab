@@ -7,6 +7,8 @@ import {
   buildLensAiOffAssessment,
   buildLensAiOffAttempt,
   canCommitLensAiOffResponse,
+  evaluateLensAiOffAttempt,
+  lensAiOffDraftFromCommittedAttempt,
   lensAiOffPostCheckRepair,
   lensTutorUsedDuringIndependent,
   nextLensAiOffDraft,
@@ -824,9 +826,18 @@ export function applyLensAiOffPostCheckSave(
     return blocked(session, "先提交判断，再做对照。");
   }
   const llmUsed = lensTutorUsedDuringIndependent(session);
+  const evalDraft = lensAiOffDraftFromCommittedAttempt(original, {
+    ...lensAiOffDraft(session),
+    currentChallengeId: input.challengeId,
+  });
+  const evaluation = evaluateLensAiOffAttempt({
+    draft: evalDraft,
+    postCheckIds: input.postCheckIds,
+    llmUsed,
+  });
   attempts[actualIndex] = applyLensAiOffPostCheck(
     original,
-    { ...lensAiOffDraft(session), currentChallengeId: input.challengeId },
+    evalDraft,
     input.postCheckIds,
     llmUsed,
   );
@@ -855,6 +866,7 @@ export function applyLensAiOffPostCheckSave(
       input.challengeId,
       input.postCheckIds,
       false,
+      evaluation.official.ok,
     );
     return {
       session: next,

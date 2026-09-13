@@ -1,12 +1,16 @@
 import {
+  actualThroughNearFocusRay,
+  backwardExtensionThroughNearFocusRay,
   classifyLensStep6FastPath,
   evaluateLensAuthoredSemanticClaim,
   evaluateConvexLensModelConstruction,
+  focalRayReferenceStatus,
   lensAuthoredBindMissingMessage,
   isCanonicalRayGeometricallyCoherent,
   officialImageConsequence,
   officialMeetingMode,
   normalizeLensStep6Text,
+  REQUIRED_RAY_SEGMENT_PAIRING,
   twoStandardRays,
   type CanonicalRayChoice,
   type ConvexLensModelAttempt,
@@ -15,6 +19,7 @@ import {
   type MeetingMode,
 } from "@/content/physics-models/convex-lens-imaging/construction";
 import { LENS_COPY } from "@/lib/content/convex-lens-optical-bench";
+import type { LensProjectableRay } from "@/lib/learning/lens-student-ray-geometry";
 import { studentUiFeedback, type StudentUiFeedback } from "@/lib/learning/student-ui-feedback";
 import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
 import { isObjectStation } from "@/lib/physics/convex-lens-optical-bench";
@@ -101,26 +106,83 @@ export function withClearedLensStep6Interpretation(draft: LensModelDraft): LensM
   return { ...draft, step6Interpretation: null };
 }
 
+export function deriveRequiredRaySupport(
+  kind: string,
+): {
+  beforeLens: CanonicalRayChoice["beforeLens"];
+  incidentPath: CanonicalRayChoice["incidentPath"];
+} | null {
+  if (kind === "parallel-axis" || kind === "through-center") {
+    const expected = REQUIRED_RAY_SEGMENT_PAIRING[kind];
+    return {
+      beforeLens: expected.beforeLens,
+      incidentPath: expected.incidentPath,
+    };
+  }
+  return null;
+}
+
+export function withDerivedRequiredRay(ray: LensRayDraft): LensRayDraft {
+  const derived = deriveRequiredRaySupport(ray.kind);
+  if (!derived) {
+    return ray;
+  }
+  return { ...ray, ...derived };
+}
+
+export function officialOptionalFocalRay(
+  station: ObjectStation,
+): CanonicalRayChoice | null {
+  const status = focalRayReferenceStatus(station);
+  if (status === "not-applicable") {
+    return null;
+  }
+  return status === "actual-optional-reference"
+    ? actualThroughNearFocusRay()
+    : backwardExtensionThroughNearFocusRay();
+}
+
 export function asCompletedLensRay(draft: LensRayDraft): CanonicalRayChoice | null {
-  if (!draft.kind || !draft.beforeLens || !draft.afterLens || !draft.incidentPath) {
+  const derived = withDerivedRequiredRay(draft);
+  if (!derived.kind || !derived.afterLens) {
+    return null;
+  }
+  const support = deriveRequiredRaySupport(derived.kind);
+  if (!support) {
     return null;
   }
   return {
-    kind: draft.kind as CanonicalRayChoice["kind"],
-    beforeLens: draft.beforeLens as CanonicalRayChoice["beforeLens"],
-    afterLens: draft.afterLens as CanonicalRayChoice["afterLens"],
-    incidentPath: draft.incidentPath as CanonicalRayChoice["incidentPath"],
+    kind: derived.kind as CanonicalRayChoice["kind"],
+    beforeLens: support.beforeLens as CanonicalRayChoice["beforeLens"],
+    afterLens: derived.afterLens as CanonicalRayChoice["afterLens"],
+    incidentPath: support.incidentPath as CanonicalRayChoice["incidentPath"],
   };
 }
 
-export function visibleLensStudentRays(draft: LensModelDraft): CanonicalRayChoice[] {
+export function asVisibleLensRay(draft: LensRayDraft): LensProjectableRay | null {
+  const support = deriveRequiredRaySupport(draft.kind);
+  if (!support || (draft.kind !== "parallel-axis" && draft.kind !== "through-center")) {
+    return null;
+  }
+  return {
+    kind: draft.kind,
+    beforeLens: support.beforeLens,
+    afterLens: draft.afterLens as LensProjectableRay["afterLens"],
+    incidentPath: support.incidentPath,
+  };
+}
+
+export function visibleLensStudentRays(draft: LensModelDraft): LensProjectableRay[] {
   const rays = [draft.rayA, draft.rayB]
-    .map((ray) => asCompletedLensRay(ray))
-    .filter((ray): ray is CanonicalRayChoice => ray !== null);
-  if (draft.includeOptionalFocal) {
-    const extra = asCompletedLensRay(draft.optionalFocal);
+    .map((ray) => asVisibleLensRay(ray))
+    .filter((ray): ray is LensProjectableRay => ray !== null);
+  if (
+    draft.includeOptionalFocal &&
+    isObjectStation(draft.objectStation)
+  ) {
+    const extra = officialOptionalFocalRay(draft.objectStation);
     if (extra) {
-      rays.push(extra);
+      rays.push({ ...extra, optionalReference: true });
     }
   }
   return rays;
@@ -145,8 +207,8 @@ export function draftToConvexLensAttempt(
     return null;
   }
   const rays: CanonicalRayChoice[] = [rayA, rayB];
-  if (draft.includeOptionalFocal) {
-    const extra = asCompletedLensRay(draft.optionalFocal);
+  if (draft.includeOptionalFocal && isObjectStation(draft.objectStation)) {
+    const extra = officialOptionalFocalRay(draft.objectStation);
     if (extra) {
       rays.push(extra);
     }
@@ -252,10 +314,10 @@ export function lensModelMissingLabels(draft: LensModelDraft): string[] {
   if (!draft.objectStation) {
     missing.push("物体相对 F / 2F 在哪里");
   }
-  if (!draft.rayA.kind || !draft.rayA.beforeLens || !draft.rayA.afterLens || !draft.rayA.incidentPath) {
+  if (!draft.rayA.kind || !draft.rayA.afterLens) {
     missing.push("第一条光线怎么走");
   }
-  if (!draft.rayB.kind || !draft.rayB.beforeLens || !draft.rayB.afterLens || !draft.rayB.incidentPath) {
+  if (!draft.rayB.kind || !draft.rayB.afterLens) {
     missing.push("第二条光线怎么走");
   }
   if (!draft.meetingMode) {
@@ -288,7 +350,7 @@ export function summarizeLensModelAttempt(attempt: ModelAttempt): string {
     return "建构必须包含平行主光轴和过光心这两条光线。可选焦点光线不能代替它们。";
   }
   if (kinds.includes("geometrically-incoherent-rays")) {
-    return "光线名字和走法要一致。再检查透镜前和透镜后的走法，是不是和这条光线的名字对得上。";
+    return "这条光线的名字和经过透镜后的走法还对不上，再看看这条特殊光线经过凸透镜后的规律。";
   }
   if (kinds.includes("station-impossible-ray")) {
     return "过近侧焦点的第三条光线要符合当前物距。焦点以内不能画成实际穿过近侧焦点。";
@@ -317,7 +379,7 @@ export type LensModelStepCheck =
   | { status: "inconsistent"; message: string };
 
 function rayDraftComplete(ray: LensRayDraft): boolean {
-  return Boolean(ray.kind && ray.beforeLens && ray.afterLens && ray.incidentPath);
+  return Boolean(ray.kind && ray.afterLens && deriveRequiredRaySupport(ray.kind));
 }
 
 function rayCoherenceCheck(
@@ -341,15 +403,10 @@ function rayCoherenceCheck(
           : "你选的过近侧焦点光线，和现在的物体位置放在一起走不通。再检查这一条。",
     };
   }
-  const named =
-    completed.kind === "parallel-axis"
-      ? "“平行主光轴”"
-      : completed.kind === "through-center"
-        ? "“过光心”"
-        : "这个名字";
   return {
     status: "inconsistent",
-    message: `你选的是${named}，但透镜前或透镜后的走法和这个名字对不上。再检查${which === "可选" ? "这条" : which}光线。`,
+    message:
+      "这条光线的名字和经过透镜后的走法还对不上，再看看这条特殊光线经过凸透镜后的规律。",
   };
 }
 
@@ -442,7 +499,7 @@ export function evaluateLensModelStep(
     if (!rayDraftComplete(draft.rayA)) {
       return {
         status: "missing",
-        message: "还需要完成第一条光线的种类、实际或反向延长、透镜前路径和透镜后路径。",
+        message: "还需要选出第一条光线的种类，以及它经过透镜后怎么走。",
       };
     }
     return rayCoherenceCheck(draft, draft.rayA, "第一条") ?? { status: "ready" };
@@ -451,24 +508,22 @@ export function evaluateLensModelStep(
     if (!rayDraftComplete(draft.rayB)) {
       return {
         status: "missing",
-        message: "还需要完成第二条光线的种类、实际或反向延长、透镜前路径和透镜后路径。",
+        message: "还需要选出第二条光线的种类，以及它经过透镜后怎么走。",
       };
     }
     const rayBInconsistent = rayCoherenceCheck(draft, draft.rayB, "第二条");
     if (rayBInconsistent) {
       return rayBInconsistent;
     }
-    if (draft.includeOptionalFocal) {
-      if (!rayDraftComplete(draft.optionalFocal)) {
-        return {
-          status: "missing",
-          message: "还需要完成这条可选光线的种类、实际或反向延长、透镜前路径和透镜后路径。",
-        };
-      }
-      const optionalInconsistent = rayCoherenceCheck(draft, draft.optionalFocal, "可选");
-      if (optionalInconsistent) {
-        return optionalInconsistent;
-      }
+    if (
+      draft.includeOptionalFocal &&
+      (!isObjectStation(draft.objectStation) ||
+        !officialOptionalFocalRay(draft.objectStation))
+    ) {
+      return {
+        status: "inconsistent",
+        message: "现在的物体位置没有合法的可选焦点参考光线。",
+      };
     }
     const kinds = [draft.rayA.kind, draft.rayB.kind];
     const hasPair =

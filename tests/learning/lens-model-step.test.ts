@@ -20,14 +20,31 @@ function incoherentParallel() {
 describe("Scene 07 MODEL local step checks", () => {
   it("step 2: incomplete ray is missing, inconsistent pairing is blocked, coherent ray is ready", () => {
     const draft = { ...emptyLensModelDraft(), objectStation: "beyond-2f" };
-    expect(evaluateLensModelStep(draft, 2).status).toBe("missing");
+    const incomplete = evaluateLensModelStep(draft, 2);
+    expect(incomplete.status).toBe("missing");
+    expect(incomplete.status === "missing" && incomplete.message).not.toMatch(
+      /实际或反向延长|透镜前路径/,
+    );
+    const kindOnly = {
+      ...draft,
+      rayA: { kind: "parallel-axis", beforeLens: "", afterLens: "", incidentPath: "" },
+    };
+    expect(evaluateLensModelStep(kindOnly, 2).status).toBe("missing");
     const incoherent = { ...draft, rayA: incoherentParallel() };
     const blocked = evaluateLensModelStep(incoherent, 2);
     expect(blocked.status).toBe("inconsistent");
     expect(blocked.status === "inconsistent" && blocked.message).toMatch(/走法/);
     expect(blocked.status === "inconsistent" && blocked.message).not.toMatch(/经过另一侧焦点/);
     const [parallel] = twoStandardRays();
-    expect(evaluateLensModelStep({ ...draft, rayA: parallel! }, 2).status).toBe("ready");
+    expect(
+      evaluateLensModelStep(
+        {
+          ...draft,
+          rayA: { kind: "parallel-axis", beforeLens: "", afterLens: parallel!.afterLens, incidentPath: "" },
+        },
+        2,
+      ).status,
+    ).toBe("ready");
   });
 
   it("step 3: required-pair structure is checked after both rays exist", () => {

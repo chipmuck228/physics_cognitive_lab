@@ -103,7 +103,7 @@ describe("Scene 07 EXAM diagram and AI_OFF post-check UI", () => {
     expect(screen.getByTestId("lens-ai-off-task")).toHaveAttribute("data-step", "post-check");
     await user.click(screen.getByRole("checkbox", { name: /这也有凸透镜/ }));
     await user.click(screen.getByRole("button", { name: LENS_AI_OFF_COPY.postCheckSubmit }));
-    expect(screen.getByTestId("lens-ai-off-repair")).toHaveTextContent(/对照还对不上/);
+    expect(screen.getByTestId("lens-ai-off-repair")).toHaveTextContent(/表面上/);
     expect(screen.getByTestId("lens-ai-off-task")).toHaveAttribute(
       "data-challenge",
       LENS_AI_OFF_A,

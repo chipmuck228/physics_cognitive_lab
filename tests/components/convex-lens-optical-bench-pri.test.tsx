@@ -79,10 +79,16 @@ describe("Scene 07 PRI", () => {
     );
     expect(screen.getByTestId("ray-parallel-axis")).toHaveAttribute("data-ray-style", "solid");
     expect(screen.getByTestId("ray-through-center")).toHaveAttribute("data-ray-style", "solid");
-    expect(screen.getByTestId("ray-through-near-focus")).toHaveAttribute(
-      "data-ray-style",
-      "dashed",
-    );
+    expect(
+      screen.getByTestId("ray-parallel-axis").querySelector('[data-ray-segment="backward-extension"]'),
+    ).toBeNull();
+    expect(
+      screen.getByTestId("ray-through-center").querySelector('[data-ray-segment="backward-extension"]'),
+    ).toBeNull();
+    const focal = screen.getByTestId("ray-through-near-focus");
+    expect(focal).toHaveAttribute("data-ray-style", "solid");
+    expect(focal.querySelector('[data-ray-segment="outgoing-actual"]')).toBeTruthy();
+    expect(focal.querySelector('[data-ray-segment="backward-extension"]')).toBeTruthy();
   });
 
   it("keeps virtual-image outgoing rays solid and only dashes backward extensions", () => {

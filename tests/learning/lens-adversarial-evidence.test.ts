@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   actualThroughNearFocusRay,
+  evaluateConvexLensModelConstruction,
   officialImageConsequence,
   twoStandardRays,
 } from "@/content/physics-models/convex-lens-imaging/construction";
@@ -90,11 +91,39 @@ describe("Scene 07 adversarial L4 / L5 / L6", () => {
   it("station-impossible ray cannot set L4", () => {
     const draft = completeLensModelDraft("inside-f");
     const extra = actualThroughNearFocusRay();
-    draft.includeOptionalFocal = true;
-    draft.optionalFocal = extra;
     const attempt = buildLensModelAttempt(draft, "t1");
-    expect(attempt.failureKinds).toContain("station-impossible-ray");
+    const reconstructed = {
+      ...attempt,
+      nodes: [...attempt.nodes, `ray:${extra.kind}:${extra.beforeLens}:${extra.afterLens}:${extra.incidentPath}`],
+    };
+    expect(reconstructed.correctStructure).toBe(true);
+    const illegal = evaluateConvexLensModelConstruction({
+      objectStation: "inside-f",
+      rays: [...twoStandardRays(), extra],
+      meetingMode: "backward-extension",
+      image: officialImageConsequence("inside-f"),
+      modelReasoning: draft.studentReasoning,
+      constructionSource: "student-constructed",
+    });
+    expect(illegal.ok).toBe(false);
+    expect(illegal.failureKind).toBe("station-impossible-ray");
+  });
+
+  it("derived before/incident fields alone cannot set L4", () => {
+    const draft = completeLensModelDraft();
+    draft.rayA = {
+      kind: "",
+      beforeLens: "parallel-to-principal-axis",
+      afterLens: "through-far-focal-point",
+      incidentPath: "actual",
+    };
+    const attempt = buildLensModelAttempt(draft, "t1");
     expect(attempt.correctStructure).toBe(false);
+    const evidence = accumulateConvexLensSceneEvidence({
+      ...lensSession(),
+      modelAttempts: [attempt],
+    });
+    expect(evidence.constructedValidCausalModel).toBeUndefined();
   });
 
   it("valid spatial construction sets L4 flag", () => {

@@ -292,6 +292,11 @@ export const LENS_RAY_KIND_OPTIONS = [
   { value: "through-near-focus", label: "过近侧焦点的光线（可选参考）" },
 ] as const;
 
+export const LENS_REQUIRED_RAY_KIND_OPTIONS = [
+  { value: "parallel-axis", label: "平行主光轴" },
+  { value: "through-center", label: "过光心" },
+] as const;
+
 export const LENS_BEFORE_OPTIONS = [
   { value: "parallel-to-principal-axis", label: "到达透镜前：平行主光轴" },
   { value: "toward-optical-center", label: "到达透镜前：朝向光心" },
@@ -387,7 +392,14 @@ export const LENS_AI_OFF_COPY = {
   postCheckTitle: "对照一下：你刚才判断时用到了哪些？",
   postCheckSubmit: "记下这次对照",
   postCheckNeedFacts: "先勾出这次对照里你确认的事实。",
-  postCheckMismatch: "这几条对照还对不上。先看你刚才选的事实，不要勾“这也有凸透镜”那种话。",
+  postCheckMissingRequired:
+    "还有一条关键事实没有对照到。再看看：物体位置、光线怎样相遇、像的性质、白卡片作用里，哪一项还没有核对？",
+  postCheckDistractor:
+    "有一项只是表面上“也有凸透镜”，还不能说明模型相同。先去掉只看器材名称的那一项。",
+  postCheckPrecommit:
+    "对照事实已经勾好了。还要回到上面的判断和理由，把物距、光线怎样相遇、像的后果说清楚。",
+  postCheckWrongChallenge: "这次对照和当前题目对不上。先回到这一题再勾一次。",
+  postCheckSystem: "这次对照没能记下。请再试一次。",
   structureTitle: "先写下这次的光路结构",
 } as const;
 

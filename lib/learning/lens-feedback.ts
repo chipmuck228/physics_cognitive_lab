@@ -50,7 +50,7 @@ export function lensFeedbackForFailureKind(
       return {
         kind: "inconsistent",
         message:
-          "这条光线的名字和它的走法对不上。先回到这一条：到达透镜前怎么走，过透镜后该怎么走。",
+          "这条光线的名字和经过透镜后的走法还对不上，再看看这条特殊光线经过凸透镜后的规律。",
       };
     }
     if (failureKind === "station-impossible-ray") {

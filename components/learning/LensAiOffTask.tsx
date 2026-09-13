@@ -162,12 +162,13 @@ export function LensAiOffTask({
           </div>
         </Card>
       ) : (
-        <Card className="space-y-4 p-4">
+        <Card className="space-y-4 p-4" data-testid="lens-ai-off-post-check-list">
           <p className="text-sm font-medium">{LENS_AI_OFF_COPY.postCheckTitle}</p>
           {postCheckOptions.map((option) => (
             <label key={option.id} className="flex cursor-pointer items-start gap-3 text-sm">
               <input
                 type="checkbox"
+                data-testid={`lens-ai-off-fact-${option.id}`}
                 checked={selectedFacts.has(option.id)}
                 onChange={() => {
                   const next = selectedFacts.has(option.id)

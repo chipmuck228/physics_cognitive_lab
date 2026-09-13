@@ -4,14 +4,13 @@ import { QuestionGroup } from "@/components/learning/QuestionGroup";
 import { ValidationMessage } from "@/components/learning/ValidationMessage";
 import {
   LENS_AFTER_OPTIONS,
-  LENS_BEFORE_OPTIONS,
   LENS_COPY,
-  LENS_INCIDENT_OPTIONS,
   LENS_MEETING_OPTIONS,
   LENS_NATURE_OPTIONS,
   LENS_ORIENTATION_OPTIONS,
   LENS_RAY_KIND_OPTIONS,
   LENS_RECEIVE_OPTIONS,
+  LENS_REQUIRED_RAY_KIND_OPTIONS,
   LENS_SIDE_OPTIONS,
   LENS_SIZE_OPTIONS,
   LENS_STATION_OPTIONS,
@@ -22,9 +21,12 @@ import type { LensFeedback } from "@/lib/learning/lens-feedback";
 import {
   LENS_MODEL_STEP_COUNT,
   evaluateLensModelStep,
+  officialOptionalFocalRay,
+  withDerivedRequiredRay,
   type LensModelDraft,
   type LensRayDraft,
 } from "@/lib/learning/lens-model";
+import { isObjectStation } from "@/lib/physics/convex-lens-optical-bench";
 
 interface LensRayConstructionProps {
   draft: LensModelDraft;
@@ -91,13 +93,22 @@ export function LensRayConstruction({
             id="lens-model-station"
             question="物体相对 F / 2F 在哪里？"
             value={draft.objectStation}
-            onChange={(objectStation) => onChange({ ...draft, objectStation })}
+            onChange={(objectStation) =>
+              onChange({
+                ...draft,
+                objectStation,
+                includeOptionalFocal:
+                  isObjectStation(objectStation) && officialOptionalFocalRay(objectStation)
+                    ? draft.includeOptionalFocal
+                    : false,
+              })
+            }
             options={[...LENS_STATION_OPTIONS]}
           />
         ) : null}
         {step === 2 ? (
           <RayEditor
-            title="第一条光线（必须自己组装）"
+            title="第一条必做光线"
             prefix="第一条光线"
             testId="lens-ray-a"
             value={draft.rayA}
@@ -107,37 +118,44 @@ export function LensRayConstruction({
         {step === 3 ? (
           <>
             <RayEditor
-              title="第二条光线（必须自己组装）"
+              title="第二条必做光线"
               prefix="第二条光线"
               testId="lens-ray-b"
               value={draft.rayB}
               onChange={(rayB) => onChange({ ...draft, rayB })}
             />
-            <label className="flex items-start gap-3 text-sm">
-              <input
-                type="checkbox"
-                checked={draft.includeOptionalFocal}
-                onChange={(event) =>
-                  onChange({ ...draft, includeOptionalFocal: event.target.checked })
-                }
-              />
-              <span>再加一条过近侧焦点的可选参考光线。它不能代替上面两条。</span>
-            </label>
-            {draft.includeOptionalFocal ? (
-              <RayEditor
-                title="可选焦点光线"
-                prefix="可选焦点光线"
-                testId="lens-ray-focal"
-                value={draft.optionalFocal}
-                onChange={(optionalFocal) => onChange({ ...draft, optionalFocal })}
-              />
+            {isObjectStation(draft.objectStation) &&
+            officialOptionalFocalRay(draft.objectStation) ? (
+              <label className="flex items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  data-testid="lens-optional-focal"
+                  checked={draft.includeOptionalFocal}
+                  onChange={(event) =>
+                    onChange({
+                      ...draft,
+                      includeOptionalFocal: event.target.checked,
+                    })
+                  }
+                />
+                <span>
+                  显示一条可选参考光线
+                  <span className="mt-1 block text-[var(--ink-muted)]">
+                    可选参考，不计入两条必做光线
+                  </span>
+                </span>
+              </label>
             ) : null}
           </>
         ) : null}
         {step === 4 ? (
           <QuestionGroup
             id="lens-model-meeting"
-            question="过透镜后，光线怎样相遇？"
+            question={
+              draft.objectStation === "inside-f"
+                ? "这两条实际光线在另一侧散开。把它们反向延长后会怎样？"
+                : "两条出射的实际光线怎样？"
+            }
             value={draft.meetingMode}
             onChange={(meetingMode) => onChange({ ...draft, meetingMode })}
             options={[...LENS_MEETING_OPTIONS]}
@@ -310,13 +328,12 @@ export function LensRayConstruction({
 }
 
 function summarizeRay(ray: LensRayDraft): string {
-  if (!ray.kind || !ray.beforeLens || !ray.afterLens || !ray.incidentPath) {
+  if (!ray.kind || !ray.afterLens) {
     return "还没装完";
   }
   return [
-    lensChoiceLabel(LENS_RAY_KIND_OPTIONS, ray.kind),
-    lensChoiceLabel(LENS_INCIDENT_OPTIONS, ray.incidentPath),
-    lensChoiceLabel(LENS_BEFORE_OPTIONS, ray.beforeLens),
+    lensChoiceLabel(LENS_REQUIRED_RAY_KIND_OPTIONS, ray.kind) ||
+      lensChoiceLabel(LENS_RAY_KIND_OPTIONS, ray.kind),
     lensChoiceLabel(LENS_AFTER_OPTIONS, ray.afterLens),
   ].join("；");
 }
@@ -339,30 +356,16 @@ function RayEditor({
       <legend className="text-sm font-medium">{title}</legend>
       <QuestionGroup
         id={`${testId}-kind`}
-        question={`${prefix}：这是哪一条光线？`}
+        question={`${prefix}：先选一条要用的特殊光线。`}
         value={value.kind}
-        onChange={(kind) => onChange({ ...value, kind })}
-        options={[...LENS_RAY_KIND_OPTIONS]}
-      />
-      <QuestionGroup
-        id={`${testId}-incident`}
-        question={`${prefix}：这段是实际光线还是反向延长？`}
-        value={value.incidentPath}
-        onChange={(incidentPath) => onChange({ ...value, incidentPath })}
-        options={[...LENS_INCIDENT_OPTIONS]}
-      />
-      <QuestionGroup
-        id={`${testId}-before`}
-        question={`${prefix}：到达透镜前怎么走？`}
-        value={value.beforeLens}
-        onChange={(beforeLens) => onChange({ ...value, beforeLens })}
-        options={[...LENS_BEFORE_OPTIONS]}
+        onChange={(kind) => onChange(withDerivedRequiredRay({ ...value, kind }))}
+        options={[...LENS_REQUIRED_RAY_KIND_OPTIONS]}
       />
       <QuestionGroup
         id={`${testId}-after`}
-        question={`${prefix}：过透镜后怎么走？`}
+        question={`${prefix}：经过透镜后，它应该怎样走？`}
         value={value.afterLens}
-        onChange={(afterLens) => onChange({ ...value, afterLens })}
+        onChange={(afterLens) => onChange(withDerivedRequiredRay({ ...value, afterLens }))}
         options={[...LENS_AFTER_OPTIONS]}
       />
     </fieldset>

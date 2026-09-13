@@ -219,12 +219,30 @@ function pushSegment(
   });
 }
 
+export type LensProjectableRay = {
+  kind: CanonicalRayChoice["kind"];
+  beforeLens: CanonicalRayChoice["beforeLens"] | "";
+  afterLens: CanonicalRayChoice["afterLens"] | "";
+  incidentPath: CanonicalRayChoice["incidentPath"];
+  optionalReference?: boolean;
+};
+
 export function projectLearnerRay(
-  ray: CanonicalRayChoice,
+  ray: LensProjectableRay,
   station: ObjectStation,
   objectHeightPx = LENS_OBJECT_HEIGHT_PX,
 ): LensStudentRayProjection {
   const object = objectTipBench(station, objectHeightPx);
+  if (!ray.beforeLens) {
+    return {
+      kind: ray.kind,
+      representable: false,
+      reason: "incident geometry is not available yet",
+      object,
+      lensHit: null,
+      segments: [],
+    };
+  }
   const incident = incidentFromBefore(ray.beforeLens, object);
   if (incident.status === "unrepresentable") {
     return {
@@ -291,6 +309,16 @@ export function projectLearnerRay(
     );
   }
 
+  if (!ray.afterLens) {
+    return {
+      kind: ray.kind,
+      representable: true,
+      object,
+      lensHit,
+      segments,
+    };
+  }
+
   const outgoing = outgoingGuide(ray.afterLens, object, lensHit);
   if ("status" in outgoing) {
     return {
@@ -324,7 +352,7 @@ export function projectLearnerRay(
   const coincidesWithIncident =
     pointsCollinear(object, outgoing.a, outgoing.b) &&
     pointsCollinear(lensHit, outgoing.a, outgoing.b);
-  if (!coincidesWithIncident) {
+  if (station === "inside-f" && !coincidesWithIncident) {
     pushSegment(
       segments,
       "backward-extension",

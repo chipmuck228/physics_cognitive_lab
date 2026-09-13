@@ -1,4 +1,5 @@
 import type { CanonicalRayChoice } from "@/content/physics-models/convex-lens-imaging/construction";
+import type { LensProjectableRay } from "@/lib/learning/lens-student-ray-geometry";
 import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
 import { OBJECT_STATIONS } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
 import {
@@ -19,7 +20,7 @@ interface ConvexLensOpticalBenchProps {
   state: ConvexLensSceneState;
   frozen?: boolean;
   showOfficialImage?: boolean;
-  studentRays?: CanonicalRayChoice[];
+  studentRays?: Array<CanonicalRayChoice | LensProjectableRay>;
   hideOfficialRays?: boolean;
   caption?: string;
   allowStationSelect?: boolean;
@@ -327,22 +328,26 @@ function StudentRay({
   station,
   objectHeight,
 }: {
-  ray: CanonicalRayChoice;
+  ray: CanonicalRayChoice | LensProjectableRay;
   station: ObjectStation;
   objectHeight: number;
 }) {
   const projection = projectLearnerRay(ray, station, objectHeight);
   const hasOutgoing = projection.segments.some((segment) => segment.role === "outgoing-actual");
+  const hasActualIncident = projection.segments.some((segment) => segment.role === "incident");
   const hasBackward = projection.segments.some((segment) => segment.role === "backward-extension");
+  const groupStyle = hasOutgoing || hasActualIncident ? "solid" : hasBackward ? "dashed" : "none";
+  const optionalReference = "optionalReference" in ray && ray.optionalReference === true;
   return (
     <g
       data-testid={`ray-${ray.kind}`}
-      data-owner="learner"
+      data-owner={optionalReference ? "optional-reference" : "learner"}
       data-before-lens={ray.beforeLens}
       data-after-lens={ray.afterLens}
       data-incident-path={ray.incidentPath}
+      data-optional-reference={optionalReference ? "true" : "false"}
       data-representable={projection.representable ? "true" : "false"}
-      data-ray-style={ray.incidentPath === "backward-extension" ? "dashed" : "solid"}
+      data-ray-style={groupStyle}
       data-outgoing-style={hasOutgoing ? "solid" : "none"}
       data-backward-style={hasBackward ? "dashed" : "none"}
     >

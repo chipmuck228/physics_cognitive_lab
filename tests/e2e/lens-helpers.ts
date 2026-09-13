@@ -210,16 +210,12 @@ export async function completeLensModel(page: Page) {
   await chooseGroupOption(page, "lens-model-station", /物体在 2F 以外/);
   await page.getByTestId("lens-model-next").click();
   await fillOneRay(page, "第一条光线", {
-    kind: "平行主光轴的光线",
-    incident: "这是实际光线（实线）",
-    before: "到达透镜前：平行主光轴",
+    kind: "平行主光轴",
     after: "过透镜后：经过另一侧焦点",
   });
   await page.getByTestId("lens-model-next").click();
   await fillOneRay(page, "第二条光线", {
-    kind: "过光心的光线",
-    incident: "这是实际光线（实线）",
-    before: "到达透镜前：朝向光心",
+    kind: "过光心",
     after: "过透镜后：方向不变",
   });
   await page.getByTestId("lens-model-next").click();
@@ -244,14 +240,12 @@ export async function completeLensModel(page: Page) {
 export async function fillOneRay(
   page: Page,
   prefix: string,
-  labels: { kind: string; incident: string; before: string; after: string },
+  labels: { kind: string; after: string },
 ) {
-  await page.getByRole("radio", { name: `${prefix}：这是哪一条光线？ ${labels.kind}` }).click();
+  await page.getByRole("radio", { name: `${prefix}：先选一条要用的特殊光线。 ${labels.kind}` }).click();
   await page
-    .getByRole("radio", { name: `${prefix}：这段是实际光线还是反向延长？ ${labels.incident}` })
+    .getByRole("radio", { name: `${prefix}：经过透镜后，它应该怎样走？ ${labels.after}` })
     .click();
-  await page.getByRole("radio", { name: `${prefix}：到达透镜前怎么走？ ${labels.before}` }).click();
-  await page.getByRole("radio", { name: `${prefix}：过透镜后怎么走？ ${labels.after}` }).click();
 }
 
 export async function completeLensProjectorTransfer(page: Page) {
@@ -384,6 +378,18 @@ export async function completeLensAiOff(page: Page) {
       .click();
     await page.getByTestId("lens-ai-off-commit").click();
     await expect(page.getByTestId("lens-ai-off-post-check")).toBeVisible();
+    if (challengeId === LENS_AI_OFF_CHALLENGE_IDS[0]) {
+      const distractor = lensAiOffPostCheckOptions(challengeId).find((option) => option.id === "surface-slogan");
+      await page.getByRole("checkbox", { name: distractor!.label }).click();
+      await page.getByRole("button", { name: "记下这次对照" }).click();
+      await expect(page.getByTestId("lens-ai-off-repair")).toBeVisible();
+      await expect(page.getByTestId("lens-ai-off-repair")).toContainText(/表面上/);
+      await expect(page.getByTestId("lens-ai-off-task")).toHaveAttribute(
+        "data-challenge",
+        challengeId,
+      );
+      await page.getByRole("checkbox", { name: distractor!.label }).click();
+    }
     for (const option of lensAiOffPostCheckOptions(challengeId)) {
       if (option.required && intendedLensAiOffPostCheckIds(challengeId).includes(option.id)) {
         await page.getByRole("checkbox", { name: option.label }).click();
