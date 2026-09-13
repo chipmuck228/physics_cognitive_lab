@@ -106,7 +106,7 @@ describe("Scene 07 experiment action eligibility", () => {
     });
     expect(result.session).toBe(session);
     expect(result.outcome.kind).toBe("missing");
-    expect(result.outcome.message).toMatch(/光屏/);
+    expect(result.outcome.message).toMatch(/实际结果|预测对照/);
   });
 
   it("valid visible form commits observed, comparison, and reflection together", () => {

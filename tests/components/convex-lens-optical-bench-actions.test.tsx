@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { ConvexLensOpticalBenchLab } from "@/components/learning/ConvexLensOpticalBenchLab";
-import { LENS_COPY, lensExperimentTitle } from "@/lib/content/convex-lens-optical-bench";
+import { LENS_COPY } from "@/lib/content/convex-lens-optical-bench";
 import { STUDENT_CHROME } from "@/lib/content/student-language";
 import { applyLensHelpIntent } from "@/lib/learning/lens-help-intents";
 import { completeLensModelDraft } from "@/lib/learning/lens-model";
@@ -68,11 +68,20 @@ afterEach(() => {
   localStorage.clear();
 });
 
+async function recordObservedAndCompare(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("radio", { name: /光屏接到清晰像/ }));
+  await user.click(screen.getByRole("radio", { name: /看见的像更大/ }));
+  await user.click(screen.getByTestId("lens-save-observed"));
+  await user.click(screen.getByRole("radio", { name: /基本一样/ }));
+  await user.click(screen.getByTestId("lens-save-comparison"));
+}
+
 describe("Scene 07 enabled-action contract", () => {
   it("reproduces the prior silent 记下这次想法 failure: enabled click with no visible result", async () => {
     const user = userEvent.setup();
     replaceSession(openTrialSession());
     render(<ConvexLensOpticalBenchLab />);
+    await recordObservedAndCompare(user);
     const button = screen.getByTestId("lens-save-reflection");
     expect(button).toBeEnabled();
     await user.click(button);
@@ -80,7 +89,7 @@ describe("Scene 07 enabled-action contract", () => {
       "data-response-class",
       "missing",
     );
-    expect(screen.getByTestId("lens-action-response-message")).toHaveTextContent(/中文字|光屏/);
+    expect(screen.getByTestId("lens-action-response-message")).toHaveTextContent(/自己的想法|中文字/);
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).experimentEvidence[0]?.sufficient).not.toBe(
       true,
     );
@@ -90,6 +99,7 @@ describe("Scene 07 enabled-action contract", () => {
     const user = userEvent.setup();
     replaceSession(openTrialSession());
     render(<ConvexLensOpticalBenchLab />);
+    await recordObservedAndCompare(user);
     await user.click(screen.getByRole("button", { name: LENS_COPY.reflectionSubmit }));
     expect(screen.getByTestId("lens-action-response")).toHaveAttribute(
       "data-response-class",
@@ -103,6 +113,7 @@ describe("Scene 07 enabled-action contract", () => {
     const user = userEvent.setup();
     replaceSession(openTrialSession());
     render(<ConvexLensOpticalBenchLab />);
+    await recordObservedAndCompare(user);
     await user.type(screen.getByTestId(`lens-reflection-${LENS_EXPERIMENT_A}`), "the image got bigger");
     await user.click(screen.getByTestId("lens-save-reflection"));
     expect(screen.getByTestId("lens-action-response")).toHaveAttribute(
@@ -116,13 +127,13 @@ describe("Scene 07 enabled-action contract", () => {
     const user = userEvent.setup();
     replaceSession(openTrialSession());
     render(<ConvexLensOpticalBenchLab />);
-    await user.click(screen.getByRole("radio", { name: /光屏接到清晰像/ }));
-    await user.click(screen.getByRole("radio", { name: /看见的像更大/ }));
-    await user.click(screen.getByRole("radio", { name: /和我猜的差不多/ }));
+    await recordObservedAndCompare(user);
     await user.type(screen.getByTestId(`lens-reflection-${LENS_EXPERIMENT_A}`), "像变大是因为物体更靠近焦点。");
     await user.click(screen.getByTestId("lens-save-reflection"));
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).experimentEvidence[0]?.sufficient).toBe(true);
-    expect(screen.getByText(lensExperimentTitle(LENS_EXPERIMENT_B))).toBeInTheDocument();
+    expect(screen.getByTestId("lens-trial-complete")).toHaveTextContent("第 1 次验证完成");
+    await user.click(screen.getByTestId("lens-start-next-trial"));
+    expect(screen.getByText(/物体正好放在焦点上/)).toBeInTheDocument();
   });
 
   it("help does not change the reflection draft used by submit", async () => {
@@ -134,31 +145,29 @@ describe("Scene 07 enabled-action contract", () => {
       }),
     );
     render(<ConvexLensOpticalBenchLab />);
+    await recordObservedAndCompare(user);
     await user.type(screen.getByTestId(`lens-reflection-${LENS_EXPERIMENT_A}`), "像变大是因为物体更靠近焦点。");
     expect(screen.getByTestId("lens-help-panel")).toBeInTheDocument();
     await user.click(screen.getByTestId("lens-help-what-compare"));
     expect(screen.getByTestId(`lens-reflection-${LENS_EXPERIMENT_A}`)).toHaveValue(
       "像变大是因为物体更靠近焦点。",
     );
-    await user.click(screen.getByRole("radio", { name: /光屏接到清晰像/ }));
-    await user.click(screen.getByRole("radio", { name: /看见的像更大/ }));
-    await user.click(screen.getByRole("radio", { name: /和我猜的差不多/ }));
     await user.click(screen.getByTestId("lens-save-reflection"));
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).experimentEvidence[0]?.reflection).toMatch(
       /靠近焦点/,
     );
   });
 
-  it("review hides the reflection button; return restores an enabled working-path save", async () => {
+  it("review hides the working-path save; return restores an enabled next action", async () => {
     const user = userEvent.setup();
     replaceSession(openTrialSession());
     render(<ConvexLensOpticalBenchLab />);
     await user.click(screen.getByRole("button", { name: STUDENT_CHROME.backAria }));
     expect(screen.getByTestId("lens-review-banner")).toBeInTheDocument();
-    expect(screen.queryByTestId("lens-save-reflection")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("lens-save-observed")).not.toBeInTheDocument();
     await user.click(screen.getByTestId("lens-return-progress"));
-    expect(screen.getByTestId("lens-save-reflection")).toBeEnabled();
-    await user.click(screen.getByTestId("lens-save-reflection"));
+    expect(screen.getByTestId("lens-save-observed")).toBeEnabled();
+    await user.click(screen.getByTestId("lens-save-observed"));
     expect(screen.getByTestId("lens-action-response")).toHaveAttribute(
       "data-response-class",
       "missing",
@@ -178,6 +187,8 @@ describe("Scene 07 enabled-action contract", () => {
       }),
     });
     render(<ConvexLensOpticalBenchLab />);
+    await user.click(screen.getByTestId("lens-save-observed"));
+    await user.click(screen.getByTestId("lens-save-comparison"));
     expect(screen.getByTestId(`lens-reflection-${LENS_EXPERIMENT_A}`)).toHaveValue(
       "像变大是因为物体更靠近焦点。",
     );
@@ -189,6 +200,9 @@ describe("Scene 07 enabled-action contract", () => {
     const user = userEvent.setup();
     replaceSession(openTrialSession());
     render(<ConvexLensOpticalBenchLab />);
+    await user.click(screen.getByRole("radio", { name: /光屏接到清晰像/ }));
+    await user.click(screen.getByRole("radio", { name: /看见的像更大/ }));
+    await user.click(screen.getByTestId("lens-save-observed"));
     await user.click(screen.getByTestId("lens-save-comparison"));
     expect(screen.getByTestId("lens-action-response")).toHaveAttribute(
       "data-response-class",

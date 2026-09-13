@@ -23,6 +23,11 @@ import {
   lensExamPattern,
 } from "../../lib/learning/lens-exam";
 import { officialImageConsequence } from "../../content/physics-models/convex-lens-imaging/construction";
+import {
+  LENS_EXPERIMENT_A,
+  LENS_EXPERIMENT_B,
+  LENS_EXPERIMENT_C,
+} from "../../lib/physics/convex-lens-optical-bench";
 
 export const LENS_LAB_PATH = "/scenes/convex-lens-optical-bench";
 
@@ -94,14 +99,41 @@ export async function completeLensExperimentCycle(
     await page.getByLabel(LENS_COPY.reasonLabel).fill(input.reason ?? "先猜一次。");
     await page.getByRole("button", { name: LENS_COPY.predictSubmit }).click();
   }
-  await page.getByRole("button", { name: LENS_COPY.runExperiment }).click();
+  await expect(page.getByTestId("lens-experiment-task")).toBeVisible();
+  await performVisibleTrialIntervention(page);
   await page.getByRole("radio", { name: new RegExp(input.screen) }).click();
   await page.getByRole("radio", { name: new RegExp(input.sizeOrCover) }).click();
   await page.getByRole("button", { name: LENS_COPY.observeSubmitExperiment }).click();
+  await expect(page.getByTestId("lens-compare-surface")).toBeVisible();
   await page.getByRole("radio", { name: new RegExp(input.comparison) }).click();
   await page.getByRole("button", { name: LENS_COPY.compareSubmit }).click();
   await page.locator("textarea").last().fill(input.reflection);
   await page.getByRole("button", { name: LENS_COPY.reflectionSubmit }).click();
+  const nextTrial = page.getByTestId("lens-start-next-trial");
+  if (await nextTrial.isVisible().catch(() => false)) {
+    await nextTrial.click();
+  }
+}
+
+export async function performVisibleTrialIntervention(page: Page) {
+  const cover = page.getByTestId("lens-cover-lens");
+  if (await cover.isVisible().catch(() => false)) {
+    await cover.click();
+    return;
+  }
+  const experiment = await page.getByTestId("lens-experiment-task").getAttribute("data-experiment");
+  const station =
+    experiment === LENS_EXPERIMENT_A
+      ? "between-f-and-2f"
+      : experiment === LENS_EXPERIMENT_B
+        ? "at-f"
+        : experiment === LENS_EXPERIMENT_C
+          ? "inside-f"
+          : null;
+  if (!station) {
+    throw new Error(`No visible learner intervention for ${experiment}`);
+  }
+  await page.getByTestId(`station-hit-${station}`).click();
 }
 
 export async function completeLensExplain(page: Page) {

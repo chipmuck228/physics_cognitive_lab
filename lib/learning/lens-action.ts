@@ -29,6 +29,7 @@ import {
 import { lensFeedbackForFailureKind, lensTransferFeedback } from "@/lib/learning/lens-feedback";
 import {
   activeIncompleteLensEvidence,
+  activeLensExperimentId,
   authoredBeforeIntervention,
   canRunLensExperiment,
   hasClosedLensExperiment,
@@ -59,6 +60,7 @@ import { applyLensReviewPhysics, isLensRevisiting } from "@/lib/learning/lens-re
 import {
   lensAiOffDraft,
   lensExamDraft,
+  lensTrialGate,
   withLensAiOffDraft,
   withLensDescribeDraft,
   withLensExamDraft,
@@ -66,8 +68,16 @@ import {
   withLensModelDraft,
   withLensObserveDraft,
   withLensTransferDraft,
+  withLensTrialGate,
   withLensWatchedDemo,
 } from "@/lib/learning/lens-scene-data";
+import {
+  isRequiredLensTrialAction,
+  lensTrialSpec,
+  lensTrialStartState,
+  nextLensTrialId,
+  type LensTrialLearnerAction,
+} from "@/lib/learning/lens-trial-intervention";
 import {
   activeLensTransferTargetId,
   buildLensTransferAttempt,
@@ -149,16 +159,22 @@ export function applyLensReflectionSave(
   if (!eligibility.enabled) {
     return blocked(session, eligibility.reason);
   }
+  if (!hasCompleteLensObservedResult(form.observed)) {
+    return {
+      session,
+      outcome: { kind: "missing", message: LENS_COPY.reflectionNeedObserved },
+    };
+  }
+  if (!isLensComparison(form.comparison)) {
+    return {
+      session,
+      outcome: { kind: "missing", message: LENS_COPY.reflectionNeedCompare },
+    };
+  }
   if (!hasOwnWords(form.reflection)) {
     return {
       session,
       outcome: { kind: "missing", message: LENS_COPY.reflectionNeedOwnWords },
-    };
-  }
-  if (!hasCompleteLensObservedResult(form.observed) || !isLensComparison(form.comparison)) {
-    return {
-      session,
-      outcome: { kind: "missing", message: LENS_COPY.reflectionNeedRecord },
     };
   }
   const next = patchIncompleteLensEvidence(session, experimentId, (evidence) => {
@@ -178,13 +194,27 @@ export function applyLensReflectionSave(
   if (next === session) {
     return blocked(session, LENS_COPY.reflectionAlready);
   }
-  const advanced = advanceLensLoop(next);
+  const closed = hasClosedLensExperiment(next, experimentId);
+  const following = nextLensTrialId(experimentId);
+  const gated =
+    closed && following
+      ? {
+          ...next,
+          sceneData: withLensTrialGate(next.sceneData, {
+            awaitingNext: true,
+            completedId: experimentId,
+          }),
+        }
+      : next;
+  const advanced = advanceLensLoop(gated);
   return {
     session: advanced,
     outcome: {
       kind: "committed",
       advanced: advanced.stage !== session.stage,
-      message: LENS_COPY.reflectionSaved,
+      message: closed
+        ? `第 ${LENS_EXPERIMENT_ORDER.indexOf(experimentId) + 1} 次验证完成`
+        : LENS_COPY.reflectionSaved,
     },
   };
 }
@@ -317,14 +347,37 @@ export function applyLensPredictionCommit(
     ],
   };
   const advanced = experimentId === LENS_EXPERIMENT_A ? advanceLensLoop(next) : next;
+  const prepared = prepareLensTrialStart(advanced, experimentId);
   return {
-    session: advanced,
+    session: prepared,
     outcome: {
       kind: "committed",
-      advanced: advanced.stage !== session.stage,
+      advanced: prepared.stage !== session.stage,
       message: LENS_COPY.predictSaved,
     },
   };
+}
+
+function prepareLensTrialStart(
+  session: LearningSession,
+  experimentId: LensExperimentId,
+): LearningSession {
+  const current = getConvexLensPhysicsState(session);
+  const start = lensTrialStartState(experimentId, current);
+  return appendLensInteractionTrace(
+    {
+      ...session,
+      physicsState: wrapConvexLensPhysicsState(start),
+    },
+    {
+      action: "prepare-trial",
+      stage: session.stage,
+      substep: "trial-prepared",
+      from: current.objectStation,
+      to: start.objectStation,
+      mode: "working",
+    },
+  );
 }
 
 export function applyLensRunExperiment(
@@ -789,10 +842,104 @@ function lensOpenTrialEligibility(
   if (session.stage !== LearningStage.EXPERIMENT) {
     return { enabled: false, reason: LENS_COPY.reviewCannotEdit };
   }
-  if (!activeIncompleteLensEvidence(session, experimentId)) {
+  if (activeIncompleteLensEvidence(session, experimentId)) {
+    return { enabled: true };
+  }
+  if (hasClosedLensExperiment(session, experimentId)) {
     return { enabled: false, reason: "这次验证已经记下了。" };
   }
-  return { enabled: true };
+  return { enabled: false, reason: LENS_COPY.observeNeedIntervention };
+}
+
+export function applyLensAcknowledgeNextTrial(
+  session: LearningSession,
+): LensActionResult {
+  if (isLensRevisiting(session)) {
+    return blocked(session, LENS_COPY.reviewCannotEdit);
+  }
+  if (session.stage !== LearningStage.EXPERIMENT) {
+    return blocked(session, "现在不能开始下一轮验证。");
+  }
+  const gate = lensTrialGate(session);
+  if (!gate.awaitingNext || !gate.completedId) {
+    return blocked(session, "现在没有下一轮可以开始。");
+  }
+  return {
+    session: appendLensInteractionTrace(
+      {
+        ...session,
+        sceneData: withLensTrialGate(session.sceneData, { awaitingNext: false }),
+      },
+      {
+        action: "acknowledge-next-trial",
+        stage: session.stage,
+        from: gate.completedId,
+        to: nextLensTrialId(gate.completedId) ?? undefined,
+        mode: "working",
+      },
+    ),
+    outcome: {
+      kind: "committed",
+      message: `可以开始第 ${LENS_EXPERIMENT_ORDER.indexOf(gate.completedId) + 2} 次验证。`,
+    },
+  };
+}
+
+export function applyLensTrialIntervention(
+  session: LearningSession,
+  experimentId: LensExperimentId,
+  action: LensTrialLearnerAction,
+): LensActionResult {
+  if (isLensRevisiting(session)) {
+    return blocked(session, LENS_COPY.reviewCannotEdit);
+  }
+  if (session.stage !== LearningStage.EXPERIMENT) {
+    return blocked(session, "现在不能在光具座上做这次改变。");
+  }
+  if (lensTrialGate(session).awaitingNext) {
+    return blocked(session, "先开始下一轮验证，再动手。");
+  }
+  if (!canRunLensExperiment(session, experimentId)) {
+    return {
+      session,
+      outcome: { kind: "missing", message: LENS_COPY.runNeedPrediction },
+    };
+  }
+  if (
+    activeIncompleteLensEvidence(session, experimentId) ||
+    hasClosedLensExperiment(session, experimentId)
+  ) {
+    return blocked(session, "这次要求的改变已经做过了。");
+  }
+  if (!isRequiredLensTrialAction(experimentId, action)) {
+    return blocked(session, lensTrialSpec(experimentId).wrongActionReason);
+  }
+  const applied = applyLensRunExperiment(session, experimentId);
+  if (applied.outcome.kind !== "physics-applied") {
+    return applied;
+  }
+  return {
+    session: appendLensInteractionTrace(applied.session, {
+      action: action.kind === "cover-lens" ? "cover-lens" : "move-object",
+      stage: session.stage,
+      substep: "trial-intervention",
+      to: action.kind === "cover-lens" ? "covered" : action.station,
+      mode: "working",
+    }),
+    outcome: {
+      kind: "physics-applied",
+      review: false,
+      message: "已经在光具座上完成这次改变。看清楚刚才发生了什么。",
+    },
+  };
+}
+
+export function applyLensCoverLens(session: LearningSession): LensActionResult {
+  const experimentId = activeLensExperimentId(session);
+  if (!experimentId) {
+    return blocked(session, "现在不能遮住透镜。");
+  }
+  return applyLensTrialIntervention(session, experimentId, { kind: "cover-lens" });
 }
 
 export function applyLensObjectStationChange(
@@ -826,6 +973,16 @@ export function applyLensObjectStationChange(
       session: reviewed,
       outcome: { kind: "physics-applied", review: true },
     };
+  }
+  if (session.stage === LearningStage.EXPERIMENT) {
+    const experimentId = activeLensExperimentId(session);
+    if (!experimentId) {
+      return blocked(session, "现在不能随便改物体位置。");
+    }
+    return applyLensTrialIntervention(session, experimentId, {
+      kind: "move-object",
+      station: toStation,
+    });
   }
   if (session.stage !== LearningStage.OBSERVE) {
     return blocked(session, "现在不能随便改物体位置。");

@@ -9,6 +9,9 @@ export type LensInteractionTraceAction =
   | "choose-object-station"
   | "construct-ray"
   | "run-intervention"
+  | "prepare-trial"
+  | "acknowledge-next-trial"
+  | "cover-lens"
   | "record-observation"
   | "commit-prediction"
   | "record-observed-result"
@@ -143,8 +146,17 @@ export function lensInteractionTraceLabel(trace: LensInteractionTrace): string {
   if (trace.action === "construct-ray") {
     return "自己装了一条光线";
   }
+  if (trace.action === "prepare-trial") {
+    return "光具座准备好这一次验证";
+  }
+  if (trace.action === "acknowledge-next-trial") {
+    return "开始下一轮验证";
+  }
+  if (trace.action === "cover-lens") {
+    return "遮住了透镜一部分";
+  }
   if (trace.action === "run-intervention") {
-    return "开始了一次验证";
+    return "在光具座上完成了这次改变";
   }
   if (trace.action === "commit-prediction") {
     return "锁定了预测";

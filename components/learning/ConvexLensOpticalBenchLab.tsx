@@ -37,7 +37,6 @@ import {
   LENS_STAGE_LABELS,
   LENS_STAGE_PROMPTS,
   LENS_TASK_FRAMES,
-  lensChangedVariable,
   lensExperimentTitle,
   lensPredictQuestion,
   lensReflectionPrompt,
@@ -62,7 +61,10 @@ import {
   asLensObservedResult,
   emptyLensObservedResult,
   firstClosedLensEvidence,
+  hasCompleteLensObservedResult,
+  isLensComparison,
 } from "@/lib/learning/lens-experiment";
+import { lensTrialSpec, nextLensTrialId } from "@/lib/learning/lens-trial-intervention";
 import { emptyLensExplainInput } from "@/lib/learning/lens-explain";
 import { lensFeedbackForFailureKind, lensTransferFeedback } from "@/lib/learning/lens-feedback";
 import { lensCognitiveTraceItems } from "@/lib/learning/lens-cognitive-trace";
@@ -108,6 +110,7 @@ import {
   lensObserveDraft,
   lensPredictDraft,
   lensTransferDraft,
+  lensTrialGate,
 } from "@/lib/learning/lens-scene-data";
 import {
   activeLensTransferTargetId,
@@ -115,7 +118,6 @@ import {
   hasCompletedLensTransfer,
   lensTransferTarget,
 } from "@/lib/learning/lens-transfer";
-import { canRunLensExperiment } from "@/lib/learning/lens-experiment";
 import {
   LENS_EXPERIMENT_A,
   LENS_EXPERIMENT_ORDER,
@@ -138,13 +140,14 @@ export function ConvexLensOpticalBenchLab() {
     setScreenAtImagePlane,
     setObjectStation,
     chooseModelStation,
+    coverLens,
+    acknowledgeNextTrial,
     saveObserveDraft,
     saveObservation,
     saveDescription,
     saveDescribeDraft,
     savePredictDraft,
     commitPrediction,
-    runExperiment,
     saveExperimentFormDraft,
     saveObservedResult,
     saveComparison,
@@ -344,19 +347,30 @@ export function ConvexLensOpticalBenchLab() {
   const describeComplete = hasSufficientLensDescription(session.descriptions);
   const explainComplete = hasSufficientLensExplanation(session.explanations);
   const transferComplete = hasCompletedLensTransfer(session.transferAttempts);
+  const trialGate = lensTrialGate(session);
+  const awaitingNextTrial = trialGate.awaitingNext && Boolean(trialGate.completedId);
   const activeExperiment = activeExperimentId(session, displayStage);
-  const activeEvidence = activeExperiment
-    ? activeIncompleteLensEvidence(session, activeExperiment) ??
-      firstClosedLensEvidence(session, activeExperiment)
+  const displayExperiment =
+    awaitingNextTrial && trialGate.completedId
+      ? trialGate.completedId
+      : activeExperiment;
+  const activeEvidence = displayExperiment
+    ? activeIncompleteLensEvidence(session, displayExperiment) ??
+      firstClosedLensEvidence(session, displayExperiment)
     : undefined;
-  const committedPrediction = activeExperiment
-    ? firstCommittedLensPrediction(session.predictions, activeExperiment)
+  const committedPrediction = displayExperiment
+    ? firstCommittedLensPrediction(session.predictions, displayExperiment)
     : undefined;
   const predictionLocked = Boolean(committedPrediction);
-  const canRun = Boolean(
-    activeExperiment && canRunLensExperiment(session, activeExperiment),
-  );
+  const trial = displayExperiment ? lensTrialSpec(displayExperiment) : null;
   const hasRun = Boolean(activeEvidence?.interventionAt);
+  const observedSaved = hasCompleteLensObservedResult(activeEvidence?.observedResult);
+  const comparisonSaved = Boolean(
+    activeEvidence?.comparison && isLensComparison(activeEvidence.comparison),
+  );
+  const reflectionSaved = Boolean(
+    activeEvidence && activeEvidence.sufficient === true,
+  );
   const reflectionGate = activeExperiment
     ? lensReflectionEligibility(session, activeExperiment)
     : { enabled: false, reason: LENS_COPY.reviewCannotEdit };
@@ -417,7 +431,15 @@ export function ConvexLensOpticalBenchLab() {
         hideOfficialRays
         studentRays={studentRays}
         allowStationSelect={
-          (isObserve || (isModel && modelDraft.constructionStep <= 1)) && !hideScene
+          (isObserve ||
+            (isModel && modelDraft.constructionStep <= 1) ||
+            (isExperiment &&
+              predictionLocked &&
+              !hasRun &&
+              !awaitingNextTrial &&
+              trial?.capability === "move-object")) &&
+          !hideScene &&
+          !revisiting
         }
         selectedStation={isModel ? modelDraft.objectStation : physicsState.objectStation}
         onSelectStation={(station) => {
@@ -432,9 +454,15 @@ export function ConvexLensOpticalBenchLab() {
         caption={
           isModel
             ? LENS_COPY.modelFrozenCaption
-            : isObserve
-              ? LENS_COPY.observeCaption
-              : undefined
+            : isExperiment && trial
+              ? awaitingNextTrial
+                ? undefined
+                : predictionLocked
+                  ? trial.instruction
+                  : LENS_COPY.trialPredictFirst
+              : isObserve
+                ? LENS_COPY.observeCaption
+                : undefined
         }
       />
     </div>
@@ -520,54 +548,68 @@ export function ConvexLensOpticalBenchLab() {
     />
   ) : isPredict && activeExperiment ? (
     predictTask
-  ) : isExperiment && activeExperiment ? (
+  ) : isExperiment && displayExperiment && trial ? (
     <div className="space-y-6">
-      {!predictionLocked ? predictTask : null}
+      {awaitingNextTrial ? null : !predictionLocked ? (
+        <div className="space-y-3">
+          <p className="text-sm text-[var(--ink-muted)]" data-testid="lens-trial-progress">
+            {`第 ${trial.index} / 4 次验证`}
+          </p>
+          {predictTask}
+        </div>
+      ) : null}
+      {awaitingNextTrial || predictionLocked ? (
       <LensExperimentTask
-        experimentId={activeExperiment}
-        title={lensExperimentTitle(activeExperiment)}
-        changedVariable={lensChangedVariable(activeExperiment)}
+        experimentId={displayExperiment}
+        trialIndex={trial.index}
+        title={lensExperimentTitle(displayExperiment)}
+        instruction={trial.instruction}
+        whatChanges={trial.whatChanges}
+        whatStays={trial.whatStays}
+        capability={trial.capability}
         committedPrediction={
           committedPrediction
             ? `${lensPredictLabel(committedPrediction.prediction)}。${committedPrediction.reasoning}`
             : null
         }
-        canRun={canRun}
-        hasRun={hasRun}
+        predictionLocked={predictionLocked}
+        interventionDone={hasRun}
+        observedSaved={observedSaved}
+        comparisonSaved={comparisonSaved}
+        reflectionSaved={reflectionSaved}
+        awaitingNext={awaitingNextTrial}
+        nextTrialIndex={
+          awaitingNextTrial ? (nextLensTrialId(displayExperiment) ? trial.index + 1 : null) : null
+        }
         observed={observed}
         comparison={comparison}
         reflection={reflection}
-        reflectionPrompt={lensReflectionPrompt(activeExperiment)}
-        onRun={() => presentAction(runExperiment(activeExperiment))}
+        reflectionPrompt={lensReflectionPrompt(displayExperiment)}
+        onCover={() => presentAction(coverLens())}
+        onStartNext={() => presentAction(acknowledgeNextTrial())}
         onObservedChange={(next) => {
           setObserved(next);
-          if (activeExperiment) {
-            saveExperimentFormDraft(activeExperiment, next, comparison, reflection);
-          }
+          saveExperimentFormDraft(displayExperiment, next, comparison, reflection);
         }}
         onSaveObserved={() => {
-          const outcome = saveObservedResult(activeExperiment, observed);
+          const outcome = saveObservedResult(displayExperiment, observed);
           presentAction(outcome);
           setObservedNeedMore(outcome.kind === "missing");
         }}
         onComparisonChange={(value) => {
           const next = value as "" | "same" | "different" | "partial";
           setComparison(next);
-          if (activeExperiment) {
-            saveExperimentFormDraft(activeExperiment, observed, next, reflection);
-          }
+          saveExperimentFormDraft(displayExperiment, observed, next, reflection);
         }}
         onSaveComparison={() => {
-          presentAction(saveComparison(activeExperiment, comparison));
+          presentAction(saveComparison(displayExperiment, comparison));
         }}
         onReflectionChange={(value) => {
           setReflection(value);
-          if (activeExperiment) {
-            saveExperimentFormDraft(activeExperiment, observed, comparison, value);
-          }
+          saveExperimentFormDraft(displayExperiment, observed, comparison, value);
         }}
         onSaveReflection={() => {
-          const outcome = saveReflection(activeExperiment, {
+          const outcome = saveReflection(displayExperiment, {
             observed,
             comparison,
             reflection,
@@ -585,6 +627,7 @@ export function ConvexLensOpticalBenchLab() {
         reflectionDisabledReason={reflectionGate.reason}
         reviewOnly={revisiting}
       />
+      ) : null}
     </div>
   ) : isExplain ? (
     <LensExplainTask
@@ -838,7 +881,11 @@ export function ConvexLensOpticalBenchLab() {
       ) : null}
       {frame && !isEntry && !isAiOff && !isComplete ? (
         <LensTaskFrame
-          context={frame.context}
+          context={
+            isExperiment && !awaitingNextTrial && !predictionLocked
+              ? LENS_COPY.trialPredictFirst
+              : frame.context
+          }
           goal={frame.goal}
           focus={frame.focus}
           action={frame.action}

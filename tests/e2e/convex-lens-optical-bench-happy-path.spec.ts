@@ -46,7 +46,7 @@ test.describe("Scene 07 complete loop", () => {
     await completeLensExperimentCycle(page, {
       screen: "光屏接到清晰像",
       sizeOrCover: "看见的像更大",
-      comparison: "和我猜的差不多",
+      comparison: "基本一样",
       reflection: "物体更靠近焦点时，像变大变远，不是光屏在制造像。",
     });
     await completeLensExperimentCycle(page, {
@@ -54,7 +54,7 @@ test.describe("Scene 07 complete loop", () => {
       reason: "物体正好在焦点上，我预计有限远处接不到清晰像。",
       screen: "怎么移光屏都接不到",
       sizeOrCover: "有限远处没有完整的像",
-      comparison: "和我猜的差不多",
+      comparison: "基本一样",
       reflection: "有限远处不相交，不要把它说成又一种普通成像。",
     });
     await completeLensExperimentCycle(page, {
@@ -62,7 +62,7 @@ test.describe("Scene 07 complete loop", () => {
       reason: "物体在焦点以内，我预计光屏接不到。",
       screen: "怎么移光屏都接不到",
       sizeOrCover: "看见的像更大",
-      comparison: "和我猜的差不多",
+      comparison: "基本一样",
       reflection: "焦点以内只有反向延长线相交，光屏接不到虚像。",
     });
     await completeLensExperimentCycle(page, {
@@ -70,7 +70,7 @@ test.describe("Scene 07 complete loop", () => {
       reason: "我预计整幅像还在，只是可能更暗。",
       screen: "光屏接到清晰像",
       sizeOrCover: "整幅像还在，通常更暗",
-      comparison: "和我猜的差不多",
+      comparison: "基本一样",
       reflection: "透镜不是把像按上下拼起来的，整幅像还在。",
     });
 

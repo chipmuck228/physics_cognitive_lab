@@ -267,6 +267,31 @@ export function lensModelStudentFeedback(
 
 export const LENS_MODEL_STEP_COUNT = 7;
 
+export function lensModelStepMissingReason(draft: LensModelDraft, step: number): string | null {
+  if (lensModelStepComplete(draft, step)) {
+    return null;
+  }
+  if (step <= 1) {
+    return "还需要先选出物体相对 F / 2F 在哪里。";
+  }
+  if (step === 2) {
+    return "还需要完成第一条光线的种类、实际或反向延长、透镜前路径和透镜后路径。";
+  }
+  if (step === 3) {
+    return "还需要完成第二条光线的种类、实际或反向延长、透镜前路径和透镜后路径。";
+  }
+  if (step === 4) {
+    return "还需要选出过透镜后光线怎样相遇。";
+  }
+  if (step === 5) {
+    return "还需要选出像在哪一侧、是实像还是虚像、正立还是倒立、大小，以及光屏能不能接到。";
+  }
+  if (step === 6) {
+    return "还需要用一句话写出为什么会聚方式会带来这样的像。";
+  }
+  return "还需要先完成这一步。";
+}
+
 export function lensModelStepComplete(draft: LensModelDraft, step: number): boolean {
   if (step <= 1) {
     return Boolean(draft.objectStation);

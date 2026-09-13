@@ -101,6 +101,10 @@ describe("Scene 07 learner UX chrome", () => {
       />,
     );
     expect(screen.getByTestId("lens-ray-construction")).toHaveAttribute("data-step", "1");
+    expect(screen.getByTestId("lens-model-next")).toBeDisabled();
+    expect(screen.getByTestId("lens-model-next-reason")).toHaveTextContent(
+      "还需要先选出物体相对 F / 2F 在哪里。",
+    );
     expect(screen.getByTestId("lens-model-station")).toBeInTheDocument();
     expect(screen.queryByTestId("lens-model-review")).not.toBeInTheDocument();
     expect(screen.queryByRole("img")).not.toBeInTheDocument();

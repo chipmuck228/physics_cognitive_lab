@@ -20,6 +20,7 @@ import type { LensFeedback } from "@/lib/learning/lens-feedback";
 import {
   LENS_MODEL_STEP_COUNT,
   lensModelStepComplete,
+  lensModelStepMissingReason,
   type LensModelDraft,
   type LensRayDraft,
 } from "@/lib/learning/lens-model";
@@ -51,6 +52,7 @@ export function LensRayConstruction({
 }: LensRayConstructionProps) {
   const step = Math.min(Math.max(draft.constructionStep || 1, 1), LENS_MODEL_STEP_COUNT);
   const canAdvance = lensModelStepComplete(draft, step);
+  const nextBlockedReason = lensModelStepMissingReason(draft, step);
   return (
     <div className="space-y-4" data-testid="lens-ray-construction" data-step={step}>
       <p className="text-sm text-[var(--ink-muted)]">
@@ -199,13 +201,20 @@ export function LensRayConstruction({
               <span />
             )}
             {step < LENS_MODEL_STEP_COUNT ? (
-              <Button
-                onClick={() => onChange({ ...draft, constructionStep: step + 1 })}
-                disabled={!canAdvance}
-                data-testid="lens-model-next"
-              >
-                下一步
-              </Button>
+              <div className="flex flex-col items-end gap-2">
+                {!canAdvance && nextBlockedReason ? (
+                  <ValidationMessage kind="info" testId="lens-model-next-reason">
+                    {nextBlockedReason}
+                  </ValidationMessage>
+                ) : null}
+                <Button
+                  onClick={() => onChange({ ...draft, constructionStep: step + 1 })}
+                  disabled={!canAdvance}
+                  data-testid="lens-model-next"
+                >
+                  下一步
+                </Button>
+              </div>
             ) : (
               <Button onClick={onSubmit}>{LENS_COPY.modelSubmit}</Button>
             )}

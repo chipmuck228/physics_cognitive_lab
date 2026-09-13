@@ -182,14 +182,14 @@ Legend: **Auth** = Scene action / evaluator / progression owner.
 | Student question | 这一次改了什么？看见的和刚才猜的一样吗？ |
 | Response shape | do → observed pair → comparison → reflection |
 | Visible references | bench + committed prediction |
-| Capabilities | `run-intervention`, `record-observed-result`, `compare-with-prediction`, `author-reflection` |
-| Semantic actions | existing experiment applies |
-| Components | `LensExperimentTask` (+ predict on later trials) |
+| Capabilities | bounded `move-object` or `cover-lens`, then `record-observed-result`, `compare-with-prediction`, `author-reflection` |
+| Semantic actions | learner intervention → Scene validates → official after-state |
+| Components | `LensExperimentTask` + bench station hits or cover button (+ predict on later trials) |
 | Renderer | DOM; SVG only redraws after Scene physics |
-| Action trace | `experiment_run`; observed / comparison / reflection committed |
-| Auth | `applyLensRunExperiment` + observed / comparison / reflection applies |
-| Protected | free station jumping that bypasses the locked trial |
-| Why no extra object-drag | Intervention is Scene-owned `runExperiment`, not a second physics path |
+| Action trace | prepare-trial / move-object / cover-lens / experiment_run; observed / comparison / reflection committed. Trace ≠ Evidence |
+| Auth | `applyLensTrialIntervention` → existing after-state + evidence write; observed / comparison / reflection applies |
+| Protected | free station jumping that bypasses the locked trial; auto-run without learner manipulation |
+| Why bounded hits | Official trial still has one required change. Hits are the learner action; `runExperiment()` is not the student click |
 
 ### EXPLAIN
 

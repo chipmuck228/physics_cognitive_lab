@@ -36,17 +36,30 @@ export const LENS_COPY = {
   reasonPlaceholder: "先说物体往哪边移，你预计光屏上会怎样。",
   predictSubmit: "锁定预测",
   predictNeedBoth: "先选你预计会看见什么，再写理由。",
+  trialPredictFirst: "先锁定这一次的预测，再去光具座上动手。",
   predictLocked: "你已经锁定预测",
   runExperiment: "开始验证",
-  runNeedPrediction: "先锁定预测，才能开始验证。",
+  runNeedPrediction: "先锁定预测，才能开始动手验证。",
+  observeAfterIntervention: "刚才发生了什么？把你实际看到的记下来。",
+  observeNeedIntervention: "还没有在光具座上完成这次要求的改变。",
+  compareNeedObserved: "还没有记录实际结果。",
+  compareNeedSelect: "还没有完成预测对照。",
+  compareMine: "我的预测",
+  compareActual: "实际看到",
+  coverLens: "遮住透镜一部分",
   observeSubmitExperiment: "记下我看见的结果",
   compareQuestion: "和你刚才猜的比一比",
   compareSubmit: "记下这次对照",
-  reflectionSubmit: "记下这次想法",
-  reflectionNeedOwnWords: "先用自己的话写一写（至少两个中文字），再记下。",
-  reflectionNeedRecord: "先记下光屏上看到的，再记下和预测的对照，然后写下你现在怎么想。",
-  reflectionSaved: "已经记下这次想法。",
+  reflectionSubmit: "记下想法，完成本轮",
+  reflectionNeedOwnWords: "还没有写下自己的想法。先用自己的话写一写（至少两个中文字）。",
+  reflectionNeedObserved: "还没有记录实际结果。",
+  reflectionNeedCompare: "还没有完成预测对照。",
+  reflectionNeedRecord: "还没有记录实际结果，也还没有完成预测对照。",
+  reflectionSaved: "已经完成本轮验证。",
   reflectionAlready: "这次想法已经记下了。",
+  trialComplete: "次验证完成",
+  startNextTrial: "开始第",
+  startNextTrialSuffix: "次验证",
   observedSaved: "已经记下你看见的结果。",
   comparisonNeedSelect: "先选出和预测哪里相同或不同。",
   comparisonSaved: "已经记下这次对照。",
@@ -191,9 +204,9 @@ export const LENS_OBSERVE_REQUIRED_IDS = [
 ] as const;
 
 export const LENS_COMPARE_OPTIONS = [
-  { value: "same", label: "和我猜的差不多" },
-  { value: "different", label: "和我猜的不一样" },
-  { value: "partial", label: "只有一部分对上了" },
+  { value: "same", label: "基本一样" },
+  { value: "different", label: "不一样" },
+  { value: "partial", label: "部分一样" },
 ] as const;
 
 export const LENS_PREDICT_OUTCOMES = [
@@ -377,6 +390,14 @@ export function lensChangedVariable(id: LensExperimentId): string {
   return "这次改的是透镜：遮住一部分，光屏先不要动。";
 }
 
+export function lensStartNextTrialLabel(nextIndex: number): string {
+  return `开始第 ${nextIndex} 次验证`;
+}
+
+export function lensTrialCompleteLabel(index: number): string {
+  return `第 ${index} 次验证完成`;
+}
+
 export function lensReflectionPrompt(id: LensExperimentId): string {
   if (id === LENS_EXPERIMENT_A) {
     return "这次让你看清了什么？像变大变远，是因为你移动了光屏，还是因为物体更靠近焦点？";
@@ -404,3 +425,11 @@ export const LENS_OBSERVED_FIELDS = {
     { value: "no-finite", label: "有限远处没有完整的像" },
   ],
 } as const;
+
+export function lensObservedLabel(
+  field: "screen" | "sizeOrCover",
+  value: string,
+): string {
+  const options = LENS_OBSERVED_FIELDS[field];
+  return options.find((option) => option.value === value)?.label ?? value;
+}
