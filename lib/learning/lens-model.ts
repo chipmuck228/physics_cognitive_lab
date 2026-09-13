@@ -1,16 +1,20 @@
 import {
-  analyzeConvexLensAuthored,
-  lensAuthoredBindMissingMessage,
+  classifyLensStep6FastPath,
+  evaluateLensAuthoredSemanticClaim,
   evaluateConvexLensModelConstruction,
+  lensAuthoredBindMissingMessage,
   isCanonicalRayGeometricallyCoherent,
   officialImageConsequence,
   officialMeetingMode,
+  normalizeLensStep6Text,
   twoStandardRays,
   type CanonicalRayChoice,
   type ConvexLensModelAttempt,
   type ImageConsequence,
+  type LensReasoningSemanticParse,
   type MeetingMode,
 } from "@/content/physics-models/convex-lens-imaging/construction";
+import { LENS_COPY } from "@/lib/content/convex-lens-optical-bench";
 import { studentUiFeedback, type StudentUiFeedback } from "@/lib/learning/student-ui-feedback";
 import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
 import { isObjectStation } from "@/lib/physics/convex-lens-optical-bench";
@@ -40,6 +44,18 @@ export interface LensModelDraft {
   screenReceivable: string;
   studentReasoning: string;
   constructionStep: number;
+  step6Interpretation?: LensStep6Interpretation | null;
+}
+
+export type LensStep6InterpretationSource =
+  | "deterministic-fast-path"
+  | "llm-semantic-parse";
+
+export interface LensStep6Interpretation {
+  provenance: "system-derived";
+  source: LensStep6InterpretationSource;
+  textNormalized: string;
+  parse: LensReasoningSemanticParse;
 }
 
 export function emptyLensRayDraft(): LensRayDraft {
@@ -62,7 +78,27 @@ export function emptyLensModelDraft(): LensModelDraft {
     screenReceivable: "",
     studentReasoning: "",
     constructionStep: 1,
+    step6Interpretation: null,
   };
+}
+
+export function lensStep6InterpretationMatches(
+  draft: LensModelDraft,
+): draft is LensModelDraft & { step6Interpretation: LensStep6Interpretation } {
+  const stored = draft.step6Interpretation;
+  return Boolean(
+    stored &&
+      stored.provenance === "system-derived" &&
+      stored.parse &&
+      stored.textNormalized === normalizeLensStep6Text(draft.studentReasoning),
+  );
+}
+
+export function withClearedLensStep6Interpretation(draft: LensModelDraft): LensModelDraft {
+  if (!draft.step6Interpretation) {
+    return draft;
+  }
+  return { ...draft, step6Interpretation: null };
 }
 
 export function asCompletedLensRay(draft: LensRayDraft): CanonicalRayChoice | null {
@@ -128,6 +164,9 @@ export function draftToConvexLensAttempt(
     },
     modelReasoning: draft.studentReasoning,
     constructionSource: "student-constructed",
+    authoredInterpretation: lensStep6InterpretationMatches(draft)
+      ? draft.step6Interpretation.parse
+      : null,
   };
 }
 
@@ -343,6 +382,53 @@ function imageCompatibleWithMeeting(draft: LensModelDraft): boolean {
   return false;
 }
 
+function claimToStepCheck(
+  claim: ReturnType<typeof evaluateLensAuthoredSemanticClaim>,
+): LensModelStepCheck {
+  if (claim.status === "ready") {
+    return { status: "ready" };
+  }
+  return {
+    status: claim.status,
+    message: claim.message,
+  };
+}
+
+export function evaluateLensModelStep6(draft: LensModelDraft): LensModelStepCheck {
+  if (!draft.studentReasoning.trim()) {
+    return {
+      status: "missing",
+      message: "还需要用一句话写出为什么会聚方式会带来这样的像。",
+    };
+  }
+  const meetingMode = draft.meetingMode as MeetingMode;
+  const image = {
+    nature: draft.nature as ImageConsequence["nature"],
+    screenReceivable: draft.screenReceivable === "true",
+  };
+  if (lensStep6InterpretationMatches(draft)) {
+    return claimToStepCheck(
+      evaluateLensAuthoredSemanticClaim(draft.step6Interpretation.parse, meetingMode, image),
+    );
+  }
+  const fast = classifyLensStep6FastPath(draft.studentReasoning);
+  if (fast.kind === "sufficient") {
+    return claimToStepCheck(
+      evaluateLensAuthoredSemanticClaim(fast.parse, meetingMode, image),
+    );
+  }
+  if (fast.kind === "insufficient") {
+    return {
+      status: "inconsistent",
+      message: lensAuthoredBindMissingMessage(fast.authored),
+    };
+  }
+  return {
+    status: "missing",
+    message: LENS_COPY.modelStep6NeedCheck,
+  };
+}
+
 export function evaluateLensModelStep(
   draft: LensModelDraft,
   step: number,
@@ -429,20 +515,7 @@ export function evaluateLensModelStep(
     return { status: "ready" };
   }
   if (step === 6) {
-    if (!draft.studentReasoning.trim()) {
-      return {
-        status: "missing",
-        message: "还需要用一句话写出为什么会聚方式会带来这样的像。",
-      };
-    }
-    const authored = analyzeConvexLensAuthored(draft.studentReasoning);
-    if (!authored.hasConsequenceBind) {
-      return {
-        status: "inconsistent",
-        message: lensAuthoredBindMissingMessage(authored),
-      };
-    }
-    return { status: "ready" };
+    return evaluateLensModelStep6(draft);
   }
   return { status: "ready" };
 }

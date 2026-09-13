@@ -13,7 +13,7 @@ Contract: [`../../interaction-alignment-audit.md`](../../interaction-alignment-a
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Repair re-audit 2026-09-13: IA-07-01 / 02 / 03 / 04 are PASS. The previous complete audit had no other blocking findings besides these repaired units.
+Repair re-audit 2026-09-13: IA-07-01 / 02 / 03 / 04 are PASS. IA-07-04 now includes the Scene07-local Step 6 semantic-parse pilot. Not a universal semantic engine.
 
 ---
 
@@ -93,12 +93,12 @@ None open after the 2026-09-13 OBSERVE / TRANSFER repair and the MODEL Step 6 se
 | Severity | **P1** |
 | Stage | MODEL |
 | Audit Unit | Step 6 authored causal relation |
-| Invariant | **IA-3** (also IA-5: blocked reason repeated “真正相交” after the learner wrote “真正汇聚”) |
-| Current status | **PASS (repaired).** Same `analyzeConvexLensAuthored` relation grammar for local Step 6 and the final construction evaluator. Accepts Grade-9 meeting/consequence synonyms plus natural causal / sequential bind. Rejects sandwiches, unbound tokens, and locally contradictory binds. |
-| Expected behavior | Step 6 claims only that the learner bound meeting behavior to an image consequence. It must not require one canonical sentence. Visible reject reasons name the missing piece. |
-| Implementation evidence | Learner sentence “我改变了物体位置，看见光线在光屏上真正汇聚，成实像。” now has `hasMeetingLanguage` + `hasConsequenceBind`. `tests/learning/lens-model-step6-authored.test.ts` accept/reject table. Final `evaluateConvexLensModelConstruction` uses the same analysis. |
-| Learner consequence | A natural 汇聚 → 成实像 sentence can advance. A leftover “真正相交” prompt is not shown when equivalent meeting language is already present. |
-| Repair boundary used | Scene07 authored analyzer only. No LLM judge. Physics Truth / L4 meaning / seven-step structure unchanged. |
+| Invariant | **IA-3**, **IA-5**, **IA-6** |
+| Current status | **PASS (pilot).** Task → authored sentence → local fast-path or LLM semantic parse → normalized claim → deterministic validator → visible reason → Next → same parse on final MODEL submit. LLM is not authoritative. Failure is recoverable and does not fabricate evidence. |
+| Expected behavior | Step 6 extracts what the learner claims, then deterministic code decides ready / missing / inconsistent against the draft and Physics Truth. Natural Grade-9 paraphrases work. |
+| Implementation evidence | Learner sentence maps on the deterministic fast path to actual-convergence + real + bind. `碰到一起` uses mocked LLM parse then the same validator. `evaluateLensAuthoredSemanticClaim` is the local/final owner. Parse provenance is `system-derived`. |
+| Learner consequence | Equivalent meeting language is not rejected as “先写出真正相交”. Parser failure shows “这句话我还没判断清楚…”, not a false PASS. |
+| Repair boundary used | Scene07-local semantic parse pilot only. No universal judge. Physics Truth / L4 / seven-step structure unchanged. |
 
 ---
 
@@ -106,7 +106,7 @@ None open after the 2026-09-13 OBSERVE / TRANSFER repair and the MODEL Step 6 se
 
 IA-3 on MODEL step 5: official image **size** vs station remains a **cross-step** leftover. Local step 5 claims meeting-compatible image (size vs official not in that claim). The IA contract allows the final evaluator to reject that. Repair path exists. **Not** logged as IA-3 FAIL.
 
-IA-07-04 closed the Step 6 lexical leftover: local and final authored checks now share one relation grammar. Selected `meetingMode` vs authored meeting kind can still wait for final submit (allowed cross-step + repair → 6).
+IA-07-04: Step 6 now uses one normalized claim (`evaluateLensAuthoredSemanticClaim`) for Next and final submit. The LLM may only emit a parse. Fast-path sufficient sentences never call the LLM.
 
 ### 1. ENTRY / start lesson
 
@@ -492,19 +492,19 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 | Cognitive task | Author why meeting implies the image |
 | Required capability | author-bind |
 | Visible control / surface | `lens-model-reasoning` |
-| Semantic learner action | draft `studentReasoning` |
-| Authoritative owner | `analyzeConvexLensAuthored` relation grammar (meeting phrase + consequence phrase + bind). Same source as the final construction evaluator. Does **not** require the word 所以 or 会聚. |
-| Expected state consequence | Ready if the authored sentence binds meeting behavior to an image consequence |
-| Expected visible consequence | Next to review |
-| Blocked condition + visible reason | Empty / sandwich / missing meeting / missing consequence / unbound pair / contradictory pair. Reasons are specific. Never “先写出真正相交” after equivalent meeting language. |
-| Progression condition | `hasConsequenceBind` |
-| Evidence input / provenance | Draft. Final may still reject authored-vs-selected `meetingMode` (allowed cross-step + repair → 6). Same sentence cannot fail a stricter lexical rule. |
+| Semantic learner action | draft `studentReasoning` then 下一步 as an explicit semantic check |
+| Authoritative owner | Deterministic `evaluateLensAuthoredSemanticClaim`. Fast-path `classifyLensStep6FastPath` or Zod-validated LLM parse. LLM never returns ready/missing. |
+| Expected state consequence | Ready only after a normalized claim aligns with the selected meeting/image |
+| Expected visible consequence | Next to review, or a specific missing / inconsistent / unclear reason |
+| Blocked condition + visible reason | Empty / sandwich / missing meeting / missing consequence / unbound pair / contradiction with own draft / parser unavailable. Never “先写出真正相交” after equivalent meeting language. |
+| Progression condition | Deterministic claim check `ready` |
+| Evidence input / provenance | Learner sentence is evidence. Parse is `system-derived` metadata. Not L4 by itself. |
 | IA-1 | PASS |
 | IA-2 | PASS |
 | IA-3 | PASS |
 | IA-4 | PASS |
 | IA-5 | PASS |
-| IA-6 | N/A |
+| IA-6 | PASS |
 
 ### 19. MODEL / review + submit
 

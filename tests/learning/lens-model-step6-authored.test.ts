@@ -66,7 +66,12 @@ describe("Scene 07 MODEL step 6 authored relation", () => {
       : flags.meetingKind === "no-finite-meeting"
         ? "at-f"
         : "beyond-2f";
-    expect(step6(text).status).toBe("ready");
+    expect(
+      evaluateLensModelStep(
+        { ...completeLensModelDraft(station), studentReasoning: text },
+        6,
+      ).status,
+    ).toBe("ready");
     expect(finalFor(text, station).ok).toBe(true);
   });
 
@@ -104,9 +109,9 @@ describe("Scene 07 MODEL step 6 authored relation", () => {
     expect(flags.hasMeetingLanguage).toBe(true);
     expect(flags.hasConsequenceLanguage).toBe(false);
     const blocked = step6(text);
-    expect(blocked.status).toBe("inconsistent");
-    expect(blocked.status === "inconsistent" && blocked.message).toMatch(/像会怎样|成实像|接不到/);
-    expect(blocked.status === "inconsistent" && blocked.message).not.toMatch(/真正相交/);
+    expect(blocked.status).not.toBe("ready");
+    expect(blocked.status !== "ready" && blocked.message).toMatch(/像会怎样|成实像|接不到/);
+    expect(blocked.status !== "ready" && blocked.message).not.toMatch(/真正相交/);
   });
 
   it("names a missing relation when both ideas are present but not bound", () => {
@@ -117,8 +122,8 @@ describe("Scene 07 MODEL step 6 authored relation", () => {
     expect(flags.hasConsequenceBind).toBe(false);
     expect(flags.missingKind).toBe("relation");
     const blocked = step6(text);
-    expect(blocked.status).toBe("inconsistent");
-    expect(blocked.status === "inconsistent" && blocked.message).toMatch(/连起来/);
+    expect(blocked.status).not.toBe("ready");
+    expect(blocked.status !== "ready" && blocked.message).toMatch(/连起来/);
   });
 
   it.each([

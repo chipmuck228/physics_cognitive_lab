@@ -30,6 +30,9 @@ interface LensRayConstructionProps {
   draft: LensModelDraft;
   onChange: (next: LensModelDraft) => void;
   onSubmit: () => void;
+  onCheckStep6?: () => void | Promise<void>;
+  step6Checking?: boolean;
+  step6CheckMessage?: string | null;
   feedback?: LensFeedback | null;
   repairStep?: number | null;
   reviewOnly?: boolean;
@@ -49,14 +52,28 @@ export function LensRayConstruction({
   draft,
   onChange,
   onSubmit,
+  onCheckStep6,
+  step6Checking = false,
+  step6CheckMessage = null,
   feedback,
   repairStep = null,
   reviewOnly = false,
 }: LensRayConstructionProps) {
   const step = Math.min(Math.max(draft.constructionStep || 1, 1), LENS_MODEL_STEP_COUNT);
   const stepCheck = evaluateLensModelStep(draft, step);
-  const canAdvance = stepCheck.status === "ready";
-  const nextBlockedReason = stepCheck.status === "ready" ? null : stepCheck.message;
+  const needsSemanticCheck =
+    step === 6 &&
+    stepCheck.status === "missing" &&
+    stepCheck.message === LENS_COPY.modelStep6NeedCheck;
+  const canAdvance =
+    step === 6
+      ? Boolean(draft.studentReasoning.trim()) &&
+        !step6Checking &&
+        (stepCheck.status === "ready" || needsSemanticCheck)
+      : stepCheck.status === "ready";
+  const nextBlockedReason = step6Checking
+    ? LENS_COPY.modelStep6Checking
+    : step6CheckMessage ?? (stepCheck.status === "ready" ? null : stepCheck.message);
   return (
     <div
       className="space-y-4"
@@ -175,7 +192,11 @@ export function LensRayConstruction({
               className="min-h-24 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm"
               value={draft.studentReasoning}
               onChange={(event) =>
-                onChange({ ...draft, studentReasoning: event.target.value })
+                onChange({
+                  ...draft,
+                  studentReasoning: event.target.value,
+                  step6Interpretation: null,
+                })
               }
             />
           </label>
@@ -232,20 +253,33 @@ export function LensRayConstruction({
             )}
             {step < LENS_MODEL_STEP_COUNT ? (
               <div className="flex flex-col items-end gap-2">
-                {!canAdvance && nextBlockedReason ? (
+                {nextBlockedReason && (step6CheckMessage || step6Checking || !canAdvance) ? (
                   <ValidationMessage
-                    kind={stepCheck.status === "inconsistent" ? "incorrect" : "info"}
-                    testId="lens-model-next-reason"
+                    kind={
+                      step6Checking
+                        ? "info"
+                        : stepCheck.status === "inconsistent"
+                          ? "incorrect"
+                          : "info"
+                    }
+                    testId={step6Checking ? "lens-model-step6-checking" : "lens-model-next-reason"}
                   >
                     {nextBlockedReason}
                   </ValidationMessage>
                 ) : null}
                 <Button
-                  onClick={() => onChange({ ...draft, constructionStep: step + 1 })}
+                  onClick={() => {
+                    if (step === 6 && onCheckStep6) {
+                      void onCheckStep6();
+                      return;
+                    }
+                    onChange({ ...draft, constructionStep: step + 1 });
+                  }}
                   disabled={!canAdvance}
                   data-testid="lens-model-next"
+                  data-checking={step6Checking ? "true" : "false"}
                 >
-                  下一步
+                  {step === 6 && step6Checking ? LENS_COPY.modelStep6Checking : "下一步"}
                 </Button>
               </div>
             ) : (

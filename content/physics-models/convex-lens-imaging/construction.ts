@@ -90,6 +90,28 @@ export interface ImageConsequence {
   screenReceivable: boolean;
 }
 
+export type LensReasoningMeetingClaim =
+  | "actual-convergence"
+  | "backward-extension"
+  | "parallel-no-finite-meeting"
+  | "unclear";
+
+export type LensReasoningImageNatureClaim = "real" | "virtual" | "none" | "unclear";
+export type LensReasoningScreenClaim = "receivable" | "not-receivable" | "unclear";
+export type LensReasoningAmbiguity = "none" | "low" | "high";
+
+/** System-derived interpretation of learner language. Not student evidence. */
+export interface LensReasoningSemanticParse {
+  meetingClaim: LensReasoningMeetingClaim;
+  imageNatureClaim: LensReasoningImageNatureClaim;
+  screenClaim: LensReasoningScreenClaim;
+  hasMeetingClaim: boolean;
+  hasConsequenceClaim: boolean;
+  hasCausalBind: boolean;
+  ambiguity: LensReasoningAmbiguity;
+  unsupportedAdditions?: string[];
+}
+
 export interface ConvexLensModelAttempt {
   objectStation: ObjectStation;
   rays: CanonicalRayChoice[];
@@ -97,6 +119,7 @@ export interface ConvexLensModelAttempt {
   image: ImageConsequence;
   modelReasoning: string;
   constructionSource: ConstructionSource;
+  authoredInterpretation?: LensReasoningSemanticParse | null;
 }
 
 export type ModelConstructionFailure =
@@ -535,6 +558,185 @@ export function lensAuthoredBindMissingMessage(
   return "先写出光线怎样相遇，再接到像的后果。";
 }
 
+export function normalizeLensStep6Text(text: string): string {
+  return compact(text);
+}
+
+function hasLensAuthoredPhysicsCue(text: string): boolean {
+  return /光线|会聚|汇聚|相交|光屏|实像|虚像|平行|延长|接到|聚到|交在|碰到|散开|发散/.test(
+    compact(text),
+  );
+}
+
+function meetingClaimFromKind(
+  kind: ConvexLensAuthoredAnalysis["meetingKind"],
+): LensReasoningMeetingClaim {
+  if (kind === "actual-convergence" || kind === "backward-extension") {
+    return kind;
+  }
+  if (kind === "no-finite-meeting") {
+    return "parallel-no-finite-meeting";
+  }
+  return "unclear";
+}
+
+function meetingModeFromClaim(claim: LensReasoningMeetingClaim): MeetingMode | null {
+  if (claim === "actual-convergence" || claim === "backward-extension") {
+    return claim;
+  }
+  if (claim === "parallel-no-finite-meeting") {
+    return "no-finite-meeting";
+  }
+  return null;
+}
+
+export function parseFromLensAuthoredAnalysis(
+  authored: ConvexLensAuthoredAnalysis,
+): LensReasoningSemanticParse {
+  const imageNatureClaim: LensReasoningImageNatureClaim =
+    authored.consequenceKind === "real" ||
+    authored.consequenceKind === "virtual" ||
+    authored.consequenceKind === "none"
+      ? authored.consequenceKind
+      : "unclear";
+  const screenClaim: LensReasoningScreenClaim =
+    imageNatureClaim === "real"
+      ? "receivable"
+      : imageNatureClaim === "virtual" || imageNatureClaim === "none"
+        ? "not-receivable"
+        : "unclear";
+  return {
+    meetingClaim: meetingClaimFromKind(authored.meetingKind),
+    imageNatureClaim,
+    screenClaim,
+    hasMeetingClaim: authored.hasMeetingLanguage,
+    hasConsequenceClaim: authored.hasConsequenceLanguage,
+    hasCausalBind: authored.hasConsequenceBind,
+    ambiguity: authored.hasConsequenceBind ? "none" : "low",
+  };
+}
+
+export type LensStep6FastPath =
+  | { kind: "sufficient"; parse: LensReasoningSemanticParse }
+  | { kind: "insufficient"; authored: ConvexLensAuthoredAnalysis }
+  | { kind: "needs-llm" };
+
+function hasUnrecognizedMeetingCue(text: string): boolean {
+  return /碰到一起|碰到|聚到|交在|汇到/.test(compact(text));
+}
+
+export function classifyLensStep6FastPath(text: string): LensStep6FastPath {
+  const authored = analyzeConvexLensAuthored(text);
+  if (authored.generic || authored.nounSandwich || authored.tableRowOnly) {
+    return { kind: "insufficient", authored };
+  }
+  if (authored.contradictory) {
+    return { kind: "insufficient", authored };
+  }
+  if (authored.hasConsequenceBind) {
+    return { kind: "sufficient", parse: parseFromLensAuthoredAnalysis(authored) };
+  }
+  if (authored.hasMeetingLanguage || authored.hasConsequenceLanguage) {
+    if (
+      !authored.hasMeetingLanguage &&
+      authored.hasConsequenceLanguage &&
+      hasUnrecognizedMeetingCue(text)
+    ) {
+      return { kind: "needs-llm" };
+    }
+    return { kind: "insufficient", authored };
+  }
+  if (hasUnrecognizedMeetingCue(text) && compact(text).length >= 8) {
+    return { kind: "needs-llm" };
+  }
+  return { kind: "insufficient", authored };
+}
+
+export type LensAuthoredClaimCheck =
+  | { status: "ready" }
+  | { status: "missing"; missingKind: LensAuthoredMissingKind | "unclear"; message: string }
+  | { status: "inconsistent"; missingKind: "contradiction"; message: string };
+
+export const LENS_STEP6_UNCLEAR_MESSAGE =
+  "这句话我还没判断清楚。你可以再说具体一点：光线怎样相遇？然后形成什么像？";
+
+export function evaluateLensAuthoredSemanticClaim(
+  parse: LensReasoningSemanticParse,
+  meetingMode: MeetingMode,
+  image: Pick<ImageConsequence, "nature" | "screenReceivable">,
+): LensAuthoredClaimCheck {
+  if (parse.ambiguity === "high" || parse.meetingClaim === "unclear") {
+    return {
+      status: "missing",
+      missingKind: "unclear",
+      message: LENS_STEP6_UNCLEAR_MESSAGE,
+    };
+  }
+  if (!parse.hasMeetingClaim) {
+    return {
+      status: "missing",
+      missingKind: "meeting",
+      message: parse.hasConsequenceClaim
+        ? "还要写出光线怎样相遇：是会聚到一起、反向延长后相交，还是彼此平行。"
+        : "先写出光线怎样相遇，再接到像的后果。",
+    };
+  }
+  if (!parse.hasConsequenceClaim && parse.imageNatureClaim === "unclear" && parse.screenClaim === "unclear") {
+    return {
+      status: "missing",
+      missingKind: "consequence",
+      message: "还要写出这样相遇之后，像会怎样，比如成实像还是光屏接不到。",
+    };
+  }
+  if (!parse.hasCausalBind) {
+    return {
+      status: "missing",
+      missingKind: "relation",
+      message: "相遇方式和像的后果都有了。还要用一句话把这两件事连起来。",
+    };
+  }
+  const parsedMeeting = meetingModeFromClaim(parse.meetingClaim);
+  if (parsedMeeting && parsedMeeting !== meetingMode) {
+    return {
+      status: "inconsistent",
+      missingKind: "contradiction",
+      message: "你写的相遇方式，和刚才选的光线相遇方式对不上。",
+    };
+  }
+  if (parse.imageNatureClaim !== "unclear" && parse.imageNatureClaim !== image.nature) {
+    return {
+      status: "inconsistent",
+      missingKind: "contradiction",
+      message: "你写的像的性质，和刚才选的像的后果对不上。",
+    };
+  }
+  if (parse.screenClaim !== "unclear") {
+    const receivable = parse.screenClaim === "receivable";
+    if (receivable !== image.screenReceivable) {
+      return {
+        status: "inconsistent",
+        missingKind: "contradiction",
+        message: "你写的光屏能不能接到，和刚才选的像的后果对不上。",
+      };
+    }
+  }
+  return { status: "ready" };
+}
+
+export function resolveLensStep6Parse(
+  text: string,
+  stored?: LensReasoningSemanticParse | null,
+): { parse: LensReasoningSemanticParse | null; source: "deterministic-fast-path" | "stored" | "none" } {
+  const fast = classifyLensStep6FastPath(text);
+  if (fast.kind === "sufficient") {
+    return { parse: fast.parse, source: "deterministic-fast-path" };
+  }
+  if (stored) {
+    return { parse: stored, source: "stored" };
+  }
+  return { parse: null, source: "none" };
+}
+
 function authoredMatchesMeeting(text: string, meetingMode: MeetingMode): boolean {
   const authored = analyzeConvexLensAuthored(text);
   if (!authored.hasMeetingLanguage) {
@@ -639,21 +841,36 @@ export function evaluateConvexLensModelConstruction(
     return { ok: false, failureKind: "image-conflicts-meeting-mode" };
   }
 
-  const authored = analyzeConvexLensAuthored(attempt.modelReasoning);
-  if (authored.generic) {
-    return { ok: false, failureKind: "authored-generic-or-noun-sandwich" };
+  const resolved = resolveLensStep6Parse(
+    attempt.modelReasoning,
+    attempt.authoredInterpretation,
+  );
+  if (!resolved.parse) {
+    const authored = analyzeConvexLensAuthored(attempt.modelReasoning);
+    if (authored.generic || authored.nounSandwich) {
+      return { ok: false, failureKind: "authored-generic-or-noun-sandwich" };
+    }
+    if (authored.tableRowOnly) {
+      return { ok: false, failureKind: "table-row-only" };
+    }
+    if (imageMatchesOfficial(attempt.objectStation, attempt.image)) {
+      return { ok: false, failureKind: "properties-without-relation" };
+    }
+    return { ok: false, failureKind: "authored-missing-meeting-bind" };
   }
-  if (authored.nounSandwich) {
-    return { ok: false, failureKind: "authored-generic-or-noun-sandwich" };
-  }
-  if (authored.tableRowOnly) {
-    return { ok: false, failureKind: "table-row-only" };
-  }
-  if (
-    !authored.hasMeetingLanguage ||
-    !authored.hasConsequenceBind ||
-    !authoredMatchesMeeting(attempt.modelReasoning, attempt.meetingMode)
-  ) {
+  const claim = evaluateLensAuthoredSemanticClaim(
+    resolved.parse,
+    attempt.meetingMode,
+    attempt.image,
+  );
+  if (claim.status !== "ready") {
+    const authored = analyzeConvexLensAuthored(attempt.modelReasoning);
+    if (authored.tableRowOnly) {
+      return { ok: false, failureKind: "table-row-only" };
+    }
+    if (authored.generic || authored.nounSandwich) {
+      return { ok: false, failureKind: "authored-generic-or-noun-sandwich" };
+    }
     if (imageMatchesOfficial(attempt.objectStation, attempt.image)) {
       return { ok: false, failureKind: "properties-without-relation" };
     }

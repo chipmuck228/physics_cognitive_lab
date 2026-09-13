@@ -74,6 +74,10 @@ export const LENS_COPY = {
   explainNeedMore: "先选出一段会聚或接收关系，再用自己的话写。只背“2F 外倒立缩小实像”还不够。",
   explainSubmit: "记下我的说明",
   modelSubmit: "提交模型",
+  modelStep6Checking: "正在看你这句话在说什么。",
+  modelStep6NeedCheck: "点下一步，我先看你这句话在说什么。",
+  modelStep6Unclear:
+    "这句话我还没判断清楚。你可以再说具体一点：光线怎样相遇？然后形成什么像？",
   modelCannotSubmit: "模型还不能提交",
   modelAccepted: "模型已经记下，可以看新情境。",
   modelFrozenCaption: "这是你正在建构的光路，不是一张已经画好的标准图。",

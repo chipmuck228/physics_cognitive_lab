@@ -85,6 +85,7 @@ import {
   lensModelRepairStep,
   visibleLensStudentRays,
 } from "@/lib/learning/lens-model";
+import { resolveLensStep6Check } from "@/lib/learning/lens-step6-parse-client";
 import {
   isLensRevisiting,
   lensDisplayStage,
@@ -190,6 +191,8 @@ export function ConvexLensOpticalBenchLab() {
   const [explain, setExplain] = useState(emptyLensExplainInput());
   const [explainNeedMore, setExplainNeedMore] = useState(false);
   const [modelDraft, setModelDraft] = useState(emptyLensModelDraft());
+  const [step6Checking, setStep6Checking] = useState(false);
+  const [step6CheckMessage, setStep6CheckMessage] = useState<string | null>(null);
   const [transferDraft, setTransferDraft] = useState(emptyLensTransferDraft());
   const [transferNeedMore, setTransferNeedMore] = useState(false);
   const [examDraft, setExamDraft] = useState(emptyLensExamDraft());
@@ -682,6 +685,9 @@ export function ConvexLensOpticalBenchLab() {
           : null
       }
       onChange={(next) => {
+        if (next.studentReasoning !== modelDraft.studentReasoning) {
+          setStep6CheckMessage(null);
+        }
         setModelDraft(next);
         if (next.objectStation && next.objectStation !== modelDraft.objectStation) {
           presentAction(chooseModelStation(next, next.objectStation as ObjectStation));
@@ -689,6 +695,31 @@ export function ConvexLensOpticalBenchLab() {
         }
         saveModelDraft(next);
       }}
+      onCheckStep6={async () => {
+        if (step6Checking) {
+          return;
+        }
+        setStep6Checking(true);
+        const result = await resolveLensStep6Check(modelDraft);
+        setModelDraft(result.draft);
+        saveModelDraft(result.draft);
+        setStep6Checking(false);
+        if (result.check.status === "ready") {
+          setStep6CheckMessage(null);
+          const advanced = { ...result.draft, constructionStep: 7 };
+          setModelDraft(advanced);
+          saveModelDraft(advanced);
+          presentAction({ kind: "committed", message: "已经记下你这句话在说什么。" });
+          return;
+        }
+        setStep6CheckMessage(result.check.message ?? LENS_COPY.modelStep6Unclear);
+        presentAction({
+          kind: result.check.status === "inconsistent" ? "rejected" : "missing",
+          message: result.check.message ?? LENS_COPY.modelStep6Unclear,
+        });
+      }}
+      step6Checking={step6Checking}
+      step6CheckMessage={step6CheckMessage}
       onSubmit={() => {
         presentAction(saveModelAttempt(modelDraft));
       }}

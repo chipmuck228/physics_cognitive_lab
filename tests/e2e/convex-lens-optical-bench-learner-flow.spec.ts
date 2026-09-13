@@ -231,4 +231,93 @@ test.describe("Scene 07 learner-visible flow", () => {
     await page.getByTestId("lens-model-repair").click();
     await expect(page.getByTestId("lens-ray-construction")).toHaveAttribute("data-step", "5");
   });
+
+  test("MODEL Step 6 natural wording can be checked without a live LLM", async ({ page }) => {
+    test.setTimeout(300_000);
+    await page.route("**/api/lens-step6-parse", async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          ok: true,
+          parse: {
+            meetingClaim: "actual-convergence",
+            imageNatureClaim: "real",
+            screenClaim: "receivable",
+            hasMeetingClaim: true,
+            hasConsequenceClaim: true,
+            hasCausalBind: true,
+            ambiguity: "none",
+          },
+        }),
+      });
+    });
+    await reachLensModel(page);
+    await page.getByRole("radio", { name: /物体在 2F 以外/ }).click();
+    await page.getByTestId("lens-model-next").click();
+    await fillOneRay(page, "第一条光线", {
+      kind: "平行主光轴的光线",
+      incident: "这是实际光线（实线）",
+      before: "到达透镜前：平行主光轴",
+      after: "过透镜后：经过另一侧焦点",
+    });
+    await page.getByTestId("lens-model-next").click();
+    await fillOneRay(page, "第二条光线", {
+      kind: "过光心的光线",
+      incident: "这是实际光线（实线）",
+      before: "到达透镜前：朝向光心",
+      after: "过透镜后：方向不变",
+    });
+    await page.getByTestId("lens-model-next").click();
+    await page.getByRole("radio", { name: /出射光线真正会聚/ }).click();
+    await page.getByTestId("lens-model-next").click();
+    await page.getByTestId("lens-model-side").getByRole("radio", { name: /像在透镜另一侧/ }).click();
+    await page.getByTestId("lens-model-nature").getByRole("radio", { name: / 实像$/ }).click();
+    await page.getByTestId("lens-model-orientation").getByRole("radio", { name: /？ 倒立$/ }).click();
+    await page.getByTestId("lens-model-size").getByRole("radio", { name: /比物体小/ }).click();
+    await page.getByTestId("lens-model-receive").getByRole("radio", { name: /光屏放到像的位置可以接到/ }).click();
+    await page.getByTestId("lens-model-next").click();
+    await page.getByTestId("lens-model-reasoning").fill("光线碰到一起，成实像。");
+    await page.getByTestId("lens-model-next").click();
+    await expect(page.getByTestId("lens-model-review")).toBeVisible();
+    await expect(page.getByTestId("lens-ray-construction")).toHaveAttribute("data-step", "7");
+  });
+
+  test("MODEL Step 6 parser failure is recoverable and not a false PASS", async ({ page }) => {
+    test.setTimeout(300_000);
+    await page.route("**/api/lens-step6-parse", async (route) => {
+      await route.fulfill({ status: 500, contentType: "application/json", body: "{}" });
+    });
+    await reachLensModel(page);
+    await page.getByRole("radio", { name: /物体在 2F 以外/ }).click();
+    await page.getByTestId("lens-model-next").click();
+    await fillOneRay(page, "第一条光线", {
+      kind: "平行主光轴的光线",
+      incident: "这是实际光线（实线）",
+      before: "到达透镜前：平行主光轴",
+      after: "过透镜后：经过另一侧焦点",
+    });
+    await page.getByTestId("lens-model-next").click();
+    await fillOneRay(page, "第二条光线", {
+      kind: "过光心的光线",
+      incident: "这是实际光线（实线）",
+      before: "到达透镜前：朝向光心",
+      after: "过透镜后：方向不变",
+    });
+    await page.getByTestId("lens-model-next").click();
+    await page.getByRole("radio", { name: /出射光线真正会聚/ }).click();
+    await page.getByTestId("lens-model-next").click();
+    await page.getByTestId("lens-model-side").getByRole("radio", { name: /像在透镜另一侧/ }).click();
+    await page.getByTestId("lens-model-nature").getByRole("radio", { name: / 实像$/ }).click();
+    await page.getByTestId("lens-model-orientation").getByRole("radio", { name: /？ 倒立$/ }).click();
+    await page.getByTestId("lens-model-size").getByRole("radio", { name: /比物体小/ }).click();
+    await page.getByTestId("lens-model-receive").getByRole("radio", { name: /光屏放到像的位置可以接到/ }).click();
+    await page.getByTestId("lens-model-next").click();
+    await page.getByTestId("lens-model-reasoning").fill("光线碰到一起，成实像。");
+    await page.getByTestId("lens-model-next").click();
+    await expect(page.getByTestId("lens-model-next-reason")).toContainText(
+      LENS_COPY.modelStep6Unclear,
+    );
+    await expect(page.getByTestId("lens-ray-construction")).toHaveAttribute("data-step", "6");
+    await expect(page.getByTestId("lens-model-review")).toHaveCount(0);
+  });
 });
