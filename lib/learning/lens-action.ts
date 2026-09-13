@@ -54,7 +54,8 @@ import {
   evaluateLensPrediction,
   firstCommittedLensPrediction,
 } from "@/lib/learning/lens-predict";
-import { isLensRevisiting } from "@/lib/learning/lens-revisit";
+import { appendLensInteractionTrace } from "@/lib/learning/lens-interaction-trace";
+import { applyLensReviewPhysics, isLensRevisiting } from "@/lib/learning/lens-revisit";
 import {
   lensAiOffDraft,
   lensExamDraft,
@@ -65,6 +66,7 @@ import {
   withLensModelDraft,
   withLensObserveDraft,
   withLensTransferDraft,
+  withLensWatchedDemo,
 } from "@/lib/learning/lens-scene-data";
 import {
   activeLensTransferTargetId,
@@ -77,15 +79,18 @@ import { createLearningEvent } from "@/lib/learning/events";
 import { nextStage } from "@/lib/learning/state-machine";
 import {
   convexLensPhysicsSnapshot,
+  runObserveDemo,
   LENS_EXPERIMENT_A,
   LENS_EXPERIMENT_ORDER,
   type LensExperimentId,
 } from "@/lib/physics/convex-lens-optical-bench";
+import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
 import {
   getConvexLensPhysicsState,
   wrapConvexLensPhysicsState,
 } from "@/lib/runtime/physics-state";
 import {
+  CONVEX_LENS_SCENE_ID,
   LearningStage,
   type DescriptionEvidence,
   type ExperimentEvidence,
@@ -788,6 +793,177 @@ function lensOpenTrialEligibility(
     return { enabled: false, reason: "这次验证已经记下了。" };
   }
   return { enabled: true };
+}
+
+export function applyLensObjectStationChange(
+  session: LearningSession,
+  toStation: ObjectStation,
+): LensActionResult {
+  if (session.physicsState.sceneId !== CONVEX_LENS_SCENE_ID) {
+    return blocked(session, LENS_COPY.reviewCannotEdit);
+  }
+  const current = getConvexLensPhysicsState(session);
+  if (current.objectStation === toStation && !isLensRevisiting(session)) {
+    return {
+      session,
+      outcome: { kind: "physics-applied", review: false, message: "物体已经在这个位置。" },
+    };
+  }
+  const fromStation = current.objectStation;
+  const nextState = { ...current, objectStation: toStation };
+  if (isLensRevisiting(session)) {
+    const reviewed = appendLensInteractionTrace(
+      applyLensReviewPhysics(session, () => nextState),
+      {
+        action: "move-object",
+        stage: session.stage,
+        from: fromStation,
+        to: toStation,
+        mode: "review",
+      },
+    );
+    return {
+      session: reviewed,
+      outcome: { kind: "physics-applied", review: true },
+    };
+  }
+  if (session.stage !== LearningStage.OBSERVE) {
+    return blocked(session, "现在不能随便改物体位置。");
+  }
+  const next = appendLensInteractionTrace(
+    {
+      ...session,
+      physicsState: wrapConvexLensPhysicsState(nextState),
+    },
+    {
+      action: "move-object",
+      stage: session.stage,
+      from: fromStation,
+      to: toStation,
+      mode: "working",
+    },
+  );
+  return {
+    session: next,
+    outcome: { kind: "physics-applied", review: false, message: "已经换了物体位置。" },
+  };
+}
+
+export function applyLensScreenChange(
+  session: LearningSession,
+  atImagePlane: boolean,
+): LensActionResult {
+  if (session.physicsState.sceneId !== CONVEX_LENS_SCENE_ID) {
+    return blocked(session, LENS_COPY.reviewCannotEdit);
+  }
+  const current = getConvexLensPhysicsState(session);
+  const nextState = { ...current, screenAtImagePlane: atImagePlane };
+  if (isLensRevisiting(session)) {
+    return {
+      session: appendLensInteractionTrace(
+        applyLensReviewPhysics(session, () => nextState),
+        {
+          action: "move-screen",
+          stage: session.stage,
+          from: String(current.screenAtImagePlane),
+          to: String(atImagePlane),
+          mode: "review",
+        },
+      ),
+      outcome: { kind: "physics-applied", review: true },
+    };
+  }
+  if (session.stage !== LearningStage.OBSERVE) {
+    return blocked(session, "现在不能随便移光屏。");
+  }
+  return {
+    session: appendLensInteractionTrace(
+      {
+        ...session,
+        physicsState: wrapConvexLensPhysicsState(nextState),
+      },
+      {
+        action: "move-screen",
+        stage: session.stage,
+        from: String(current.screenAtImagePlane),
+        to: String(atImagePlane),
+        mode: "working",
+      },
+    ),
+    outcome: {
+      kind: "physics-applied",
+      review: false,
+      message: atImagePlane ? LENS_COPY.screenAtImage : LENS_COPY.screenOffImage,
+    },
+  };
+}
+
+export function applyLensObserveDemoCycle(session: LearningSession): LensActionResult {
+  const current = getConvexLensPhysicsState(session);
+  const nextState = runObserveDemo(current.demoStationIndex + 1);
+  if (isLensRevisiting(session)) {
+    return {
+      session: appendLensInteractionTrace(
+        applyLensReviewPhysics(session, () => nextState),
+        {
+          action: "move-object",
+          stage: session.stage,
+          from: current.objectStation,
+          to: nextState.objectStation,
+          mode: "review",
+        },
+      ),
+      outcome: { kind: "physics-applied", review: true },
+    };
+  }
+  if (session.stage !== LearningStage.OBSERVE) {
+    return blocked(session, "现在不能换物体位置。");
+  }
+  return {
+    session: appendLensInteractionTrace(
+      {
+        ...session,
+        sceneData: withLensWatchedDemo(session.sceneData, true),
+        physicsState: wrapConvexLensPhysicsState(nextState),
+      },
+      {
+        action: "move-object",
+        stage: session.stage,
+        from: current.objectStation,
+        to: nextState.objectStation,
+        mode: "working",
+      },
+    ),
+    outcome: { kind: "physics-applied", review: false, message: "已经换了物体位置。" },
+  };
+}
+
+export function applyLensModelStationChoice(
+  session: LearningSession,
+  draft: LensModelDraft,
+  station: ObjectStation,
+): LensActionResult {
+  if (isLensRevisiting(session) || session.stage !== LearningStage.MODEL) {
+    return blocked(session, LENS_COPY.reviewCannotEdit);
+  }
+  const nextDraft = { ...draft, objectStation: station };
+  return {
+    session: appendLensInteractionTrace(
+      {
+        ...session,
+        sceneData: withLensModelDraft(session.sceneData, nextDraft),
+      },
+      {
+        action: "choose-object-station",
+        stage: session.stage,
+        substep: "construction-1",
+        from: draft.objectStation || undefined,
+        to: station,
+        mode: "working",
+      },
+    ),
+    outcome: { kind: "committed", message: "已经记下这个物距站点。" },
+  };
 }
 
 function blocked(session: LearningSession, message?: string): LensActionResult {

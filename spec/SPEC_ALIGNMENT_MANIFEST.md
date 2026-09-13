@@ -236,6 +236,8 @@ The canonical model definition lives in `content/physics-models/convex-lens-imag
 - `scenes/convex-lens-optical-bench/readiness.md`
 - `scenes/convex-lens-optical-bench/physical-representation-plan.md`
 - `scenes/convex-lens-optical-bench/interaction-plan.md`
+- `scenes/convex-lens-optical-bench/model-aligned-surface-audit.md` (Scene-local; not an owner)
+- `scenes/convex-lens-optical-bench/interaction-capability-pilot.md` (Scene-local CANDIDATE; not an owner)
 - `state-machine.md`
 - `universal-physics-learning-protocol.md`
 

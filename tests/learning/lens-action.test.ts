@@ -6,8 +6,10 @@ import {
   applyLensDescriptionSave,
   applyLensExplanationSave,
   applyLensModelSubmit,
+  applyLensObjectStationChange,
   applyLensObservationSave,
   applyLensObservedSave,
+  applyLensScreenChange,
   applyLensPredictionCommit,
   applyLensReflectionSave,
   applyLensTransferSubmit,
@@ -16,6 +18,7 @@ import {
 import { presentLensActionResponse } from "@/lib/learning/lens-action-response";
 import { completeLensExplainInput } from "@/lib/learning/lens-explain";
 import { completeLensModelDraft } from "@/lib/learning/lens-model";
+import { lensInteractionTraces } from "@/lib/learning/lens-interaction-trace";
 import { applyLensGoBack, applyLensReturnToProgress } from "@/lib/learning/lens-revisit";
 import {
   completeLensTransferDraft,
@@ -291,5 +294,46 @@ describe("Scene 07 authoritative stage actions", () => {
     expect(result.session.transferAttempts[0]?.accepted).toBe(false);
     expect(result.outcome.kind).toBe("rejected");
     expect(presentLensActionResponse(result.outcome)).toBe("rejected");
+  });
+
+  it("object-station change writes physics and process trace, not Evidence", () => {
+    const session = stageSession(LearningStage.OBSERVE);
+    const result = applyLensObjectStationChange(session, "between-f-and-2f");
+    expect(result.outcome.kind).toBe("physics-applied");
+    expect(result.session.observations).toEqual(session.observations);
+    expect(result.session.stage).toBe(LearningStage.OBSERVE);
+    expect(result.session.physicsState).not.toBe(session.physicsState);
+    const traces = lensInteractionTraces(result.session);
+    expect(traces.some((item) => item.action === "move-object" && item.to === "between-f-and-2f")).toBe(
+      true,
+    );
+  });
+
+  it("review object-station change does not write Evidence", () => {
+    const viewing = applyLensGoBack({
+      ...stageSession(LearningStage.DESCRIBE),
+      observations: [
+        {
+          text: "看见光屏变了。",
+          timestamp: "t2",
+          selectedOptionIds: [...LENS_OBSERVE_REQUIRED_IDS],
+          sufficient: true,
+        },
+      ],
+    });
+    const before = viewing.observations;
+    const result = applyLensObjectStationChange(viewing, "inside-f");
+    expect(result.outcome.kind).toBe("physics-applied");
+    expect(result.session.observations).toEqual(before);
+    expect(result.session.stage).toBe(LearningStage.DESCRIBE);
+    expect(lensInteractionTraces(result.session).at(-1)?.mode).toBe("review");
+  });
+
+  it("screen change is a two-state Scene action", () => {
+    const result = applyLensScreenChange(stageSession(LearningStage.OBSERVE), false);
+    expect(result.outcome.kind).toBe("physics-applied");
+    expect(lensInteractionTraces(result.session).some((item) => item.action === "move-screen")).toBe(
+      true,
+    );
   });
 });

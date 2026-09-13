@@ -11,12 +11,16 @@ import {
   applyLensDescriptionSave,
   applyLensExamSubmit,
   applyLensExplanationSave,
+  applyLensModelStationChoice,
   applyLensModelSubmit,
+  applyLensObjectStationChange,
   applyLensObservationSave,
+  applyLensObserveDemoCycle,
   applyLensObservedSave,
   applyLensPredictionCommit,
   applyLensReflectionSave,
   applyLensRunExperiment,
+  applyLensScreenChange,
   applyLensTransferSubmit,
   type LensExperimentForm,
 } from "@/lib/learning/lens-action";
@@ -38,7 +42,6 @@ import {
   withLensObserveDraft,
   withLensPredictDraft,
   withLensTransferDraft,
-  withLensWatchedDemo,
 } from "@/lib/learning/lens-scene-data";
 import { type LensExplainInput } from "@/lib/learning/lens-explain";
 import {
@@ -57,7 +60,6 @@ import {
 import {
   applyLensGoBack,
   applyLensReturnToProgress,
-  applyLensReviewPhysics,
   canLensGoBack,
   isLensRevisiting,
 } from "@/lib/learning/lens-revisit";
@@ -69,15 +71,7 @@ import {
   subscribeSession,
   updateSession,
 } from "@/lib/learning/session-store";
-import {
-  runObserveDemo,
-  type ConvexLensSceneState,
-  type LensExperimentId,
-} from "@/lib/physics/convex-lens-optical-bench";
-import {
-  getConvexLensPhysicsState,
-  wrapConvexLensPhysicsState,
-} from "@/lib/runtime/physics-state";
+import { type LensExperimentId } from "@/lib/physics/convex-lens-optical-bench";
 import {
   CONVEX_LENS_SCENE_ID,
   LearningStage,
@@ -178,68 +172,28 @@ export function useConvexLensLearningSession() {
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
-  const updatePhysics = useCallback((updater: (state: ConvexLensSceneState) => ConvexLensSceneState) => {
-    updateSession((current) => {
-      if (current.physicsState.sceneId !== CONVEX_LENS_SCENE_ID) {
-        return current;
-      }
-      if (isLensRevisiting(current)) {
-        return applyLensReviewPhysics(current, updater);
-      }
-      return {
-        ...current,
-        physicsState: wrapConvexLensPhysicsState(
-          updater(getConvexLensPhysicsState(current)),
-        ),
-      };
-    }, CONVEX_LENS_SCENE_ID);
-  }, []);
+  const markDemoWatched = useCallback(
+    (): LensDomainOutcome => captureLensAction((current) => applyLensObserveDemoCycle(current)),
+    [],
+  );
 
-  const markDemoWatched = useCallback(() => {
-    updateSession((current) => {
-      if (isLensRevisiting(current)) {
-        return applyLensReviewPhysics(current, (state) =>
-          runObserveDemo(state.demoStationIndex + 1),
-        );
-      }
-      if (current.stage !== LearningStage.OBSERVE) {
-        return current;
-      }
-      const currentState = getConvexLensPhysicsState(current);
-      return {
-        ...current,
-        sceneData: withLensWatchedDemo(current.sceneData, true),
-        physicsState: wrapConvexLensPhysicsState(
-          runObserveDemo(currentState.demoStationIndex + 1),
-        ),
-      };
-    }, CONVEX_LENS_SCENE_ID);
-  }, []);
+  const setScreenAtImagePlane = useCallback(
+    (atPlane: boolean): LensDomainOutcome =>
+      captureLensAction((current) => applyLensScreenChange(current, atPlane)),
+    [],
+  );
 
-  const setScreenAtImagePlane = useCallback((atPlane: boolean) => {
-    updateSession((current) => {
-      if (current.physicsState.sceneId !== CONVEX_LENS_SCENE_ID) {
-        return current;
-      }
-      if (isLensRevisiting(current)) {
-        return applyLensReviewPhysics(current, (state) => ({
-          ...state,
-          screenAtImagePlane: atPlane,
-        }));
-      }
-      return {
-        ...current,
-        physicsState: wrapConvexLensPhysicsState({
-          ...getConvexLensPhysicsState(current),
-          screenAtImagePlane: atPlane,
-        }),
-      };
-    }, CONVEX_LENS_SCENE_ID);
-  }, []);
+  const setObjectStation = useCallback(
+    (station: ObjectStation): LensDomainOutcome =>
+      captureLensAction((current) => applyLensObjectStationChange(current, station)),
+    [],
+  );
 
-  const setObjectStation = useCallback((station: ObjectStation) => {
-    updatePhysics((state) => ({ ...state, objectStation: station }));
-  }, [updatePhysics]);
+  const chooseModelStation = useCallback(
+    (draft: LensModelDraft, station: ObjectStation): LensDomainOutcome =>
+      captureLensAction((current) => applyLensModelStationChoice(current, draft, station)),
+    [],
+  );
 
   const saveObservation = useCallback(
     (selectedOptionIds: string[]): LensDomainOutcome =>
@@ -452,6 +406,7 @@ export function useConvexLensLearningSession() {
     markDemoWatched,
     setScreenAtImagePlane,
     setObjectStation,
+    chooseModelStation,
     saveObserveDraft,
     saveObservation,
     saveDescription,

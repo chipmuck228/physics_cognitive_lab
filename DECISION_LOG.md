@@ -773,3 +773,15 @@ Default Scene-scoped review request: `spec/prompts/review-physics-representation
 
 ---
 
+## D065 — Scene 07 interaction capability pilot (not a standard)
+
+**Date:** 2026-09-13
+
+**Decision:** Scene 07 may name Scene-local interaction capabilities, semantic actions, and process traces. These are **CANDIDATE only**. Do not create UniversalInteractionCapability, UniversalPhysicsRenderer, or a project-wide capability contract. Renderer (SVG / DOM) must not own Physics Truth: gesture → bench units → `ObjectStation` / screen flag → Scene action → official physics. Interaction trace reuses `session.events` and is not Evidence. No new npm dependency. No Three.js.
+
+**Why:** Prove UPLP + reviewed Physics Model + Evidence Design can drive explicit capabilities on one Scene without extracting a universal interaction grammar.
+
+**Consequence:** Scene 07 optical bench station hits are discrete and model-aligned. Continuous pixel-u is forbidden. metadata.status unchanged. Not learner-validated.
+
+---
+

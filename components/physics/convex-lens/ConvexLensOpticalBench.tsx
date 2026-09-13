@@ -1,5 +1,12 @@
 import type { CanonicalRayChoice } from "@/content/physics-models/convex-lens-imaging/construction";
+import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
+import { OBJECT_STATIONS } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
 import {
+  interpretObjectMoveGesture,
+  svgClientXToBenchX,
+} from "@/lib/learning/lens-semantic-action";
+import {
+  OBJECT_BENCH_X,
   officialBenchDisplay,
   type ConvexLensSceneState,
 } from "@/lib/physics/convex-lens-optical-bench";
@@ -11,6 +18,9 @@ interface ConvexLensOpticalBenchProps {
   studentRays?: CanonicalRayChoice[];
   hideOfficialRays?: boolean;
   caption?: string;
+  allowStationSelect?: boolean;
+  selectedStation?: string;
+  onSelectStation?: (station: ObjectStation) => void;
 }
 
 const WIDTH = 640;
@@ -23,6 +33,14 @@ function toX(benchX: number): number {
   return CX + benchX * UNIT;
 }
 
+const STATION_HIT_LABEL: Record<ObjectStation, string> = {
+  "beyond-2f": "2F 外",
+  "at-2f": "2F",
+  "between-f-and-2f": "F–2F",
+  "at-f": "F",
+  "inside-f": "F 内",
+};
+
 export function ConvexLensOpticalBench({
   state,
   frozen = false,
@@ -30,6 +48,9 @@ export function ConvexLensOpticalBench({
   studentRays = [],
   hideOfficialRays = false,
   caption,
+  allowStationSelect = false,
+  selectedStation,
+  onSelectStation,
 }: ConvexLensOpticalBenchProps) {
   const display = officialBenchDisplay(state);
   const { geometry, imaging, screenReceive, cover } = display;
@@ -67,6 +88,21 @@ export function ConvexLensOpticalBench({
         role="img"
         aria-label="凸透镜光具座"
         className="h-auto w-full rounded-2xl border border-[var(--line)] bg-white"
+        data-interactive-stations={allowStationSelect ? "true" : "false"}
+        onClick={(event) => {
+          if (!allowStationSelect || !onSelectStation) {
+            return;
+          }
+          const svg = event.currentTarget;
+          const rect = svg.getBoundingClientRect();
+          const action = interpretObjectMoveGesture({
+            fromStation: state.objectStation,
+            benchX: svgClientXToBenchX(event.clientX - rect.left, rect.width),
+          });
+          if (action) {
+            onSelectStation(action.toStation);
+          }
+        }}
       >
         <line
           x1="24"
@@ -94,6 +130,51 @@ export function ConvexLensOpticalBench({
         <Landmark x={toX(-2)} label="2F" testId="near-2f" />
         <Landmark x={toX(1)} label="F" testId="far-f" />
         <Landmark x={toX(2)} label="2F" testId="far-2f" />
+        {allowStationSelect
+          ? OBJECT_STATIONS.map((station) => {
+              const selected = (selectedStation ?? state.objectStation) === station;
+              return (
+                <g
+                  key={station}
+                  data-testid={`station-hit-${station}`}
+                  data-station={station}
+                  data-selected={selected ? "true" : "false"}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`把物体放到${STATION_HIT_LABEL[station]}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onSelectStation?.(station);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onSelectStation?.(station);
+                    }
+                  }}
+                >
+                  <rect
+                    x={toX(OBJECT_BENCH_X[station]) - 22}
+                    y={AXIS_Y - 86}
+                    width="44"
+                    height="112"
+                    fill={selected ? "rgba(37, 99, 235, 0.12)" : "transparent"}
+                    stroke={selected ? "#2563eb" : "rgba(15, 23, 42, 0.18)"}
+                    strokeDasharray={selected ? undefined : "3 3"}
+                    rx="8"
+                  />
+                  <text
+                    x={toX(OBJECT_BENCH_X[station]) - 16}
+                    y={AXIS_Y + 104}
+                    fontSize="11"
+                    fill={selected ? "#1d4ed8" : "currentColor"}
+                  >
+                    {STATION_HIT_LABEL[station]}
+                  </text>
+                </g>
+              );
+            })
+          : null}
         <ArrowObject
           x={objectX}
           height={geometry.objectHeight}
@@ -138,6 +219,11 @@ export function ConvexLensOpticalBench({
             virtual={virtual}
           />
         ))}
+        {rays.length > 0 ? (
+          <text x="28" y="28" fontSize="12" fill="#1d4ed8" data-testid="student-ray-legend">
+            蓝线是你自己装的光线
+          </text>
+        ) : null}
       </svg>
     </div>
   );
@@ -230,6 +316,7 @@ function StudentRay({
   return (
     <g
       data-testid={`ray-${ray.kind}`}
+      data-owner="learner"
       data-ray-style={backwardOnly ? "dashed" : "solid"}
       data-outgoing-style={backwardOnly ? "none" : "solid"}
       data-backward-style={showBackwardToImage || backwardOnly ? "dashed" : "none"}
@@ -239,8 +326,8 @@ function StudentRay({
         y1={beforeY}
         x2={CX}
         y2={lensY}
-        stroke="currentColor"
-        strokeWidth="1.5"
+        stroke="#1d4ed8"
+        strokeWidth="2"
         strokeDasharray={backwardOnly ? "6 4" : undefined}
         data-ray-segment="incident"
       />
@@ -250,8 +337,8 @@ function StudentRay({
           y1={lensY}
           x2={rightEnd}
           y2={outgoingY}
-          stroke="currentColor"
-          strokeWidth="1.5"
+          stroke="#1d4ed8"
+          strokeWidth="2"
           data-ray-segment="outgoing-actual"
         />
       )}
@@ -261,8 +348,8 @@ function StudentRay({
           y1={lensY}
           x2={imageX}
           y2={AXIS_Y - 48}
-          stroke="currentColor"
-          strokeWidth="1.5"
+          stroke="#1d4ed8"
+          strokeWidth="2"
           strokeDasharray="6 4"
           data-ray-segment="backward-extension"
         />
@@ -273,8 +360,8 @@ function StudentRay({
           y1={beforeY}
           x2={imageX}
           y2={AXIS_Y - 48}
-          stroke="currentColor"
-          strokeWidth="1.5"
+          stroke="#1d4ed8"
+          strokeWidth="2"
           strokeDasharray="6 4"
           data-ray-segment="backward-extension"
         />

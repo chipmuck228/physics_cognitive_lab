@@ -5,6 +5,8 @@ export {
   isLensExperimentId,
   isObjectStation,
   officialBenchDisplay,
+  nearestObjectStationFromBenchX,
+  OBJECT_BENCH_X,
   prepareLensExperimentState,
   runConvexLensExperiment,
   runObserveDemo,

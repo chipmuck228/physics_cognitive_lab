@@ -66,6 +66,7 @@ import {
 import { emptyLensExplainInput } from "@/lib/learning/lens-explain";
 import { lensFeedbackForFailureKind, lensTransferFeedback } from "@/lib/learning/lens-feedback";
 import { lensCognitiveTraceItems } from "@/lib/learning/lens-cognitive-trace";
+import { lensInteractionTraces } from "@/lib/learning/lens-interaction-trace";
 import {
   availableLensHelpIntents,
   lensHelpAllowed,
@@ -120,6 +121,7 @@ import {
   LENS_EXPERIMENT_ORDER,
   type LensExperimentId,
 } from "@/lib/physics/convex-lens-optical-bench";
+import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
 import { LearningStage, type ExamAttempt } from "@/types/learning";
 
 export function ConvexLensOpticalBenchLab() {
@@ -133,6 +135,8 @@ export function ConvexLensOpticalBenchLab() {
     revealHelpNext,
     markDemoWatched,
     setScreenAtImagePlane,
+    setObjectStation,
+    chooseModelStation,
     saveObserveDraft,
     saveObservation,
     saveDescription,
@@ -407,6 +411,19 @@ export function ConvexLensOpticalBenchLab() {
         showOfficialImage={!isModel}
         hideOfficialRays
         studentRays={studentRays}
+        allowStationSelect={
+          (isObserve || (isModel && modelDraft.constructionStep <= 1)) && !hideScene
+        }
+        selectedStation={isModel ? modelDraft.objectStation : physicsState.objectStation}
+        onSelectStation={(station) => {
+          if (isModel) {
+            const outcome = chooseModelStation(modelDraft, station);
+            setModelDraft({ ...modelDraft, objectStation: station });
+            presentAction(outcome);
+            return;
+          }
+          presentAction(setObjectStation(station));
+        }}
         caption={
           isModel
             ? LENS_COPY.modelFrozenCaption
@@ -466,18 +483,10 @@ export function ConvexLensOpticalBenchLab() {
         saveObserveDraft(next);
       }}
       onPlayDemo={() => {
-        markDemoWatched();
-        presentAction({
-          kind: "physics-applied",
-          review: revisiting,
-        });
+        presentAction(markDemoWatched());
       }}
       onMoveScreen={() => {
-        setScreenAtImagePlane(!physicsState.screenAtImagePlane);
-        presentAction({
-          kind: "physics-applied",
-          review: revisiting,
-        });
+        presentAction(setScreenAtImagePlane(!physicsState.screenAtImagePlane));
       }}
       screenAtImagePlane={physicsState.screenAtImagePlane}
       onSubmit={() => {
@@ -602,6 +611,10 @@ export function ConvexLensOpticalBenchLab() {
       }
       onChange={(next) => {
         setModelDraft(next);
+        if (next.objectStation && next.objectStation !== modelDraft.objectStation) {
+          presentAction(chooseModelStation(next, next.objectStation as ObjectStation));
+          return;
+        }
         saveModelDraft(next);
       }}
       onSubmit={() => {
@@ -851,6 +864,7 @@ export function ConvexLensOpticalBenchLab() {
       {!isEntry && !isComplete ? (
         <LensCognitiveTrace
           items={lensCognitiveTraceItems(session)}
+          processItems={lensInteractionTraces(session)}
           progressStage={session.stage}
           displayStage={displayStage}
         />

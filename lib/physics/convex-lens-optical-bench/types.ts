@@ -96,6 +96,25 @@ const IMAGE_HEIGHT: Record<ObjectStation, number> = {
   "inside-f": 68,
 };
 
+/** Bench units, not SVG pixels. Used only to snap a gesture to a named station. */
+export const OBJECT_BENCH_X: Record<ObjectStation, number> = OBJECT_X;
+
+export function nearestObjectStationFromBenchX(benchX: number): ObjectStation | null {
+  if (benchX > -0.2) {
+    return null;
+  }
+  let best: ObjectStation = "beyond-2f";
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const station of OBJECT_STATIONS) {
+    const distance = Math.abs(benchX - OBJECT_X[station]);
+    if (distance < bestDistance) {
+      best = station;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
 export function isObjectStation(value: unknown): value is ObjectStation {
   return (OBJECT_STATIONS as readonly string[]).includes(value as string);
 }

@@ -276,4 +276,44 @@ describe("Scene 07 enabled-action contract", () => {
     );
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).transferAttempts[0]?.accepted).toBe(false);
   });
+
+  it("OBSERVE exposes station hits and applying one changes canonical physics", async () => {
+    const user = userEvent.setup();
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-station-hit", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.OBSERVE,
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    expect(screen.getByTestId("station-hit-between-f-and-2f")).toBeInTheDocument();
+    await user.click(screen.getByTestId("station-hit-between-f-and-2f"));
+    expect(screen.getByTestId("convex-lens-optical-bench")).toHaveAttribute(
+      "data-object-station",
+      "between-f-and-2f",
+    );
+    expect(screen.getByTestId("lens-action-response")).toHaveAttribute(
+      "data-response-class",
+      "applied",
+    );
+  });
+
+  it("EXPLAIN has no station-hit or ray construction controls", () => {
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-explain-caps", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.EXPLAIN,
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    expect(screen.queryByTestId("station-hit-beyond-2f")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("lens-ray-construction")).not.toBeInTheDocument();
+    expect(screen.getByTestId("lens-explain-task")).toBeInTheDocument();
+  });
+
+  it("AI_OFF has no help entry", () => {
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-aioff-caps", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.AI_OFF,
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    expect(screen.queryByRole("button", { name: /我不知道现在要做什么/ })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("lens-help-panel")).not.toBeInTheDocument();
+  });
 });

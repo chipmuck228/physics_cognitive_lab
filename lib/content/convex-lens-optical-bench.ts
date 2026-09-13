@@ -16,7 +16,7 @@ export const LENS_COPY = {
   landingCta: "开始看光具座",
   sceneTitle: "凸透镜光具座",
   startLesson: "开始观察",
-  observeCaption: "先换一个物体位置，再移动光屏，看这两次分别发生了什么。",
+  observeCaption: "先点物体相对 F / 2F 的位置，再移动光屏，看这两次分别发生了什么。",
   playDemo: "换一个物体位置看一看",
   moveScreen: "移动光屏",
   screenAtImage: "光屏放到像的位置",
