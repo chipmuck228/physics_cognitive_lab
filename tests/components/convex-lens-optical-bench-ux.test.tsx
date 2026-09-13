@@ -15,6 +15,7 @@ import {
 import { STUDENT_CHROME } from "@/lib/content/student-language";
 import { emptyLensAiOffDraft } from "@/lib/learning/lens-ai-off";
 import { completeLensModelDraft, emptyLensModelDraft } from "@/lib/learning/lens-model";
+import { authoritativeLensPhysics } from "@/lib/learning/lens-revisit";
 import { createSession } from "@/lib/learning/session";
 import { getSessionSnapshot, replaceSession, resetSessionMemory } from "@/lib/learning/session-store";
 import { CONVEX_LENS_SCENE_ID, LearningStage } from "@/types/learning";
@@ -62,6 +63,12 @@ afterEach(() => {
   resetSessionMemory();
   localStorage.clear();
 });
+
+async function goBackTimes(user: ReturnType<typeof userEvent.setup>, times: number) {
+  for (let index = 0; index < times; index += 1) {
+    await user.click(screen.getByRole("button", { name: STUDENT_CHROME.backAria }));
+  }
+}
 
 describe("Scene 07 learner UX chrome", () => {
   it("does not reveal that every Observe option is required", () => {
@@ -158,6 +165,100 @@ describe("Scene 07 learner UX chrome", () => {
     await user.click(screen.getByTestId("lens-return-progress"));
     expect(screen.getByTestId("lens-transfer-task")).toBeInTheDocument();
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.TRANSFER);
+  });
+
+  it("A. revisiting OBSERVE lets the student move the screen in preview only", async () => {
+    const user = userEvent.setup();
+    const seeded = modelSession();
+    replaceSession(seeded);
+    render(<ConvexLensOpticalBenchLab />);
+    await goBackTimes(user, 5);
+    expect(screen.getByTestId("lens-observe-task")).toBeInTheDocument();
+    const bench = screen.getByTestId("convex-lens-optical-bench");
+    const screenBefore = bench.getAttribute("data-screen-x");
+    const objectBefore = bench.getAttribute("data-object-station");
+    const physicsBefore = JSON.parse(
+      JSON.stringify(getSessionSnapshot(CONVEX_LENS_SCENE_ID).physicsState),
+    );
+    const evidenceBefore = getSessionSnapshot(CONVEX_LENS_SCENE_ID).observations;
+    await user.click(screen.getByTestId("lens-move-screen"));
+    expect(screen.getByTestId("convex-lens-optical-bench")).not.toHaveAttribute(
+      "data-screen-x",
+      screenBefore,
+    );
+    await user.click(screen.getByTestId("lens-play-demo"));
+    expect(screen.getByTestId("convex-lens-optical-bench")).not.toHaveAttribute(
+      "data-object-station",
+      objectBefore,
+    );
+    const viewing = getSessionSnapshot(CONVEX_LENS_SCENE_ID);
+    expect(viewing.stage).toBe(LearningStage.MODEL);
+    expect(viewing.physicsState).toEqual(physicsBefore);
+    expect(viewing.observations).toEqual(evidenceBefore);
+    await user.click(screen.getByTestId("lens-return-progress"));
+    expect(screen.getByTestId("lens-ray-construction")).toBeInTheDocument();
+    expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).physicsState).toEqual(physicsBefore);
+    expect(authoritativeLensPhysics(getSessionSnapshot(CONVEX_LENS_SCENE_ID))).toEqual(
+      authoritativeLensPhysics(seeded),
+    );
+  });
+
+  it("B. OBSERVE help does not offer ray-construction intents", () => {
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-observe-help", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.OBSERVE,
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    expect(screen.getByTestId("lens-help-what-now")).toBeInTheDocument();
+    expect(screen.getByTestId("lens-help-where-look")).toBeInTheDocument();
+    expect(screen.queryByTestId("lens-help-how-rays")).not.toBeInTheDocument();
+    expect(screen.queryByText("我不知道光线怎么走")).not.toBeInTheDocument();
+  });
+
+  it("C. unsubmitted Observe selection survives help", async () => {
+    const user = userEvent.setup();
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-observe-draft", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.OBSERVE,
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    const option = screen.getByLabelText(LENS_OBSERVE_OPTIONS[0]!.label);
+    await user.click(option);
+    expect(option).toBeChecked();
+    await user.click(screen.getByTestId("lens-help-what-now"));
+    expect(screen.getByLabelText(LENS_OBSERVE_OPTIONS[0]!.label)).toBeChecked();
+    await user.click(screen.getByTestId("lens-help-next"));
+    expect(screen.getByLabelText(LENS_OBSERVE_OPTIONS[0]!.label)).toBeChecked();
+  });
+
+  it("D. partial MODEL construction survives help", async () => {
+    const user = userEvent.setup();
+    replaceSession({
+      ...modelSession(),
+      modelAttempts: [],
+      sceneData: {
+        ...modelSession().sceneData,
+        modelDraft: emptyLensModelDraft(),
+      },
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    await user.click(screen.getByRole("radio", { name: /物体在 2F 以外/ }));
+    expect(screen.getByRole("radio", { name: /物体在 2F 以外/ })).toBeChecked();
+    await user.click(screen.getByTestId("lens-help-what-now"));
+    expect(screen.getByRole("radio", { name: /物体在 2F 以外/ })).toBeChecked();
+    expect(screen.getByTestId("lens-ray-construction")).toHaveAttribute("data-step", "1");
+  });
+
+  it("E. Scene 07 has only LensHelpPanel, not the generic tutor entry", () => {
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-one-help", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.OBSERVE,
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    expect(screen.getByTestId("lens-help-panel")).toBeInTheDocument();
+    expect(screen.queryByText(STUDENT_CHROME.tutorAsk)).not.toBeInTheDocument();
+    expect(screen.queryByText(STUDENT_CHROME.tutorName)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: STUDENT_CHROME.tutorAskAria })).not.toBeInTheDocument();
   });
 
   it("hides help intents on AI_OFF", () => {

@@ -1,12 +1,13 @@
 import { Button } from "@/components/common/Button";
 import { ValidationMessage } from "@/components/learning/ValidationMessage";
 import {
-  LENS_HELP_INTENTS,
+  lensHelpIntentLabel,
   nextLensHelpPrompt,
   type LensHelpIntentId,
 } from "@/lib/learning/lens-help-intents";
 
 interface LensHelpPanelProps {
+  intents: readonly LensHelpIntentId[];
   intentId: LensHelpIntentId | "";
   prompts: string[];
   onSelectIntent: (intentId: LensHelpIntentId) => void;
@@ -14,6 +15,7 @@ interface LensHelpPanelProps {
 }
 
 export function LensHelpPanel({
+  intents,
   intentId,
   prompts,
   onSelectIntent,
@@ -24,14 +26,14 @@ export function LensHelpPanel({
     <div className="space-y-3" data-testid="lens-help-panel">
       <p className="text-sm font-medium">需要帮忙？先说卡在哪。</p>
       <div className="flex flex-wrap gap-2">
-        {LENS_HELP_INTENTS.map((intent) => (
+        {intents.map((id) => (
           <Button
-            key={intent.id}
-            variant={intentId === intent.id ? "secondary" : "ghost"}
-            onClick={() => onSelectIntent(intent.id)}
-            data-testid={`lens-help-${intent.id}`}
+            key={id}
+            variant={intentId === id ? "secondary" : "ghost"}
+            onClick={() => onSelectIntent(id)}
+            data-testid={`lens-help-${id}`}
           >
-            {intent.label}
+            {lensHelpIntentLabel(id)}
           </Button>
         ))}
       </div>

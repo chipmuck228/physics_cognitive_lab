@@ -40,11 +40,15 @@ import {
 import {
   lensAiOffDraft,
   lensExamDraft,
+  lensModelDraft,
   withLensAiOffDraft,
   withLensDescribeDraft,
   withLensExamDraft,
+  withLensExperimentFormDraft,
   withLensExplainDraft,
   withLensModelDraft,
+  withLensObserveDraft,
+  withLensPredictDraft,
   withLensTransferDraft,
   withLensWatchedDemo,
 } from "@/lib/learning/lens-scene-data";
@@ -72,11 +76,13 @@ import {
 import {
   applyLensHelpIntent,
   applyLensHelpNext,
+  availableLensHelpIntents,
   type LensHelpIntentId,
 } from "@/lib/learning/lens-help-intents";
 import {
   applyLensGoBack,
   applyLensReturnToProgress,
+  applyLensReviewPhysics,
   canLensGoBack,
   isLensRevisiting,
 } from "@/lib/learning/lens-revisit";
@@ -181,7 +187,13 @@ export function useConvexLensLearningSession() {
       if (isLensRevisiting(current) || current.stage === LearningStage.AI_OFF) {
         return current;
       }
-      return applyLensHelpIntent(current, current.stage, intentId);
+      const context = {
+        constructionStep: lensModelDraft(current).constructionStep,
+      };
+      if (!availableLensHelpIntents(current.stage, context).includes(intentId)) {
+        return current;
+      }
+      return applyLensHelpIntent(current, current.stage, intentId, context);
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
@@ -190,14 +202,20 @@ export function useConvexLensLearningSession() {
       if (isLensRevisiting(current) || current.stage === LearningStage.AI_OFF) {
         return current;
       }
-      return applyLensHelpNext(current, current.stage);
+      const context = {
+        constructionStep: lensModelDraft(current).constructionStep,
+      };
+      return applyLensHelpNext(current, current.stage, context);
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
   const updatePhysics = useCallback((updater: (state: ConvexLensSceneState) => ConvexLensSceneState) => {
     updateSession((current) => {
-      if (isLensRevisiting(current) || current.physicsState.sceneId !== CONVEX_LENS_SCENE_ID) {
+      if (current.physicsState.sceneId !== CONVEX_LENS_SCENE_ID) {
         return current;
+      }
+      if (isLensRevisiting(current)) {
+        return applyLensReviewPhysics(current, updater);
       }
       return {
         ...current,
@@ -210,7 +228,12 @@ export function useConvexLensLearningSession() {
 
   const markDemoWatched = useCallback(() => {
     updateSession((current) => {
-      if (isLensRevisiting(current) || current.stage !== LearningStage.OBSERVE) {
+      if (isLensRevisiting(current)) {
+        return applyLensReviewPhysics(current, (state) =>
+          runObserveDemo(state.demoStationIndex + 1),
+        );
+      }
+      if (current.stage !== LearningStage.OBSERVE) {
         return current;
       }
       const currentState = getConvexLensPhysicsState(current);
@@ -226,8 +249,14 @@ export function useConvexLensLearningSession() {
 
   const setScreenAtImagePlane = useCallback((atPlane: boolean) => {
     updateSession((current) => {
-      if (isLensRevisiting(current) || current.physicsState.sceneId !== CONVEX_LENS_SCENE_ID) {
+      if (current.physicsState.sceneId !== CONVEX_LENS_SCENE_ID) {
         return current;
+      }
+      if (isLensRevisiting(current)) {
+        return applyLensReviewPhysics(current, (state) => ({
+          ...state,
+          screenAtImagePlane: atPlane,
+        }));
       }
       return {
         ...current,
@@ -696,6 +725,77 @@ export function useConvexLensLearningSession() {
     [],
   );
 
+  const saveObserveDraft = useCallback((selectedOptionIds: string[]) => {
+    updateSession((current) => {
+      if (isLensRevisiting(current) || current.stage !== LearningStage.OBSERVE) {
+        return current;
+      }
+      return {
+        ...current,
+        sceneData: withLensObserveDraft(current.sceneData, selectedOptionIds),
+      };
+    }, CONVEX_LENS_SCENE_ID);
+  }, []);
+
+  const saveDescribeDraft = useCallback((input: LensDescribeInput) => {
+    updateSession((current) => {
+      if (isLensRevisiting(current) || current.stage !== LearningStage.DESCRIBE) {
+        return current;
+      }
+      return { ...current, sceneData: withLensDescribeDraft(current.sceneData, input) };
+    }, CONVEX_LENS_SCENE_ID);
+  }, []);
+
+  const savePredictDraft = useCallback(
+    (experimentId: LensExperimentId, outcome: string, reason: string) => {
+      updateSession((current) => {
+        if (isLensRevisiting(current)) {
+          return current;
+        }
+        if (
+          current.stage !== LearningStage.PREDICT &&
+          current.stage !== LearningStage.EXPERIMENT
+        ) {
+          return current;
+        }
+        return {
+          ...current,
+          sceneData: withLensPredictDraft(current.sceneData, {
+            experimentId,
+            outcome,
+            reason,
+          }),
+        };
+      }, CONVEX_LENS_SCENE_ID);
+    },
+    [],
+  );
+
+  const saveExperimentFormDraft = useCallback(
+    (
+      experimentId: LensExperimentId,
+      observed: LensObservedResult,
+      comparison: "" | "same" | "different" | "partial",
+      reflection: string,
+    ) => {
+      updateSession((current) => {
+        if (isLensRevisiting(current) || current.stage !== LearningStage.EXPERIMENT) {
+          return current;
+        }
+        return {
+          ...current,
+          sceneData: withLensExperimentFormDraft(current.sceneData, {
+            experimentId,
+            observed,
+            comparison,
+            reflection,
+          }),
+        };
+      }, CONVEX_LENS_SCENE_ID);
+    },
+    [],
+  );
+
   const startOver = useCallback(() => {
     resetStoredSession(CONVEX_LENS_SCENE_ID);
   }, []);
@@ -713,10 +813,14 @@ export function useConvexLensLearningSession() {
     markDemoWatched,
     setScreenAtImagePlane,
     setObjectStation,
+    saveObserveDraft,
     saveObservation,
     saveDescription,
+    saveDescribeDraft,
+    savePredictDraft,
     commitPrediction,
     runExperiment,
+    saveExperimentFormDraft,
     saveObservedResult,
     saveComparison,
     saveReflection,

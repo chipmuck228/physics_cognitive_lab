@@ -18,9 +18,7 @@ import { LensRayConstruction } from "@/components/learning/LensRayConstruction";
 import { LensReviewBanner } from "@/components/learning/LensReviewBanner";
 import { LensTaskFrame } from "@/components/learning/LensTaskFrame";
 import { LensTransferTask } from "@/components/learning/LensTransferTask";
-import { TutorPanel } from "@/components/tutor/TutorPanel";
 import { useConvexLensLearningSession } from "@/hooks/useConvexLensLearningSession";
-import { useTutor } from "@/hooks/useTutor";
 import {
   LENS_COPY,
   LENS_EXAM_COPY,
@@ -63,6 +61,7 @@ import {
 import { emptyLensExplainInput } from "@/lib/learning/lens-explain";
 import { lensFeedbackForFailureKind, lensTransferFeedback } from "@/lib/learning/lens-feedback";
 import {
+  availableLensHelpIntents,
   lensHelpAllowed,
   lensHelpPrompts,
   lensHelpState,
@@ -76,6 +75,7 @@ import {
 import {
   isLensRevisiting,
   lensDisplayStage,
+  lensPreviewPhysics,
   lensViewingStage,
 } from "@/lib/learning/lens-revisit";
 import { hasSufficientLensDescription } from "@/lib/learning/lens-describe";
@@ -95,8 +95,11 @@ import {
   lensAiOffDraft,
   lensDescribeDraft,
   lensExamDraft,
+  lensExperimentFormDraft,
   lensExplainDraft,
   lensModelDraft,
+  lensObserveDraft,
+  lensPredictDraft,
   lensTransferDraft,
 } from "@/lib/learning/lens-scene-data";
 import {
@@ -107,8 +110,6 @@ import {
 } from "@/lib/learning/lens-transfer";
 import { canRunLensExperiment } from "@/lib/learning/lens-experiment";
 import {
-  createInitialConvexLensState,
-  isConvexLensSceneState,
   LENS_EXPERIMENT_A,
   LENS_EXPERIMENT_ORDER,
   type LensExperimentId,
@@ -126,10 +127,14 @@ export function ConvexLensOpticalBenchLab() {
     revealHelpNext,
     markDemoWatched,
     setScreenAtImagePlane,
+    saveObserveDraft,
     saveObservation,
     saveDescription,
+    saveDescribeDraft,
+    savePredictDraft,
     commitPrediction,
     runExperiment,
+    saveExperimentFormDraft,
     saveObservedResult,
     saveComparison,
     saveReflection,
@@ -147,7 +152,6 @@ export function ConvexLensOpticalBenchLab() {
     startOver,
     canGoBack,
   } = useConvexLensLearningSession();
-  const tutor = useTutor(session);
 
   const [selectedOptionIds, setSelectedOptionIds] = useState<string[]>([]);
   const [observeNeedMore, setObserveNeedMore] = useState(false);
@@ -172,25 +176,45 @@ export function ConvexLensOpticalBenchLab() {
     session ? lensAiOffDraft(session) : undefined,
   );
   const [aiOffNeedResponse, setAiOffNeedResponse] = useState(false);
-  const [formKey, setFormKey] = useState("");
+
+  const hydrateKey = session
+    ? [
+        session.sessionId,
+        session.stage,
+        lensViewingStage(session) ?? "",
+        session.observations.length,
+        session.descriptions.length,
+        session.predictions.length,
+        session.experimentEvidence.length,
+        session.explanations.length,
+        session.modelAttempts.length,
+        session.transferAttempts.length,
+        session.examAttempts.length,
+        session.independentAssessment?.challengeAttempts?.length ?? 0,
+      ].join("|")
+    : "";
 
   useEffect(() => {
     if (!session) {
       return;
     }
     const latestObservation = session.observations.at(-1);
-    setSelectedOptionIds(latestObservation?.selectedOptionIds ?? []);
+    setSelectedOptionIds(
+      lensObserveDraft(session) ?? latestObservation?.selectedOptionIds ?? [],
+    );
     setObserveNeedMore(
       session.stage === LearningStage.OBSERVE &&
         Boolean(latestObservation) &&
         !hasSufficientLensObservation(session.observations),
     );
-    const draft = lensDescribeDraft(session) ?? emptyLensDescribeInput();
+    const draft = lensDescribeDraft(session);
     const latestDescription = session.descriptions.at(-1);
-    setDescribe({
-      ...draft,
-      studentDescription: latestDescription?.text ?? draft.studentDescription,
-    });
+    setDescribe(
+      draft ?? {
+        ...emptyLensDescribeInput(),
+        studentDescription: latestDescription?.text ?? "",
+      },
+    );
     setDescribeNeedStructure(
       session.stage === LearningStage.DESCRIBE &&
         Boolean(latestDescription) &&
@@ -233,13 +257,17 @@ export function ConvexLensOpticalBenchLab() {
         : emptyLensExamDraft(),
     );
     setAiOffDraft(lensAiOffDraft(session));
-  }, [session]);
+    // Help and review-preview writes must not rehydrate drafts.
+  }, [hydrateKey]);
 
   const experimentKey = session
     ? experimentKeyFor(lensDisplayStage(session), session)
     : "";
-  if (session && experimentKey !== formKey) {
-    setFormKey(experimentKey);
+
+  useEffect(() => {
+    if (!session || !experimentKey) {
+      return;
+    }
     const experimentId = activeExperimentId(session, lensDisplayStage(session));
     const prediction = experimentId
       ? firstCommittedLensPrediction(session.predictions, experimentId)
@@ -248,20 +276,35 @@ export function ConvexLensOpticalBenchLab() {
       ? activeIncompleteLensEvidence(session, experimentId) ??
         firstClosedLensEvidence(session, experimentId)
       : undefined;
-    setPredictOutcome(prediction?.prediction ?? "");
-    setPredictReason(prediction?.reasoning ?? "");
-    setPredictNeedMore(false);
-    setObserved(asLensObservedResult(evidence?.observedResult));
-    setComparison(
-      evidence?.comparison === "same" ||
-        evidence?.comparison === "different" ||
-        evidence?.comparison === "partial"
-        ? evidence.comparison
-        : "",
+    const predictDraft = experimentId ? lensPredictDraft(session) : null;
+    setPredictOutcome(
+      predictDraft && predictDraft.experimentId === experimentId
+        ? predictDraft.outcome
+        : (prediction?.prediction ?? ""),
     );
-    setReflection(evidence?.reflection ?? "");
+    setPredictReason(
+      predictDraft && predictDraft.experimentId === experimentId
+        ? predictDraft.reason
+        : (prediction?.reasoning ?? ""),
+    );
+    setPredictNeedMore(false);
+    const formDraft = experimentId ? lensExperimentFormDraft(session) : null;
+    const useForm = Boolean(formDraft && formDraft.experimentId === experimentId);
+    setObserved(
+      useForm ? formDraft!.observed : asLensObservedResult(evidence?.observedResult),
+    );
+    setComparison(
+      useForm
+        ? formDraft!.comparison
+        : evidence?.comparison === "same" ||
+            evidence?.comparison === "different" ||
+            evidence?.comparison === "partial"
+          ? evidence.comparison
+          : "",
+    );
+    setReflection(useForm ? formDraft!.reflection : (evidence?.reflection ?? ""));
     setObservedNeedMore(false);
-  }
+  }, [experimentKey, hydrateKey]);
 
   if (!hydrated || !session || !aiOffDraft) {
     return (
@@ -286,7 +329,6 @@ export function ConvexLensOpticalBenchLab() {
   const isAiOff = displayStage === LearningStage.AI_OFF;
   const isComplete = displayStage === LearningStage.COMPLETE;
   const authoritativeAiOff = session.stage === LearningStage.AI_OFF;
-  const authoritativeComplete = session.stage === LearningStage.COMPLETE;
   const observeComplete = hasSufficientLensObservation(session.observations);
   const describeComplete = hasSufficientLensDescription(session.descriptions);
   const explainComplete = hasSufficientLensExplanation(session.explanations);
@@ -335,9 +377,7 @@ export function ConvexLensOpticalBenchLab() {
       ? "post-check"
       : aiOffDraft.step;
 
-  const physicsState = isConvexLensSceneState(session.physicsState.state)
-    ? session.physicsState.state
-    : createInitialConvexLensState();
+  const physicsState = lensPreviewPhysics(session);
   const constructed = draftToConvexLensAttempt(modelDraft);
   const hideScene = isExam || isAiOff || isComplete || isTransfer;
   const scene = hideScene ? undefined : (
@@ -362,8 +402,18 @@ export function ConvexLensOpticalBenchLab() {
       }
       locked={predictionLocked && (isExperiment || isPredict)}
       needMore={predictNeedMore}
-      onOutcomeChange={setPredictOutcome}
-      onReasonChange={setPredictReason}
+      onOutcomeChange={(value) => {
+        setPredictOutcome(value);
+        if (activeExperiment) {
+          savePredictDraft(activeExperiment, value, predictReason);
+        }
+      }}
+      onReasonChange={(value) => {
+        setPredictReason(value);
+        if (activeExperiment) {
+          savePredictDraft(activeExperiment, predictOutcome, value);
+        }
+      }}
       onCommit={() => {
         if (!predictOutcome || predictReason.trim().length < 2) {
           setPredictNeedMore(true);
@@ -386,11 +436,11 @@ export function ConvexLensOpticalBenchLab() {
     <LensObserveTask
       selectedOptionIds={selectedOptionIds}
       onToggle={(optionId) => {
-        setSelectedOptionIds((current) =>
-          current.includes(optionId)
-            ? current.filter((item) => item !== optionId)
-            : [...current, optionId],
-        );
+        const next = selectedOptionIds.includes(optionId)
+          ? selectedOptionIds.filter((item) => item !== optionId)
+          : [...selectedOptionIds, optionId];
+        setSelectedOptionIds(next);
+        saveObserveDraft(next);
       }}
       onPlayDemo={markDemoWatched}
       onMoveScreen={() => setScreenAtImagePlane(!physicsState.screenAtImagePlane)}
@@ -408,7 +458,10 @@ export function ConvexLensOpticalBenchLab() {
   ) : isDescribe ? (
     <LensDescribeTask
       value={describe}
-      onChange={setDescribe}
+      onChange={(next) => {
+        setDescribe(next);
+        saveDescribeDraft(next);
+      }}
       onSubmit={() => saveDescription(describe)}
       needStructure={describeNeedStructure && !describeComplete}
       reviewOnly={revisiting}
@@ -434,7 +487,12 @@ export function ConvexLensOpticalBenchLab() {
         reflection={reflection}
         reflectionPrompt={lensReflectionPrompt(activeExperiment)}
         onRun={() => runExperiment(activeExperiment)}
-        onObservedChange={setObserved}
+        onObservedChange={(next) => {
+          setObserved(next);
+          if (activeExperiment) {
+            saveExperimentFormDraft(activeExperiment, next, comparison, reflection);
+          }
+        }}
         onSaveObserved={() => {
           if (!hasCompleteLensObservedResult(observed)) {
             setObservedNeedMore(true);
@@ -443,15 +501,24 @@ export function ConvexLensOpticalBenchLab() {
           setObservedNeedMore(false);
           saveObservedResult(activeExperiment, observed);
         }}
-        onComparisonChange={(value) =>
-          setComparison(value as "" | "same" | "different" | "partial")
-        }
+        onComparisonChange={(value) => {
+          const next = value as "" | "same" | "different" | "partial";
+          setComparison(next);
+          if (activeExperiment) {
+            saveExperimentFormDraft(activeExperiment, observed, next, reflection);
+          }
+        }}
         onSaveComparison={() => {
           if (comparison === "same" || comparison === "different" || comparison === "partial") {
             saveComparison(activeExperiment, comparison);
           }
         }}
-        onReflectionChange={setReflection}
+        onReflectionChange={(value) => {
+          setReflection(value);
+          if (activeExperiment) {
+            saveExperimentFormDraft(activeExperiment, observed, comparison, value);
+          }
+        }}
         onSaveReflection={() => {
           if (reflection.trim().length < 2) {
             return;
@@ -669,9 +736,17 @@ export function ConvexLensOpticalBenchLab() {
   ) : null;
 
   const frame = LENS_TASK_FRAMES[displayStage];
+  const helpIntents = availableLensHelpIntents(displayStage, {
+    constructionStep: modelDraft.constructionStep,
+  });
   const help = lensHelpState(session, displayStage);
+  const activeHelpIntent =
+    help.intentId && helpIntents.includes(help.intentId) ? help.intentId : "";
   const showHelp =
-    lensHelpAllowed(displayStage) && !revisiting && !authoritativeAiOff;
+    lensHelpAllowed(displayStage) &&
+    !revisiting &&
+    !authoritativeAiOff &&
+    helpIntents.length > 0;
   const framedTask = (
     <div className="space-y-5">
       {revisiting && viewingStage ? (
@@ -691,8 +766,11 @@ export function ConvexLensOpticalBenchLab() {
       {task}
       {showHelp ? (
         <LensHelpPanel
-          intentId={help.intentId}
-          prompts={help.intentId ? lensHelpPrompts(help.intentId, help.revealed) : []}
+          intents={helpIntents}
+          intentId={activeHelpIntent}
+          prompts={
+            activeHelpIntent ? lensHelpPrompts(activeHelpIntent, help.revealed) : []
+          }
           onSelectIntent={selectHelpIntent}
           onRevealNext={revealHelpNext}
         />
@@ -700,17 +778,10 @@ export function ConvexLensOpticalBenchLab() {
     </div>
   );
 
-  const tutorStudentText = isObserve
-    ? selectedOptionIds.join("，")
-    : isDescribe
-      ? describe.studentDescription
-      : isExplain
-        ? explain.studentExplanation
-        : isTransfer
-          ? transferDraft.studentExplanation
-          : isExam
-            ? examDraft.reasoning
-            : predictReason;
+  // Scene 07 pilot: LLM TutorPanel is intentionally not rendered until it can
+  // be bound to stage + substep + help intent + visible affordances.
+  // LensHelpPanel is the only learner-facing help entry. useTutor remains
+  // available for Scene 01–06 and is not deleted.
 
   return (
     <LearningShell
@@ -720,20 +791,7 @@ export function ConvexLensOpticalBenchLab() {
       progressStages={[...LENS_PHASE_STAGES]}
       scene={scene}
       task={framedTask}
-      tutor={
-        tutor.allowed &&
-        !authoritativeAiOff &&
-        !authoritativeComplete &&
-        !revisiting ? (
-          <TutorPanel
-            message={tutor.message}
-            loading={tutor.loading}
-            onAsk={() => {
-              void tutor.askTutor(tutorStudentText);
-            }}
-          />
-        ) : null
-      }
+      tutor={null}
       examNotice={
         displayStage === LearningStage.EXAM && !revisiting
           ? LENS_EXAM_COPY.notice

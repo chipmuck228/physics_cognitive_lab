@@ -11,6 +11,7 @@ import { lensFeedbackForFailureKind } from "@/lib/learning/lens-feedback";
 import {
   applyLensHelpIntent,
   applyLensHelpNext,
+  availableLensHelpIntents,
   lensHelpAllowed,
 } from "@/lib/learning/lens-help-intents";
 import {
@@ -25,9 +26,14 @@ import { evaluateLensObservation } from "@/lib/learning/lens-observe";
 import {
   applyLensGoBack,
   applyLensReturnToProgress,
+  applyLensReviewPhysics,
+  authoritativeLensPhysics,
   isLensRevisiting,
+  LENS_REVIEW_PHYSICS_KEY,
   LENS_VIEWING_STAGE_KEY,
   lensDisplayStage,
+  lensPreviewPhysics,
+  lensReviewPhysics,
 } from "@/lib/learning/lens-revisit";
 import { createSession } from "@/lib/learning/session";
 import {
@@ -184,6 +190,42 @@ describe("Scene 07 revisit navigation", () => {
     expect(loaded!.modelAttempts).toEqual(viewing.modelAttempts);
   });
 
+  it("MODEL → revisit OBSERVE keeps preview physics off the authoritative state", () => {
+    const model = lensSession(LearningStage.MODEL);
+    const beforePhysics = JSON.parse(JSON.stringify(model.physicsState));
+    const beforeEvidence = snapshotEvidence(model);
+    let viewing = model;
+    while (lensDisplayStage(viewing) !== LearningStage.OBSERVE) {
+      viewing = applyLensGoBack(viewing);
+    }
+    expect(viewing.stage).toBe(LearningStage.MODEL);
+    expect(lensDisplayStage(viewing)).toBe(LearningStage.OBSERVE);
+    const previewBefore = lensPreviewPhysics(viewing);
+    const moved = applyLensReviewPhysics(viewing, (state) => ({
+      ...state,
+      screenAtImagePlane: !state.screenAtImagePlane,
+    }));
+    const cycled = applyLensReviewPhysics(moved, (state) => ({
+      ...state,
+      objectStation: state.objectStation === "beyond-2f" ? "inside-f" : "beyond-2f",
+    }));
+    expect(cycled.physicsState).toEqual(beforePhysics);
+    expect(lensReviewPhysics(cycled)?.screenAtImagePlane).not.toBe(
+      previewBefore.screenAtImagePlane,
+    );
+    expect(lensReviewPhysics(cycled)?.objectStation).not.toBe(previewBefore.objectStation);
+    expect(snapshotEvidence(cycled)).toEqual({
+      ...beforeEvidence,
+      draft: cycled.sceneData.modelDraft,
+    });
+    const restored = applyLensReturnToProgress(cycled);
+    expect(restored.stage).toBe(LearningStage.MODEL);
+    expect(restored.physicsState).toEqual(beforePhysics);
+    expect(authoritativeLensPhysics(restored)).toEqual(authoritativeLensPhysics(model));
+    expect(restored.sceneData[LENS_REVIEW_PHYSICS_KEY]).toBeUndefined();
+    expect(snapshotEvidence(restored)).toEqual(beforeEvidence);
+  });
+
   it("does not add evidence or stage_entered while revisiting", () => {
     const viewing = applyLensGoBack(lensSession(LearningStage.MODEL));
     const again = applyLensGoBack(viewing);
@@ -259,6 +301,24 @@ describe("Scene 07 feedback and help", () => {
     const think = lensFeedbackForFailureKind("table-row-only", []);
     expect(think.kind).toBe("think_again");
     expect(think.message).not.toMatch(/选实际会聚/);
+  });
+
+  it("shows only task-visible help intents", () => {
+    expect(availableLensHelpIntents(LearningStage.OBSERVE)).toEqual([
+      "what-now",
+      "where-look",
+    ]);
+    expect(availableLensHelpIntents(LearningStage.OBSERVE)).not.toContain("how-rays");
+    expect(
+      availableLensHelpIntents(LearningStage.MODEL, { constructionStep: 2 }),
+    ).toContain("how-rays");
+    expect(
+      availableLensHelpIntents(LearningStage.MODEL, { constructionStep: 5 }),
+    ).toEqual(["how-image"]);
+    expect(availableLensHelpIntents(LearningStage.AI_OFF)).toEqual([]);
+    const observe = lensSession(LearningStage.OBSERVE);
+    observe.stage = LearningStage.OBSERVE;
+    expect(applyLensHelpIntent(observe, LearningStage.OBSERVE, "how-rays")).toBe(observe);
   });
 
   it("blocks help intents on AI_OFF", () => {

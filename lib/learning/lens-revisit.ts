@@ -1,7 +1,13 @@
 import { previousStage, stageIndex } from "@/lib/learning/state-machine";
+import {
+  createInitialConvexLensState,
+  isConvexLensSceneState,
+  type ConvexLensSceneState,
+} from "@/lib/physics/convex-lens-optical-bench";
 import { LearningStage, type LearningSession } from "@/types/learning";
 
 export const LENS_VIEWING_STAGE_KEY = "viewingStage";
+export const LENS_REVIEW_PHYSICS_KEY = "reviewPhysics";
 
 export function lensViewingStage(session: LearningSession): LearningStage | null {
   const value = session.sceneData[LENS_VIEWING_STAGE_KEY];
@@ -43,6 +49,36 @@ export function canLensGoBack(session: LearningSession): boolean {
   return previousStage(display) !== null && display !== LearningStage.ENTRY;
 }
 
+export function authoritativeLensPhysics(session: LearningSession): ConvexLensSceneState {
+  return isConvexLensSceneState(session.physicsState.state)
+    ? session.physicsState.state
+    : createInitialConvexLensState();
+}
+
+export function lensReviewPhysics(session: LearningSession): ConvexLensSceneState | null {
+  const raw = session.sceneData[LENS_REVIEW_PHYSICS_KEY];
+  return isConvexLensSceneState(raw) ? raw : null;
+}
+
+export function lensPreviewPhysics(session: LearningSession): ConvexLensSceneState {
+  if (isLensRevisiting(session)) {
+    return lensReviewPhysics(session) ?? authoritativeLensPhysics(session);
+  }
+  return authoritativeLensPhysics(session);
+}
+
+export function withLensReviewPhysics(
+  sceneData: Record<string, unknown>,
+  state: ConvexLensSceneState | null,
+): Record<string, unknown> {
+  if (!state) {
+    const next = { ...sceneData };
+    delete next[LENS_REVIEW_PHYSICS_KEY];
+    return next;
+  }
+  return { ...sceneData, [LENS_REVIEW_PHYSICS_KEY]: { ...state } };
+}
+
 export function applyLensGoBack(session: LearningSession): LearningSession {
   const display = lensDisplayStage(session);
   const target = previousStage(display);
@@ -52,9 +88,13 @@ export function applyLensGoBack(session: LearningSession): LearningSession {
   if (stageIndex(target) >= stageIndex(session.stage)) {
     return session;
   }
+  const viewingData = withLensViewingStage(session.sceneData, target);
+  const seeded = lensReviewPhysics({ ...session, sceneData: viewingData })
+    ? viewingData
+    : withLensReviewPhysics(viewingData, authoritativeLensPhysics(session));
   return {
     ...session,
-    sceneData: withLensViewingStage(session.sceneData, target),
+    sceneData: seeded,
   };
 }
 
@@ -64,7 +104,26 @@ export function applyLensReturnToProgress(session: LearningSession): LearningSes
   }
   return {
     ...session,
-    sceneData: withLensViewingStage(session.sceneData, null),
+    sceneData: withLensReviewPhysics(
+      withLensViewingStage(session.sceneData, null),
+      null,
+    ),
+  };
+}
+
+export function applyLensReviewPhysics(
+  session: LearningSession,
+  updater: (state: ConvexLensSceneState) => ConvexLensSceneState,
+): LearningSession {
+  if (!isLensRevisiting(session)) {
+    return session;
+  }
+  return {
+    ...session,
+    sceneData: withLensReviewPhysics(
+      session.sceneData,
+      updater(lensPreviewPhysics(session)),
+    ),
   };
 }
 

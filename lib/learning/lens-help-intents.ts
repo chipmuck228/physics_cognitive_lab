@@ -5,12 +5,20 @@ export const LENS_HELP_KEY = "helpByStage";
 export const LENS_HELP_INTENTS = [
   { id: "what-now", label: "我不知道现在要做什么" },
   { id: "where-look", label: "我不知道该看哪里" },
+  { id: "how-distinguish", label: "我不知道怎么把这些东西分开" },
+  { id: "what-compare", label: "我不知道该比较什么" },
+  { id: "how-reason", label: "我不知道理由怎么写" },
   { id: "how-rays", label: "我不知道光线怎么走" },
+  { id: "how-meeting", label: "我不知道光线怎样相遇" },
   { id: "how-image", label: "我不知道怎么判断像" },
   { id: "how-say", label: "我不知道这句话怎么说" },
 ] as const;
 
 export type LensHelpIntentId = (typeof LENS_HELP_INTENTS)[number]["id"];
+
+export interface LensHelpContext {
+  constructionStep?: number;
+}
 
 const ATTENTION = "先停一下，只看眼前这一步，不要一次想完整张表。";
 const COMPARE = "把两个东西并排放：你刚改的，和你看见的。";
@@ -30,11 +38,35 @@ const LADDERS: Record<LensHelpIntentId, readonly string[]> = {
     "F 和 2F 是位置标志，不是像，也不是光屏。",
     "先指给自己看：物体在哪，光屏在哪，再写。",
   ],
+  "how-distinguish": [
+    "先对着光具座指：左边是物体，中间是透镜。",
+    "把 F / 2F 和像、光屏并排放：它们是不是同一件东西？",
+    "先问：你指的是装置上的哪一块？",
+    "写的时候分别说出物体、透镜、像和光屏。",
+  ],
+  "what-compare": [
+    "先只看你刚改的那一项。",
+    COMPARE,
+    "先问：变的是位置，还是光屏上的画面？",
+    "再说相同的地方和不同的地方。",
+  ],
+  "how-reason": [
+    "先写你准备改什么，或你看见什么。",
+    "不要先跳到整张成像表。",
+    "先问：物体相对 F / 2F 换了没有？",
+    "再用“所以”接上你预计会看见的。",
+  ],
   "how-rays": [
     "先选一条你能说清楚的光线，不要同时想三条。",
     "到达透镜前怎么走，和过透镜后怎么走，要说的是同一条光线。",
     QUESTION,
     "实线表示光真的这样走；虚线只表示把光线反方向延长。",
+  ],
+  "how-meeting": [
+    "先看两条光线过透镜以后是聚到一起，还是散开。",
+    "把“真的交在一点”和“只有延长线相交”并排放。",
+    "先问：交点在光线前进的方向上吗？",
+    "用自己的话写会聚方式，不要只背表。",
   ],
   "how-image": [
     "先看两条光线过透镜以后是聚到一起，还是散开。",
@@ -56,6 +88,63 @@ export function lensHelpAllowed(stage: LearningStage): boolean {
     stage !== LearningStage.COMPLETE &&
     stage !== LearningStage.ENTRY
   );
+}
+
+export function availableLensHelpIntents(
+  stage: LearningStage,
+  context: LensHelpContext = {},
+): readonly LensHelpIntentId[] {
+  if (!lensHelpAllowed(stage)) {
+    return [];
+  }
+  if (stage === LearningStage.OBSERVE) {
+    return ["what-now", "where-look"];
+  }
+  if (stage === LearningStage.DESCRIBE) {
+    return ["what-now", "how-distinguish", "how-say"];
+  }
+  if (stage === LearningStage.PREDICT) {
+    return ["what-now", "what-compare", "how-reason"];
+  }
+  if (stage === LearningStage.EXPERIMENT) {
+    return ["what-now", "where-look", "what-compare"];
+  }
+  if (stage === LearningStage.EXPLAIN) {
+    return ["what-now", "how-meeting", "how-say"];
+  }
+  if (stage === LearningStage.MODEL) {
+    return modelHelpIntents(context.constructionStep ?? 1);
+  }
+  if (stage === LearningStage.TRANSFER) {
+    return ["what-now", "how-image", "how-say"];
+  }
+  if (stage === LearningStage.EXAM) {
+    return ["what-now", "how-reason"];
+  }
+  return [];
+}
+
+function modelHelpIntents(step: number): readonly LensHelpIntentId[] {
+  if (step <= 1) {
+    return ["what-now", "where-look"];
+  }
+  if (step === 2 || step === 3) {
+    return ["what-now", "how-rays"];
+  }
+  if (step === 4) {
+    return ["how-meeting"];
+  }
+  if (step === 5) {
+    return ["how-image"];
+  }
+  if (step === 6) {
+    return ["how-say"];
+  }
+  return ["what-now"];
+}
+
+export function lensHelpIntentLabel(intentId: LensHelpIntentId): string {
+  return LENS_HELP_INTENTS.find((item) => item.id === intentId)?.label ?? intentId;
 }
 
 export function lensHelpState(
@@ -108,8 +197,9 @@ export function applyLensHelpIntent(
   session: LearningSession,
   stage: LearningStage,
   intentId: LensHelpIntentId,
+  context: LensHelpContext = {},
 ): LearningSession {
-  if (!lensHelpAllowed(stage)) {
+  if (!availableLensHelpIntents(stage, context).includes(intentId)) {
     return session;
   }
   return {
@@ -124,12 +214,16 @@ export function applyLensHelpIntent(
 export function applyLensHelpNext(
   session: LearningSession,
   stage: LearningStage,
+  context: LensHelpContext = {},
 ): LearningSession {
   if (!lensHelpAllowed(stage)) {
     return session;
   }
   const current = lensHelpState(session, stage);
   if (!current.intentId) {
+    return session;
+  }
+  if (!availableLensHelpIntents(stage, context).includes(current.intentId)) {
     return session;
   }
   if (!nextLensHelpPrompt(current.intentId, current.revealed)) {

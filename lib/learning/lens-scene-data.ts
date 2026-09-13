@@ -1,5 +1,9 @@
 import type { LensDescribeInput } from "@/lib/learning/lens-describe";
 import {
+  asLensObservedResult,
+  type LensObservedResult,
+} from "@/lib/learning/lens-experiment";
+import {
   LENS_AI_OFF_DRAFT_KIND,
   emptyLensAiOffDraft,
   type LensAiOffDraft,
@@ -22,6 +26,9 @@ import { emptyLensExplainInput, type LensExplainInput } from "@/lib/learning/len
 import type { LearningSession } from "@/types/learning";
 
 export const LENS_WATCHED_DEMO_KEY = "watchedObserveDemo";
+export const LENS_OBSERVE_DRAFT_KEY = "observeDraft";
+export const LENS_PREDICT_DRAFT_KEY = "predictDraft";
+export const LENS_EXPERIMENT_FORM_KEY = "experimentFormDraft";
 export const LENS_DESCRIBE_DRAFT_KEY = "describeDraft";
 export const LENS_EXPLAIN_DRAFT_KEY = "explainDraft";
 export const LENS_MODEL_DRAFT_KEY = "modelDraft";
@@ -35,6 +42,90 @@ export function emptyLensSceneData(): Record<string, unknown> {
 
 export function lensWatchedObserveDemo(session: LearningSession): boolean {
   return session.sceneData[LENS_WATCHED_DEMO_KEY] === true;
+}
+
+export function lensObserveDraft(session: LearningSession): string[] | null {
+  const draft = session.sceneData[LENS_OBSERVE_DRAFT_KEY];
+  if (!Array.isArray(draft)) {
+    return null;
+  }
+  return draft.filter((item): item is string => typeof item === "string");
+}
+
+export function withLensObserveDraft(
+  sceneData: Record<string, unknown>,
+  selectedOptionIds: string[],
+): Record<string, unknown> {
+  return { ...sceneData, [LENS_OBSERVE_DRAFT_KEY]: selectedOptionIds };
+}
+
+export function lensPredictDraft(
+  session: LearningSession,
+): { experimentId: string; outcome: string; reason: string } | null {
+  const draft = session.sceneData[LENS_PREDICT_DRAFT_KEY];
+  if (!draft || typeof draft !== "object") {
+    return null;
+  }
+  const record = draft as Record<string, unknown>;
+  if (typeof record.experimentId !== "string") {
+    return null;
+  }
+  return {
+    experimentId: record.experimentId,
+    outcome: typeof record.outcome === "string" ? record.outcome : "",
+    reason: typeof record.reason === "string" ? record.reason : "",
+  };
+}
+
+export function withLensPredictDraft(
+  sceneData: Record<string, unknown>,
+  draft: { experimentId: string; outcome: string; reason: string },
+): Record<string, unknown> {
+  return { ...sceneData, [LENS_PREDICT_DRAFT_KEY]: draft };
+}
+
+export function lensExperimentFormDraft(session: LearningSession): {
+  experimentId: string;
+  observed: LensObservedResult;
+  comparison: "" | "same" | "different" | "partial";
+  reflection: string;
+} | null {
+  const draft = session.sceneData[LENS_EXPERIMENT_FORM_KEY];
+  if (!draft || typeof draft !== "object") {
+    return null;
+  }
+  const record = draft as Record<string, unknown>;
+  if (typeof record.experimentId !== "string") {
+    return null;
+  }
+  const comparison =
+    record.comparison === "same" ||
+    record.comparison === "different" ||
+    record.comparison === "partial"
+      ? record.comparison
+      : "";
+  return {
+    experimentId: record.experimentId,
+    observed: asLensObservedResult(
+      record.observed && typeof record.observed === "object"
+        ? record.observed
+        : undefined,
+    ),
+    comparison,
+    reflection: typeof record.reflection === "string" ? record.reflection : "",
+  };
+}
+
+export function withLensExperimentFormDraft(
+  sceneData: Record<string, unknown>,
+  draft: {
+    experimentId: string;
+    observed: LensObservedResult;
+    comparison: "" | "same" | "different" | "partial";
+    reflection: string;
+  },
+): Record<string, unknown> {
+  return { ...sceneData, [LENS_EXPERIMENT_FORM_KEY]: draft };
 }
 
 export function withLensWatchedDemo(
