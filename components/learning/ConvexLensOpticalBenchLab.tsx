@@ -82,6 +82,7 @@ import {
 import {
   emptyLensModelDraft,
   lensModelMissingLabels,
+  lensModelRepairStep,
   visibleLensStudentRays,
 } from "@/lib/learning/lens-model";
 import {
@@ -647,6 +648,11 @@ export function ConvexLensOpticalBenchLab() {
   ) : isModel ? (
     <LensRayConstruction
       draft={modelDraft}
+      repairStep={
+        latestModel && !latestModel.correctStructure
+          ? lensModelRepairStep(latestModel.failureKinds?.[0], modelDraft)
+          : null
+      }
       feedback={
         latestModel && !latestModel.correctStructure
           ? lensFeedbackForFailureKind(

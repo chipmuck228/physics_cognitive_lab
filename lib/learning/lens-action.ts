@@ -45,6 +45,7 @@ import {
   buildLensModelAttempt,
   draftToConvexLensAttempt,
   lensModelMissingLabels,
+  lensModelRepairStep,
   type LensModelDraft,
 } from "@/lib/learning/lens-model";
 import {
@@ -607,6 +608,7 @@ export function applyLensModelSubmit(
   };
   if (!attempt.correctStructure) {
     const incomplete = !draftToConvexLensAttempt(draft);
+    const repairStep = lensModelRepairStep(attempt.failureKinds?.[0], draft);
     if (incomplete || attempt.failureKinds?.includes("missing-required-construction-pair")) {
       return {
         session: next,
@@ -616,6 +618,7 @@ export function applyLensModelSubmit(
             attempt.failureKinds?.[0],
             lensModelMissingLabels(draft),
           ).message,
+          repairStep,
         },
       };
     }
@@ -624,6 +627,7 @@ export function applyLensModelSubmit(
       outcome: {
         kind: "rejected",
         message: lensFeedbackForFailureKind(attempt.failureKinds?.[0], []).message,
+        repairStep,
       },
     };
   }
@@ -633,6 +637,7 @@ export function applyLensModelSubmit(
     outcome: {
       kind: "committed",
       advanced: advanced.stage !== session.stage,
+      message: LENS_COPY.modelAccepted,
     },
   };
 }

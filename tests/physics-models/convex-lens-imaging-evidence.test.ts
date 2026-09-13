@@ -59,7 +59,7 @@ function atFAttempt(
     meetingMode: "no-finite-meeting",
     image: officialImageConsequence("at-f"),
     modelReasoning:
-      "物体正好在焦点上，出射光线平行，有限远处不相交，所以不成完整的像。",
+      "物体正好在焦点上时，折射后的光线彼此平行，有限远处不相交，所以光屏怎么移动都接不到清晰像。",
     ...overrides,
   });
 }
@@ -99,7 +99,7 @@ const boundaryPass: ConvexLensAiOffAttempt = {
   meetingMode: "backward-extension",
   image: officialImageConsequence("inside-f"),
   preCommitReasoning:
-    "邮票在焦点以内，光线散开，只有反向延长线相交，所以是虚像，白纸接不到。物体正好在焦点上时，出射光线平行，有限远处不成完整的像。",
+    "邮票在焦点以内，光线散开，只有反向延长线相交，所以是虚像，白纸接不到。物体正好在焦点上时，折射后的光线彼此平行，有限远处不相交，所以光屏怎么移动都接不到清晰像。",
   judgmentId: "virtual-not-on-screen-and-f-is-limit",
   llmUsed: false,
 };

@@ -21,7 +21,6 @@ import {
   applyLensCoverLens,
   applyLensPredictionCommit,
   applyLensReflectionSave,
-  applyLensRunExperiment,
   applyLensScreenChange,
   applyLensTransferSubmit,
   type LensExperimentForm,
@@ -216,10 +215,6 @@ export function useConvexLensLearningSession() {
       ),
     [],
   );
-
-  const runExperiment = useCallback((experimentId: LensExperimentId): LensDomainOutcome => {
-    return captureLensAction((current) => applyLensRunExperiment(current, experimentId));
-  }, []);
 
   const coverLens = useCallback((): LensDomainOutcome => {
     return captureLensAction((current) => applyLensCoverLens(current));
@@ -423,7 +418,6 @@ export function useConvexLensLearningSession() {
     saveDescribeDraft,
     savePredictDraft,
     commitPrediction,
-    runExperiment,
     coverLens,
     acknowledgeNextTrial,
     saveExperimentFormDraft,

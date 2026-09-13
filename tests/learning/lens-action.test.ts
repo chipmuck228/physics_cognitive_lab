@@ -255,6 +255,8 @@ describe("Scene 07 authoritative stage actions", () => {
       meetingMode: "",
     });
     expect(result.outcome.kind).toBe("committed");
+    expect(result.outcome.kind === "committed" && result.outcome.message).toMatch(/新情境/);
+    expect(result.session.stage).toBe(LearningStage.TRANSFER);
     expect(incomplete.outcome.kind).toBe("missing");
     expect(incomplete.session.modelAttempts[0]?.correctStructure).toBe(false);
     expect(incomplete.session.stage).toBe(LearningStage.MODEL);
@@ -268,8 +270,15 @@ describe("Scene 07 authoritative stage actions", () => {
     const result = applyLensModelSubmit(stageSession(LearningStage.MODEL), draft);
     expect(result.session.modelAttempts[0]?.correctStructure).toBe(false);
     expect(result.outcome.kind).toBe("rejected");
+    expect(result.outcome.kind === "rejected" && result.outcome.repairStep).toBe(4);
     expect(presentLensActionResponse(result.outcome)).toBe("rejected");
     expect(result.session.stage).toBe(LearningStage.MODEL);
+    const sizeFail = applyLensModelSubmit(stageSession(LearningStage.MODEL), {
+      ...completeLensModelDraft("beyond-2f"),
+      size: "enlarged",
+    });
+    expect(sizeFail.outcome.kind).toBe("rejected");
+    expect(sizeFail.outcome.kind === "rejected" && sizeFail.outcome.repairStep).toBe(5);
   });
 
   it("TRANSFER incomplete is missing", () => {

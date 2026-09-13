@@ -71,7 +71,8 @@ export function lensFeedbackForFailureKind(
   if (failureKind === "u-equals-f-as-ordinary-image") {
     return {
       kind: "think_again",
-      message: "物体正好在焦点上时，先问有限远处有没有交点，再谈像。",
+      message:
+        "物体正好在焦点上时，先看折射后的光线是不是彼此平行、会不会在有限位置会聚，再谈像。不要把它说成普通的清晰成像。",
     };
   }
   if (

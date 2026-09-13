@@ -15,12 +15,13 @@ import {
   LENS_SIDE_OPTIONS,
   LENS_SIZE_OPTIONS,
   LENS_STATION_OPTIONS,
+  lensChoiceLabel,
+  lensModelRepairLabel,
 } from "@/lib/content/convex-lens-optical-bench";
 import type { LensFeedback } from "@/lib/learning/lens-feedback";
 import {
   LENS_MODEL_STEP_COUNT,
-  lensModelStepComplete,
-  lensModelStepMissingReason,
+  evaluateLensModelStep,
   type LensModelDraft,
   type LensRayDraft,
 } from "@/lib/learning/lens-model";
@@ -30,6 +31,7 @@ interface LensRayConstructionProps {
   onChange: (next: LensModelDraft) => void;
   onSubmit: () => void;
   feedback?: LensFeedback | null;
+  repairStep?: number | null;
   reviewOnly?: boolean;
 }
 
@@ -48,13 +50,20 @@ export function LensRayConstruction({
   onChange,
   onSubmit,
   feedback,
+  repairStep = null,
   reviewOnly = false,
 }: LensRayConstructionProps) {
   const step = Math.min(Math.max(draft.constructionStep || 1, 1), LENS_MODEL_STEP_COUNT);
-  const canAdvance = lensModelStepComplete(draft, step);
-  const nextBlockedReason = lensModelStepMissingReason(draft, step);
+  const stepCheck = evaluateLensModelStep(draft, step);
+  const canAdvance = stepCheck.status === "ready";
+  const nextBlockedReason = stepCheck.status === "ready" ? null : stepCheck.message;
   return (
-    <div className="space-y-4" data-testid="lens-ray-construction" data-step={step}>
+    <div
+      className="space-y-4"
+      data-testid="lens-ray-construction"
+      data-step={step}
+      data-step-status={stepCheck.status}
+    >
       <p className="text-sm text-[var(--ink-muted)]">
         {`第 ${step} 步 / 共 ${LENS_MODEL_STEP_COUNT} 步：${STEP_TITLES[step - 1]}`}
       </p>
@@ -128,7 +137,7 @@ export function LensRayConstruction({
             />
             <QuestionGroup
               id="lens-model-nature"
-              question="这是实像、虚像，还是没有有限远的像？"
+              question="这是实像、虚像，还是有限远处不成普通清晰像？"
               value={draft.nature}
               onChange={(nature) => onChange({ ...draft, nature })}
               options={[...LENS_NATURE_OPTIONS]}
@@ -174,9 +183,30 @@ export function LensRayConstruction({
         {step === 7 ? (
           <div className="space-y-2 text-sm" data-testid="lens-model-review">
             <p>检查你刚才建构的关系，再提交。这里仍然没有已经画好的标准图。</p>
-            <p>{`物体位置：${draft.objectStation || "还没选"}`}</p>
-            <p>{`会聚方式：${draft.meetingMode || "还没选"}`}</p>
-            <p>{draft.studentReasoning || "还没有写下联系。"}</p>
+            <p data-testid="lens-model-review-station">
+              {`物体位置：${lensChoiceLabel(LENS_STATION_OPTIONS, draft.objectStation) || "还没选"}`}
+            </p>
+            <p data-testid="lens-model-review-ray-a">
+              {`第一条光线：${summarizeRay(draft.rayA)}`}
+            </p>
+            <p data-testid="lens-model-review-ray-b">
+              {`第二条光线：${summarizeRay(draft.rayB)}`}
+            </p>
+            <p data-testid="lens-model-review-meeting">
+              {`会聚方式：${lensChoiceLabel(LENS_MEETING_OPTIONS, draft.meetingMode) || "还没选"}`}
+            </p>
+            <p data-testid="lens-model-review-image">
+              {`像的后果：${[
+                lensChoiceLabel(LENS_SIDE_OPTIONS, draft.side),
+                lensChoiceLabel(LENS_NATURE_OPTIONS, draft.nature),
+                lensChoiceLabel(LENS_ORIENTATION_OPTIONS, draft.orientation),
+                lensChoiceLabel(LENS_SIZE_OPTIONS, draft.size),
+                lensChoiceLabel(LENS_RECEIVE_OPTIONS, draft.screenReceivable),
+              ]
+                .filter(Boolean)
+                .join("；") || "还没选"}`}
+            </p>
+            <p data-testid="lens-model-review-bind">{draft.studentReasoning || "还没有写下联系。"}</p>
           </div>
         ) : null}
         </fieldset>
@@ -203,7 +233,10 @@ export function LensRayConstruction({
             {step < LENS_MODEL_STEP_COUNT ? (
               <div className="flex flex-col items-end gap-2">
                 {!canAdvance && nextBlockedReason ? (
-                  <ValidationMessage kind="info" testId="lens-model-next-reason">
+                  <ValidationMessage
+                    kind={stepCheck.status === "inconsistent" ? "incorrect" : "info"}
+                    testId="lens-model-next-reason"
+                  >
                     {nextBlockedReason}
                   </ValidationMessage>
                 ) : null}
@@ -216,13 +249,42 @@ export function LensRayConstruction({
                 </Button>
               </div>
             ) : (
-              <Button onClick={onSubmit}>{LENS_COPY.modelSubmit}</Button>
+              <div className="flex flex-col items-end gap-2">
+                {feedback && repairStep ? (
+                  <div className="space-y-2 text-right" data-testid="lens-model-repair-panel">
+                    <p className="text-sm font-medium">{LENS_COPY.modelCannotSubmit}</p>
+                    <Button
+                      variant="secondary"
+                      onClick={() => onChange({ ...draft, constructionStep: repairStep })}
+                      data-testid="lens-model-repair"
+                      data-repair-step={String(repairStep)}
+                    >
+                      {lensModelRepairLabel(repairStep)}
+                    </Button>
+                  </div>
+                ) : null}
+                <Button onClick={onSubmit} data-testid="lens-model-submit">
+                  {LENS_COPY.modelSubmit}
+                </Button>
+              </div>
             )}
           </div>
         )}
       </Card>
     </div>
   );
+}
+
+function summarizeRay(ray: LensRayDraft): string {
+  if (!ray.kind || !ray.beforeLens || !ray.afterLens || !ray.incidentPath) {
+    return "还没装完";
+  }
+  return [
+    lensChoiceLabel(LENS_RAY_KIND_OPTIONS, ray.kind),
+    lensChoiceLabel(LENS_INCIDENT_OPTIONS, ray.incidentPath),
+    lensChoiceLabel(LENS_BEFORE_OPTIONS, ray.beforeLens),
+    lensChoiceLabel(LENS_AFTER_OPTIONS, ray.afterLens),
+  ].join("；");
 }
 
 function RayEditor({

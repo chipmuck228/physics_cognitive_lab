@@ -72,6 +72,8 @@ export const LENS_COPY = {
   explainNeedMore: "先选出一段会聚或接收关系，再用自己的话写。只背“2F 外倒立缩小实像”还不够。",
   explainSubmit: "记下我的说明",
   modelSubmit: "提交模型",
+  modelCannotSubmit: "模型还不能提交",
+  modelAccepted: "模型已经记下，可以看新情境。",
   modelFrozenCaption: "这是你正在建构的光路，不是一张已经画好的标准图。",
   transferSubmit: "检查迁移",
   transferOwnWords: "用自己的话说明这个新情境里，物体相对焦点在哪里、光线怎样会聚。",
@@ -274,13 +276,13 @@ export const LENS_INCIDENT_OPTIONS = [
 export const LENS_SIDE_OPTIONS = [
   { value: "other-side", label: "像在透镜另一侧" },
   { value: "same-side", label: "像和物体在同一侧" },
-  { value: "none", label: "有限远处没有像" },
+  { value: "none", label: "有限远处没有普通清晰像" },
 ] as const;
 
 export const LENS_NATURE_OPTIONS = [
   { value: "real", label: "实像" },
   { value: "virtual", label: "虚像" },
-  { value: "none", label: "不成有限远的像" },
+  { value: "none", label: "有限远处不成普通清晰像" },
 ] as const;
 
 export const LENS_ORIENTATION_OPTIONS = [
@@ -304,7 +306,7 @@ export const LENS_RECEIVE_OPTIONS = [
 export const LENS_EXPLAIN_MEETING = [
   { value: "actual-convergence", label: "有的位置上，光线会真正交在一起" },
   { value: "backward-extension", label: "有的位置上，只有反向延长线相交" },
-  { value: "no-finite-meeting", label: "物体正好在焦点上时，有限远处不相交" },
+  { value: "no-finite-meeting", label: "物体正好在焦点上时，折射后光线平行，有限远处不相交" },
   { value: "slogan-only", label: "2F 外倒立缩小实像" },
 ] as const;
 
@@ -369,7 +371,7 @@ export function lensPredictQuestion(id: LensExperimentId): string {
     return "同一块透镜，物体从 2F 以外移到 F 与 2F 之间。你预计像和光屏会怎样？";
   }
   if (id === LENS_EXPERIMENT_B) {
-    return "物体正好放在焦点上。无论怎么移动光屏，你预计能不能接到清晰像？";
+    return "物体正好放在焦点上。折射后的光线还会在有限位置会聚吗？光屏怎么移动，你预计能不能接到清晰像？";
   }
   if (id === LENS_EXPERIMENT_C) {
     return "物体放到焦点以内。光屏还能不能接到像？透过透镜看会怎样？";
@@ -403,7 +405,7 @@ export function lensReflectionPrompt(id: LensExperimentId): string {
     return "这次让你看清了什么？像变大变远，是因为你移动了光屏，还是因为物体更靠近焦点？";
   }
   if (id === LENS_EXPERIMENT_B) {
-    return "有限远处有没有交点？不要把它说成又一种普通成像。";
+    return "折射后的光线还彼此平行吗？有限远处有没有交点？不要把它说成又一种普通成像。可以理解为像在无限远处，但光屏接不到清晰像。";
   }
   if (id === LENS_EXPERIMENT_C) {
     return "光屏接不到，和透过透镜能看见，是不是一回事？";
@@ -422,7 +424,7 @@ export const LENS_OBSERVED_FIELDS = {
     { value: "smaller", label: "看见的像更小" },
     { value: "whole-dimmer", label: "整幅像还在，通常更暗" },
     { value: "half-gone", label: "像少掉了一半" },
-    { value: "no-finite", label: "有限远处没有完整的像" },
+    { value: "no-finite", label: "折射后光线平行，有限远处没有完整清晰的像" },
   ],
 } as const;
 
@@ -431,5 +433,16 @@ export function lensObservedLabel(
   value: string,
 ): string {
   const options = LENS_OBSERVED_FIELDS[field];
+  return options.find((option) => option.value === value)?.label ?? value;
+}
+
+export function lensModelRepairLabel(step: number): string {
+  return `回到第 ${step} 步修改`;
+}
+
+export function lensChoiceLabel(
+  options: ReadonlyArray<{ value: string; label: string }>,
+  value: string,
+): string {
   return options.find((option) => option.value === value)?.label ?? value;
 }

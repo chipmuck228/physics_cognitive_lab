@@ -161,7 +161,7 @@ Missing complete-trial pieces: exact missing list, never generic “不能继续
 | Field | Value |
 |---|---|
 | Learner question | 物体正好放在焦点上。光屏还能接到清晰像吗？ |
-| Learner goal | 自己把物体放到焦点上，看有限远处成不成像 |
+| Learner goal | 自己把物体放到焦点上，看有限远处能不能接到清晰像 |
 | Visible controls | station hits; no screen; no cover |
 | Allowed action | move-object → `at-f` |
 | Starting state | trial 1 after-state (`between-f-and-2f`) |
@@ -249,7 +249,9 @@ Official rays stay hidden.
 | 6 | 会聚方式怎样决定像？ | textarea | author bind | 还需要用一句话写出为什么会聚方式会带来这样的像。 |
 | 7 | 检查后再提交 | 提交模型 | submit | evaluator missing / rejected copy; no internals |
 
-Disabled 下一步 must show the missing-action reason. Official image / official rays stay hidden. Learner-ray projection remains canonical.
+Disabled 下一步 must show the missing-action **or inconsistency** reason. Official image / official rays stay hidden. Learner-ray projection remains canonical.
+
+Follow-up: each MODEL step uses Scene07-local `evaluateLensModelStep`. Final submit still uses the construction evaluator. Rejection shows `模型还不能提交` and `回到第 N 步修改`. Trial 4 must render `lens-partial-cover` on the lens when `lensPartiallyCovered`.
 
 ---
 

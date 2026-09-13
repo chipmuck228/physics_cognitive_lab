@@ -53,7 +53,7 @@ test.describe("Scene 07 complete loop", () => {
       predictOutcome: "光屏接不到清晰像",
       reason: "物体正好在焦点上，我预计有限远处接不到清晰像。",
       screen: "怎么移光屏都接不到",
-      sizeOrCover: "有限远处没有完整的像",
+      sizeOrCover: "有限远处没有完整清晰的像",
       comparison: "基本一样",
       reflection: "有限远处不相交，不要把它说成又一种普通成像。",
     });

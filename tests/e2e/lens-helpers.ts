@@ -118,7 +118,23 @@ export async function completeLensExperimentCycle(
 export async function performVisibleTrialIntervention(page: Page) {
   const cover = page.getByTestId("lens-cover-lens");
   if (await cover.isVisible().catch(() => false)) {
+    await expect(page.getByTestId("lens-partial-cover")).toHaveCount(0);
     await cover.click();
+    await expect(page.getByTestId("lens-partial-cover")).toBeVisible();
+    await expect(page.getByTestId("convex-lens-optical-bench")).toHaveAttribute(
+      "data-lens-partially-covered",
+      "true",
+    );
+    await expect(page.getByTestId("convex-lens-optical-bench")).toHaveAttribute(
+      "data-cover-complete",
+      "true",
+    );
+    await expect(page.getByTestId("convex-lens-optical-bench")).toHaveAttribute(
+      "data-cover-brightness",
+      "reduced",
+    );
+    await expect(page.getByTestId("optical-image")).toBeVisible();
+    await expect(page.getByTestId("convex-lens")).toBeAttached();
     return;
   }
   const experiment = await page.getByTestId("lens-experiment-task").getAttribute("data-experiment");
@@ -147,6 +163,46 @@ export async function completeLensExplain(page: Page) {
   await expect(
     page.getByRole("heading", { name: lensStageHeading(LearningStage.MODEL) }),
   ).toBeVisible();
+}
+
+export async function reachLensModel(page: Page) {
+  await openLensLab(page);
+  await startLensLesson(page);
+  await completeLensObserve(page);
+  await completeLensDescribe(page);
+  await completeLensPredictA(page);
+  await completeLensExperimentCycle(page, {
+    screen: "光屏接到清晰像",
+    sizeOrCover: "看见的像更大",
+    comparison: "基本一样",
+    reflection: "物体更靠近焦点时，像变大变远，不是光屏在制造像。",
+  });
+  await completeLensExperimentCycle(page, {
+    predictOutcome: "光屏接不到清晰像",
+    reason: "物体正好在焦点上，我预计有限远处接不到清晰像。",
+    screen: "怎么移光屏都接不到",
+    sizeOrCover: "有限远处没有完整清晰的像",
+    comparison: "基本一样",
+    reflection: "有限远处不相交，不要把它说成又一种普通成像。",
+  });
+  await completeLensExperimentCycle(page, {
+    predictOutcome: "光屏接不到清晰像",
+    reason: "物体在焦点以内，我预计光屏接不到。",
+    screen: "怎么移光屏都接不到",
+    sizeOrCover: "看见的像更大",
+    comparison: "基本一样",
+    reflection: "焦点以内只有反向延长线相交，光屏接不到虚像。",
+  });
+  await completeLensExperimentCycle(page, {
+    predictOutcome: "还能接到实像，像会更大、更远",
+    reason: "我预计整幅像还在，只是可能更暗。",
+    screen: "光屏接到清晰像",
+    sizeOrCover: "整幅像还在，通常更暗",
+    comparison: "基本一样",
+    reflection: "透镜不是把像按上下拼起来的，整幅像还在。",
+  });
+  await completeLensExplain(page);
+  await expect(page.getByTestId("lens-ray-construction")).toBeVisible();
 }
 
 export async function completeLensModel(page: Page) {
@@ -185,7 +241,7 @@ export async function completeLensModel(page: Page) {
   ).toBeVisible();
 }
 
-async function fillOneRay(
+export async function fillOneRay(
   page: Page,
   prefix: string,
   labels: { kind: string; incident: string; before: string; after: string },
@@ -304,7 +360,7 @@ export async function completeLensAiOff(page: Page) {
     } else {
       await fillImagingStructure(page, "inside-f", "lens-ai-off");
       await page.getByTestId("lens-ai-off-reasoning").fill(
-        "邮票在焦点以内，光线散开，只有反向延长线相交，所以是虚像，白纸接不到。物体正好在焦点上时，出射光线平行，有限远处不成完整的像。",
+        "邮票在焦点以内，光线散开，只有反向延长线相交，所以是虚像，白纸接不到。物体正好在焦点上时，折射后的光线彼此平行，有限远处不相交，所以光屏怎么移动都接不到清晰像。",
       );
     }
     await page

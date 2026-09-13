@@ -13,8 +13,8 @@ export type LensActionResponseClass =
 export type LensDomainOutcome =
   | { kind: "physics-applied"; review: boolean; message?: string }
   | { kind: "committed"; advanced?: boolean; message?: string }
-  | { kind: "rejected"; missing?: boolean; message?: string }
-  | { kind: "missing"; message?: string }
+  | { kind: "rejected"; missing?: boolean; message?: string; repairStep?: number }
+  | { kind: "missing"; message?: string; repairStep?: number }
   | { kind: "blocked"; message?: string }
   | { kind: "loading"; message?: string }
   | { kind: "system-error"; message?: string }

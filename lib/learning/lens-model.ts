@@ -1,14 +1,18 @@
 import {
+  analyzeConvexLensAuthored,
   evaluateConvexLensModelConstruction,
+  isCanonicalRayGeometricallyCoherent,
+  officialImageConsequence,
+  officialMeetingMode,
   twoStandardRays,
   type CanonicalRayChoice,
   type ConvexLensModelAttempt,
   type ImageConsequence,
   type MeetingMode,
 } from "@/content/physics-models/convex-lens-imaging/construction";
-import { officialImageConsequence } from "@/content/physics-models/convex-lens-imaging/construction";
 import { studentUiFeedback, type StudentUiFeedback } from "@/lib/learning/student-ui-feedback";
 import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
+import { isObjectStation } from "@/lib/physics/convex-lens-optical-bench";
 import type { ModelAttempt } from "@/types/learning";
 
 export const LENS_MODEL_DRAFT_KIND = "lens-model-draft";
@@ -244,13 +248,13 @@ export function summarizeLensModelAttempt(attempt: ModelAttempt): string {
     return "建构必须包含平行主光轴和过光心这两条光线。可选焦点光线不能代替它们。";
   }
   if (kinds.includes("geometrically-incoherent-rays")) {
-    return "光线名字和走法要一致。平行主光轴的光线过另一侧焦点；过光心的光线方向不变。";
+    return "光线名字和走法要一致。再检查透镜前和透镜后的走法，是不是和这条光线的名字对得上。";
   }
   if (kinds.includes("station-impossible-ray")) {
     return "过近侧焦点的第三条光线要符合当前物距。焦点以内不能画成实际穿过近侧焦点。";
   }
   if (kinds.includes("u-equals-f-as-ordinary-image")) {
-    return "物体正好在焦点上时，有限远处不成完整的像。";
+    return "物体正好在焦点上时，折射后的光线彼此平行，不会在有限位置会聚，所以光屏怎么移动都接不到清晰像。";
   }
   if (kinds.includes("image-conflicts-meeting-mode") || kinds.includes("meeting-mode-conflicts-station")) {
     return "会聚方式和像的后果要互相匹配，也要符合你选的物距站点。";
@@ -267,51 +271,235 @@ export function lensModelStudentFeedback(
 
 export const LENS_MODEL_STEP_COUNT = 7;
 
-export function lensModelStepMissingReason(draft: LensModelDraft, step: number): string | null {
-  if (lensModelStepComplete(draft, step)) {
+export type LensModelStepCheck =
+  | { status: "ready" }
+  | { status: "missing"; message: string }
+  | { status: "inconsistent"; message: string };
+
+function rayDraftComplete(ray: LensRayDraft): boolean {
+  return Boolean(ray.kind && ray.beforeLens && ray.afterLens && ray.incidentPath);
+}
+
+function rayCoherenceCheck(
+  draft: LensModelDraft,
+  ray: LensRayDraft,
+  which: "第一条" | "第二条" | "可选",
+): LensModelStepCheck | null {
+  const completed = asCompletedLensRay(ray);
+  if (!completed || !isObjectStation(draft.objectStation)) {
     return null;
   }
+  if (isCanonicalRayGeometricallyCoherent(draft.objectStation, completed)) {
+    return null;
+  }
+  if (completed.kind === "through-near-focus") {
+    return {
+      status: "inconsistent",
+      message:
+        which === "可选"
+          ? "这条可选光线和现在的物体位置放在一起走不通。先回到两条必做的光线。"
+          : "你选的过近侧焦点光线，和现在的物体位置放在一起走不通。再检查这一条。",
+    };
+  }
+  const named =
+    completed.kind === "parallel-axis"
+      ? "“平行主光轴”"
+      : completed.kind === "through-center"
+        ? "“过光心”"
+        : "这个名字";
+  return {
+    status: "inconsistent",
+    message: `你选的是${named}，但透镜前或透镜后的走法和这个名字对不上。再检查${which === "可选" ? "这条" : which}光线。`,
+  };
+}
+
+function imageCompatibleWithMeeting(draft: LensModelDraft): boolean {
+  if (draft.meetingMode === "actual-convergence") {
+    return (
+      draft.nature === "real" &&
+      draft.side === "other-side" &&
+      draft.orientation === "inverted" &&
+      draft.screenReceivable === "true"
+    );
+  }
+  if (draft.meetingMode === "backward-extension") {
+    return (
+      draft.nature === "virtual" &&
+      draft.side === "same-side" &&
+      draft.orientation === "upright" &&
+      draft.screenReceivable === "false"
+    );
+  }
+  if (draft.meetingMode === "no-finite-meeting") {
+    return (
+      draft.nature === "none" &&
+      draft.side === "none" &&
+      draft.orientation === "none" &&
+      draft.size === "none" &&
+      draft.screenReceivable === "false"
+    );
+  }
+  return false;
+}
+
+export function evaluateLensModelStep(
+  draft: LensModelDraft,
+  step: number,
+): LensModelStepCheck {
   if (step <= 1) {
-    return "还需要先选出物体相对 F / 2F 在哪里。";
+    return draft.objectStation
+      ? { status: "ready" }
+      : { status: "missing", message: "还需要先选出物体相对 F / 2F 在哪里。" };
   }
   if (step === 2) {
-    return "还需要完成第一条光线的种类、实际或反向延长、透镜前路径和透镜后路径。";
+    if (!rayDraftComplete(draft.rayA)) {
+      return {
+        status: "missing",
+        message: "还需要完成第一条光线的种类、实际或反向延长、透镜前路径和透镜后路径。",
+      };
+    }
+    return rayCoherenceCheck(draft, draft.rayA, "第一条") ?? { status: "ready" };
   }
   if (step === 3) {
-    return "还需要完成第二条光线的种类、实际或反向延长、透镜前路径和透镜后路径。";
+    if (!rayDraftComplete(draft.rayB)) {
+      return {
+        status: "missing",
+        message: "还需要完成第二条光线的种类、实际或反向延长、透镜前路径和透镜后路径。",
+      };
+    }
+    const rayBInconsistent = rayCoherenceCheck(draft, draft.rayB, "第二条");
+    if (rayBInconsistent) {
+      return rayBInconsistent;
+    }
+    if (draft.includeOptionalFocal) {
+      if (!rayDraftComplete(draft.optionalFocal)) {
+        return {
+          status: "missing",
+          message: "还需要完成这条可选光线的种类、实际或反向延长、透镜前路径和透镜后路径。",
+        };
+      }
+      const optionalInconsistent = rayCoherenceCheck(draft, draft.optionalFocal, "可选");
+      if (optionalInconsistent) {
+        return optionalInconsistent;
+      }
+    }
+    const kinds = [draft.rayA.kind, draft.rayB.kind];
+    const hasPair =
+      kinds.includes("parallel-axis") && kinds.includes("through-center");
+    if (!hasPair) {
+      return {
+        status: "inconsistent",
+        message: "这两条光线还没有组成当前模型要求的两条必做光线。",
+      };
+    }
+    return { status: "ready" };
   }
   if (step === 4) {
-    return "还需要选出过透镜后光线怎样相遇。";
+    if (!draft.meetingMode) {
+      return { status: "missing", message: "还需要选出过透镜后光线怎样相遇。" };
+    }
+    if (
+      isObjectStation(draft.objectStation) &&
+      officialMeetingMode(draft.objectStation) !== draft.meetingMode
+    ) {
+      return {
+        status: "inconsistent",
+        message:
+          "你选的相遇方式和现在的物体位置、已经画出的光线放在一起对不上。先回到光具座上看光线是散开、会聚，还是彼此平行。",
+      };
+    }
+    return { status: "ready" };
   }
   if (step === 5) {
-    return "还需要选出像在哪一侧、是实像还是虚像、正立还是倒立、大小，以及光屏能不能接到。";
+    if (!draft.side || !draft.nature || !draft.orientation || !draft.size || !draft.screenReceivable) {
+      return {
+        status: "missing",
+        message:
+          "还需要选出像在哪一侧、是实像还是虚像、正立还是倒立、大小，以及光屏能不能接到。",
+      };
+    }
+    if (!imageCompatibleWithMeeting(draft)) {
+      return {
+        status: "inconsistent",
+        message:
+          "你选的像的后果，和刚才选的相遇方式对不上。先对照相遇方式，再看像在哪一侧、能不能接到。",
+      };
+    }
+    return { status: "ready" };
   }
   if (step === 6) {
-    return "还需要用一句话写出为什么会聚方式会带来这样的像。";
+    if (!draft.studentReasoning.trim()) {
+      return {
+        status: "missing",
+        message: "还需要用一句话写出为什么会聚方式会带来这样的像。",
+      };
+    }
+    const authored = analyzeConvexLensAuthored(draft.studentReasoning);
+    if (authored.generic || authored.nounSandwich || authored.tableRowOnly) {
+      return {
+        status: "inconsistent",
+        message: "这句话还只是在背表或堆名词。先写出光线怎样相遇，再接到像的后果。",
+      };
+    }
+    if (!authored.hasMeetingLanguage || !authored.hasConsequenceBind) {
+      return {
+        status: "inconsistent",
+        message: "先写出光线是真正相交、反向延长还是彼此平行，再接到像的后果。",
+      };
+    }
+    return { status: "ready" };
   }
-  return "还需要先完成这一步。";
+  return { status: "ready" };
+}
+
+export function lensModelStepMissingReason(draft: LensModelDraft, step: number): string | null {
+  const check = evaluateLensModelStep(draft, step);
+  return check.status === "ready" ? null : check.message;
 }
 
 export function lensModelStepComplete(draft: LensModelDraft, step: number): boolean {
-  if (step <= 1) {
-    return Boolean(draft.objectStation);
+  return evaluateLensModelStep(draft, step).status === "ready";
+}
+
+export function lensModelRepairStep(
+  failureKind: string | undefined,
+  draft?: LensModelDraft,
+): number {
+  if (
+    failureKind === "geometrically-incoherent-rays" ||
+    failureKind === "station-impossible-ray" ||
+    failureKind === "missing-required-construction-pair" ||
+    failureKind === "missing-or-duplicate-rays"
+  ) {
+    const rayA = draft ? asCompletedLensRay(draft.rayA) : null;
+    if (
+      draft &&
+      isObjectStation(draft.objectStation) &&
+      rayA &&
+      isCanonicalRayGeometricallyCoherent(draft.objectStation, rayA)
+    ) {
+      return 3;
+    }
+    return 2;
   }
-  if (step === 2) {
-    return Boolean(draft.rayA.kind && draft.rayA.beforeLens && draft.rayA.afterLens && draft.rayA.incidentPath);
+  if (
+    failureKind === "meeting-mode-conflicts-station" ||
+    failureKind === "u-equals-f-as-ordinary-image"
+  ) {
+    return 4;
   }
-  if (step === 3) {
-    return Boolean(draft.rayB.kind && draft.rayB.beforeLens && draft.rayB.afterLens && draft.rayB.incidentPath);
+  if (failureKind === "image-conflicts-meeting-mode") {
+    return 5;
   }
-  if (step === 4) {
-    return Boolean(draft.meetingMode);
+  if (
+    failureKind === "properties-without-relation" ||
+    failureKind === "authored-missing-meeting-bind" ||
+    failureKind === "authored-generic-or-noun-sandwich" ||
+    failureKind === "table-row-only"
+  ) {
+    return 6;
   }
-  if (step === 5) {
-    return Boolean(draft.side && draft.nature && draft.orientation && draft.size && draft.screenReceivable);
-  }
-  if (step === 6) {
-    return draft.studentReasoning.trim().length > 0;
-  }
-  return true;
+  return 7;
 }
 
 export function completeLensModelDraft(station: ObjectStation = "beyond-2f"): LensModelDraft {
@@ -325,7 +513,7 @@ export function completeLensModelDraft(station: ObjectStation = "beyond-2f"): Le
         : "actual-convergence";
   const reasoning =
     station === "at-f"
-      ? "物体正好在焦点上，出射光线平行，有限远处不相交，所以不成完整的像。"
+      ? "物体正好在焦点上时，折射后的光线彼此平行，有限远处不相交，所以光屏怎么移动都接不到清晰像。"
       : station === "inside-f"
         ? "物体在焦点以内，光线发散，反向延长线相交，所以是虚像，屏接不到。"
         : "物体在 2F 以外，光线在另一侧真正会聚，所以成倒立缩小的实像，光屏放到交点才能接到。";

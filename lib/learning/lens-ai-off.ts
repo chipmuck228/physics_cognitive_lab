@@ -467,7 +467,7 @@ export function completeLensAiOffDraft(challengeId: string): LensAiOffDraft {
     reasoning:
       challengeId === LENS_AI_OFF_A
         ? "窗外景物在 2F 以外，光线在另一侧真正会聚，所以成倒立缩小实像，白卡片是接收器，要放到像的位置才能接到。"
-        : "邮票在焦点以内，光线散开，只有反向延长线相交，所以是虚像，白纸接不到。物体正好在焦点上时，出射光线平行，有限远处不成完整的像。",
+        : "邮票在焦点以内，光线散开，只有反向延长线相交，所以是虚像，白纸接不到。物体正好在焦点上时，折射后的光线彼此平行，有限远处不相交，所以光屏怎么移动都接不到清晰像。",
     postCheckSelections: intendedLensAiOffPostCheckIds(challengeId),
   };
 }

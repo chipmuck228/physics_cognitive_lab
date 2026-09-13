@@ -82,6 +82,7 @@ export function ConvexLensOpticalBench({
       data-screen-x={geometry.screenX}
       data-cover-complete={cover.imageComplete ? "true" : "false"}
       data-cover-brightness={cover.brightness}
+      data-lens-partially-covered={state.lensPartiallyCovered ? "true" : "false"}
       data-frozen={frozen ? "true" : "false"}
       data-official-rays="hidden"
     >
@@ -131,6 +132,28 @@ export function ConvexLensOpticalBench({
         <text x={CX + 8} y="42" fontSize="12">
           透镜
         </text>
+        {state.lensPartiallyCovered ? (
+          <g data-testid="lens-partial-cover" data-cover-on="lens">
+            <rect
+              x={CX - 16}
+              y="48"
+              width="32"
+              height={AXIS_Y - 44}
+              fill="#334155"
+              stroke="#0f172a"
+              strokeWidth="1.5"
+              opacity="0.9"
+              data-testid="lens-partial-cover-shape"
+              data-cover-x={CX - 16}
+              data-cover-width="32"
+              data-cover-y="48"
+              data-lens-x={CX}
+            />
+            <text x={CX + 22} y="70" fontSize="12" fontWeight="700" fill="#0f172a">
+              遮挡
+            </text>
+          </g>
+        ) : null}
         <Landmark x={toX(-1)} label="F" testId="near-f" />
         <Landmark x={toX(-2)} label="2F" testId="near-2f" />
         <Landmark x={toX(1)} label="F" testId="far-f" />

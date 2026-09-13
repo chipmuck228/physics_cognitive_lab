@@ -163,6 +163,44 @@ describe("Scene 07 PRI", () => {
     expect(screen.queryByTestId("official-ray-through-center")).not.toBeInTheDocument();
   });
 
+  it("shows no lens cover until the lens is partially covered", () => {
+    const { rerender } = render(
+      <ConvexLensOpticalBench state={createInitialConvexLensState()} />,
+    );
+    const bench = screen.getByTestId("convex-lens-optical-bench");
+    expect(bench).toHaveAttribute("data-lens-partially-covered", "false");
+    expect(screen.queryByTestId("lens-partial-cover")).not.toBeInTheDocument();
+    expect(screen.getByTestId("optical-image")).toBeInTheDocument();
+    expect(bench).toHaveAttribute("data-cover-brightness", "normal");
+    rerender(
+      <ConvexLensOpticalBench
+        state={{ ...createInitialConvexLensState(), lensPartiallyCovered: true }}
+      />,
+    );
+    const covered = screen.getByTestId("convex-lens-optical-bench");
+    expect(covered).toHaveAttribute("data-lens-partially-covered", "true");
+    expect(screen.getByTestId("lens-partial-cover")).toBeInTheDocument();
+    expect(screen.getByTestId("lens-partial-cover")).toHaveAttribute("data-cover-on", "lens");
+    const shape = screen.getByTestId("lens-partial-cover-shape");
+    const coverX = Number(shape.getAttribute("data-cover-x"));
+    const lensX = Number(shape.getAttribute("data-lens-x"));
+    const screenNode = screen.getByTestId("screen");
+    expect(Math.abs(coverX - lensX)).toBeLessThan(20);
+    expect(screen.getByTestId("convex-lens")).toBeInTheDocument();
+    expect(screen.getByTestId("optical-image")).toBeInTheDocument();
+    expect(covered).toHaveAttribute("data-cover-complete", "true");
+    expect(covered).toHaveAttribute("data-cover-brightness", "reduced");
+    expect(screen.getByTestId("optical-image")).toHaveAttribute("data-testid", "optical-image");
+    expect(screen.queryByTestId("optical-image-half")).not.toBeInTheDocument();
+    expect(screenNode).not.toHaveAttribute("data-cover-on");
+    rerender(<ConvexLensOpticalBench state={createInitialConvexLensState()} />);
+    expect(screen.queryByTestId("lens-partial-cover")).not.toBeInTheDocument();
+    expect(screen.getByTestId("convex-lens-optical-bench")).toHaveAttribute(
+      "data-lens-partially-covered",
+      "false",
+    );
+  });
+
   it("keeps F and 2F as distinct landmarks", () => {
     render(<ConvexLensOpticalBench state={createInitialConvexLensState()} />);
     expect(screen.getByTestId("near-f")).toHaveAttribute("data-quantity-id", "focal-point");

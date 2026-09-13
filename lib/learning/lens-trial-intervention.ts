@@ -63,7 +63,8 @@ export const LENS_TRIAL_SPECS: Record<LensExperimentId, LensTrialSpec> = {
       lensPartiallyCovered: false,
     },
     required: { kind: "move-object", station: "at-f" },
-    instruction: "你的预测已经锁定。现在把物体放到焦点上，看看光屏还能不能接到清晰像。",
+    instruction:
+      "你的预测已经锁定。现在把物体放到焦点上，看看光屏怎么移动能不能接到清晰像。",
     whatChanges: "物体位置：放到焦点上",
     whatStays: "同一块透镜，不要改成别的站点",
     wrongActionReason: "这次要把物体放到焦点上。",

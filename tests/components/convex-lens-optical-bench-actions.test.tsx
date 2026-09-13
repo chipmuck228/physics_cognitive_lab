@@ -261,6 +261,10 @@ describe("Scene 07 enabled-action contract", () => {
       "data-response-class",
       "rejected",
     );
+    expect(screen.getByTestId("lens-model-repair-panel")).toHaveTextContent(
+      LENS_COPY.modelCannotSubmit,
+    );
+    expect(screen.getByTestId("lens-model-repair")).toHaveTextContent("回到第 4 步修改");
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).modelAttempts[0]?.correctStructure).toBe(
       false,
     );

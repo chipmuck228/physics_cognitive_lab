@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-import { LENS_COPY, LENS_STAGE_PROMPTS } from "../../lib/content/convex-lens-optical-bench";
+import {
+  LENS_COPY,
+  LENS_STAGE_PROMPTS,
+  lensModelRepairLabel,
+} from "../../lib/content/convex-lens-optical-bench";
 import { STUDENT_CHROME } from "../../lib/content/student-language";
 import { LearningStage } from "../../types/learning";
 import {
@@ -15,9 +19,11 @@ import {
   completeLensPredictA,
   completeLensProjectorTransfer,
   expectNoTutorChrome,
+  fillOneRay,
   lensStageHeading,
   openLensLab,
   performVisibleTrialIntervention,
+  reachLensModel,
   startLensLesson,
 } from "./lens-helpers";
 
@@ -81,7 +87,7 @@ test.describe("Scene 07 learner-visible flow", () => {
       predictOutcome: "光屏接不到清晰像",
       reason: "物体正好在焦点上，我预计有限远处接不到清晰像。",
       screen: "怎么移光屏都接不到",
-      sizeOrCover: "有限远处没有完整的像",
+      sizeOrCover: "有限远处没有完整清晰的像",
       comparison: "基本一样",
       reflection: "有限远处不相交，不要把它说成又一种普通成像。",
     });
@@ -141,5 +147,60 @@ test.describe("Scene 07 learner-visible flow", () => {
     await expect(page.getByTestId("lens-experiment-task")).toBeVisible();
     await expect(page.getByTestId("lens-compare-surface")).toBeVisible();
     await expect(page.getByTestId("lens-trial-progress")).toContainText("第 1 / 4 次验证");
+  });
+
+  test("MODEL blocks an inconsistent ray and offers a repair path after final reject", async ({
+    page,
+  }) => {
+    test.setTimeout(300_000);
+    await reachLensModel(page);
+    await page.getByRole("radio", { name: /物体在 2F 以外/ }).click();
+    await page.getByTestId("lens-model-next").click();
+    await fillOneRay(page, "第一条光线", {
+      kind: "平行主光轴的光线",
+      incident: "这是实际光线（实线）",
+      before: "到达透镜前：平行主光轴",
+      after: "过透镜后：方向不变",
+    });
+    await expect(page.getByTestId("lens-model-next")).toBeDisabled();
+    await expect(page.getByTestId("lens-model-next-reason")).toContainText("走法");
+    await expect(page.getByTestId("lens-model-next-reason")).not.toContainText("经过另一侧焦点");
+
+    await fillOneRay(page, "第一条光线", {
+      kind: "平行主光轴的光线",
+      incident: "这是实际光线（实线）",
+      before: "到达透镜前：平行主光轴",
+      after: "过透镜后：经过另一侧焦点",
+    });
+    await page.getByTestId("lens-model-next").click();
+    await fillOneRay(page, "第二条光线", {
+      kind: "过光心的光线",
+      incident: "这是实际光线（实线）",
+      before: "到达透镜前：朝向光心",
+      after: "过透镜后：方向不变",
+    });
+    await page.getByTestId("lens-model-next").click();
+    await page.getByRole("radio", { name: /出射光线真正会聚/ }).click();
+    await page.getByTestId("lens-model-next").click();
+    await page.getByTestId("lens-model-side").getByRole("radio", { name: /像在透镜另一侧/ }).click();
+    await page.getByTestId("lens-model-nature").getByRole("radio", { name: / 实像$/ }).click();
+    await page.getByTestId("lens-model-orientation").getByRole("radio", { name: /？ 倒立$/ }).click();
+    await page.getByTestId("lens-model-size").getByRole("radio", { name: /？ 比物体大$/ }).click();
+    await page.getByTestId("lens-model-receive").getByRole("radio", { name: /光屏放到像的位置可以接到/ }).click();
+    await page.getByTestId("lens-model-next").click();
+    await page.getByTestId("lens-model-reasoning").fill(
+      "物体在 2F 以外，光线在另一侧真正会聚，所以成倒立缩小的实像，光屏放到交点才能接到。",
+    );
+    await page.getByTestId("lens-model-next").click();
+    await expect(page.getByTestId("lens-model-review-ray-a")).toBeVisible();
+    await page.getByTestId("lens-model-submit").click();
+    await expect(page.getByTestId("lens-model-repair-panel")).toContainText(
+      LENS_COPY.modelCannotSubmit,
+    );
+    await expect(page.getByTestId("lens-model-repair")).toContainText(
+      lensModelRepairLabel(5),
+    );
+    await page.getByTestId("lens-model-repair").click();
+    await expect(page.getByTestId("lens-ray-construction")).toHaveAttribute("data-step", "5");
   });
 });
