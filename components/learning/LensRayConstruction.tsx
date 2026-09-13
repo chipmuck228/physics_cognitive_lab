@@ -57,6 +57,7 @@ export function LensRayConstruction({
         {`第 ${step} 步 / 共 ${LENS_MODEL_STEP_COUNT} 步：${STEP_TITLES[step - 1]}`}
       </p>
       <Card className="space-y-5 p-4">
+        <fieldset disabled={reviewOnly} className="space-y-5 border-0 p-0">
         {step === 1 ? (
           <QuestionGroup
             id="lens-model-station"
@@ -176,6 +177,7 @@ export function LensRayConstruction({
             <p>{draft.studentReasoning || "还没有写下联系。"}</p>
           </div>
         ) : null}
+        </fieldset>
         {feedback ? (
           <ValidationMessage
             kind={feedback.kind === "missing" ? "missing" : "incorrect"}

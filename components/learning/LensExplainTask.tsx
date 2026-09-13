@@ -27,6 +27,7 @@ export function LensExplainTask({
   return (
     <div data-testid="lens-explain-task" className="space-y-4">
       <Card className="space-y-5 p-4">
+        <fieldset disabled={reviewOnly} className="space-y-5 border-0 p-0">
         <QuestionGroup
           id="lens-explain-meeting"
           question="光线会怎样相交？"
@@ -50,8 +51,10 @@ export function LensExplainTask({
             onChange={(event) =>
               onChange({ ...value, studentExplanation: event.target.value })
             }
+            disabled={reviewOnly}
           />
         </label>
+        </fieldset>
         {needMore ? (
           <ValidationMessage kind="missing">
             先选出一段会聚或接收关系，再用自己的话写。只背“2F 外倒立缩小实像”还不够。

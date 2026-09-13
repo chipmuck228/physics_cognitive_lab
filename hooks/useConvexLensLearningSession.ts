@@ -2,8 +2,17 @@
 
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 
-import { LENS_PHASE_STAGES } from "@/lib/content/convex-lens-optical-bench";
 import { advanceIfReady } from "@/lib/learning/advance";
+import {
+  advanceLensLoop,
+  applyLensComparisonSave,
+  applyLensObservedSave,
+  applyLensPredictionCommit,
+  applyLensReflectionSave,
+  applyLensRunExperiment,
+  type LensExperimentForm,
+} from "@/lib/learning/lens-action";
+import type { LensDomainOutcome } from "@/lib/learning/lens-action-response";
 import {
   applyLensAiOffPostCheck,
   buildLensAiOffAssessment,
@@ -17,26 +26,11 @@ import {
   evaluateLensDescription,
   type LensDescribeInput,
 } from "@/lib/learning/lens-describe";
-import {
-  activeIncompleteLensEvidence,
-  authoredBeforeIntervention,
-  canRunLensExperiment,
-  emptyLensObservedResult,
-  hasClosedLensExperiment,
-  isLensComparison,
-  isLensExperimentClosed,
-  lensComparisonLabel,
-  runSceneLensExperiment,
-  type LensObservedResult,
-} from "@/lib/learning/lens-experiment";
+import { type LensObservedResult } from "@/lib/learning/lens-experiment";
 import {
   evaluateLensObservation,
   lensObservationLabelsFor,
 } from "@/lib/learning/lens-observe";
-import {
-  evaluateLensPrediction,
-  firstCommittedLensPrediction,
-} from "@/lib/learning/lens-predict";
 import {
   lensAiOffDraft,
   lensExamDraft,
@@ -95,11 +89,7 @@ import {
   subscribeSession,
   updateSession,
 } from "@/lib/learning/session-store";
-import { nextStage } from "@/lib/learning/state-machine";
 import {
-  convexLensPhysicsSnapshot,
-  LENS_EXPERIMENT_A,
-  LENS_EXPERIMENT_ORDER,
   runObserveDemo,
   type ConvexLensSceneState,
   type LensExperimentId,
@@ -112,11 +102,9 @@ import {
   CONVEX_LENS_SCENE_ID,
   LearningStage,
   type DescriptionEvidence,
-  type ExperimentEvidence,
   type ExplanationEvidence,
   type LearningSession,
   type ObservationEvidence,
-  type PredictionEvidence,
 } from "@/types/learning";
 import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
 
@@ -132,7 +120,7 @@ export function useConvexLensLearningSession() {
       if (current.stage !== LearningStage.ENTRY) {
         return current;
       }
-      return advanceWithinLoop(current);
+      return advanceLensLoop(current);
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
@@ -300,7 +288,7 @@ export function useConvexLensLearningSession() {
           }),
         ],
       };
-      return evaluation.sufficient ? advanceWithinLoop(next) : next;
+      return evaluation.sufficient ? advanceLensLoop(next) : next;
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
@@ -330,171 +318,37 @@ export function useConvexLensLearningSession() {
           }),
         ],
       };
-      return evaluation.sufficient ? advanceWithinLoop(next) : next;
+      return evaluation.sufficient ? advanceLensLoop(next) : next;
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
   const commitPrediction = useCallback(
-    (experimentId: LensExperimentId, outcome: string, reason: string) => {
-      updateSession((current) => {
-        const allowed =
-          current.stage === LearningStage.PREDICT ||
-          current.stage === LearningStage.EXPERIMENT;
-        if (isLensRevisiting(current) || !allowed) {
-          return current;
-        }
-        const order = LENS_EXPERIMENT_ORDER as readonly string[];
-        const index = order.indexOf(experimentId);
-        if (index > 0) {
-          const previous = order[index - 1] as LensExperimentId;
-          if (
-            current.stage !== LearningStage.EXPERIMENT ||
-            !hasClosedLensExperiment(current, previous)
-          ) {
-            return current;
-          }
-        }
-        if (
-          experimentId !== LENS_EXPERIMENT_A &&
-          current.stage !== LearningStage.EXPERIMENT
-        ) {
-          return current;
-        }
-        if (firstCommittedLensPrediction(current.predictions, experimentId)) {
-          return current;
-        }
-        const evaluation = evaluateLensPrediction(outcome, reason);
-        if (!evaluation.sufficient) {
-          return current;
-        }
-        const prediction: PredictionEvidence = {
-          prediction: outcome,
-          reasoning: reason.trim(),
-          timestamp: new Date().toISOString(),
-          experimentId,
-          committed: true,
-        };
-        const next = {
-          ...current,
-          predictions: [...current.predictions, prediction],
-          events: [
-            ...current.events,
-            createLearningEvent("prediction_made", current.stage, {
-              experimentId,
-              outcome,
-            }),
-          ],
-        };
-        return experimentId === LENS_EXPERIMENT_A ? advanceWithinLoop(next) : next;
-      }, CONVEX_LENS_SCENE_ID);
-    },
+    (experimentId: LensExperimentId, outcome: string, reason: string): LensDomainOutcome =>
+      captureLensAction((current) =>
+        applyLensPredictionCommit(current, experimentId, outcome, reason),
+      ),
     [],
   );
 
-  const runExperiment = useCallback((experimentId: LensExperimentId) => {
-    updateSession((current) => {
-      if (isLensRevisiting(current) || current.stage !== LearningStage.EXPERIMENT) {
-        return current;
-      }
-      if (!canRunLensExperiment(current, experimentId)) {
-        return current;
-      }
-      if (
-        activeIncompleteLensEvidence(current, experimentId) ||
-        hasClosedLensExperiment(current, experimentId)
-      ) {
-        return current;
-      }
-      const prediction = firstCommittedLensPrediction(current.predictions, experimentId);
-      if (!prediction) {
-        return current;
-      }
-      const currentState = getConvexLensPhysicsState(current);
-      const physics = runSceneLensExperiment(experimentId, currentState);
-      const interventionAt = new Date().toISOString();
-      const evidence: ExperimentEvidence = {
-        prediction: prediction.prediction,
-        predictionReason: prediction.reasoning,
-        predictionComparison: "",
-        reflection: "",
-        timestamp: interventionAt,
-        experimentId,
-        committedAt: prediction.timestamp,
-        interventionAt,
-        intervention: { objectStation: physics.after.objectStation },
-        observedResult: emptyLensObservedResult(),
-        comparison: "",
-        physicsResult: convexLensPhysicsSnapshot(physics.after),
-        authoredBeforeIntervention: authoredBeforeIntervention(
-          prediction.timestamp,
-          interventionAt,
-        ),
-        sufficient: false,
-      };
-      return {
-        ...current,
-        physicsState: wrapConvexLensPhysicsState(physics.after),
-        experimentEvidence: [...current.experimentEvidence, evidence],
-        events: [
-          ...current.events,
-          createLearningEvent("experiment_run", current.stage, {
-            experimentId,
-          }),
-        ],
-      };
-    }, CONVEX_LENS_SCENE_ID);
+  const runExperiment = useCallback((experimentId: LensExperimentId): LensDomainOutcome => {
+    return captureLensAction((current) => applyLensRunExperiment(current, experimentId));
   }, []);
 
   const saveObservedResult = useCallback(
-    (experimentId: LensExperimentId, observed: LensObservedResult) => {
-      updateSession((current) => {
-        if (isLensRevisiting(current)) {
-          return current;
-        }
-        return patchIncompleteEvidence(current, experimentId, (evidence) => ({
-          ...evidence,
-          observedResult: observed,
-        }));
-      }, CONVEX_LENS_SCENE_ID);
-    },
+    (experimentId: LensExperimentId, observed: LensObservedResult): LensDomainOutcome =>
+      captureLensAction((current) => applyLensObservedSave(current, experimentId, observed)),
     [],
   );
 
   const saveComparison = useCallback(
-    (experimentId: LensExperimentId, comparison: "same" | "different" | "partial") => {
-      if (!isLensComparison(comparison)) {
-        return;
-      }
-      updateSession((current) => {
-        if (isLensRevisiting(current)) {
-          return current;
-        }
-        return patchIncompleteEvidence(current, experimentId, (evidence) => ({
-          ...evidence,
-          comparison,
-          predictionComparison: lensComparisonLabel(comparison),
-        }));
-      }, CONVEX_LENS_SCENE_ID);
-    },
+    (experimentId: LensExperimentId, comparison: string): LensDomainOutcome =>
+      captureLensAction((current) => applyLensComparisonSave(current, experimentId, comparison)),
     [],
   );
 
   const saveReflection = useCallback(
-    (experimentId: LensExperimentId, reflection: string) => {
-      updateSession((current) => {
-        if (isLensRevisiting(current)) {
-          return current;
-        }
-        const next = patchIncompleteEvidence(current, experimentId, (evidence) => {
-          const updated = { ...evidence, reflection: reflection.trim() };
-          return {
-            ...updated,
-            sufficient: isLensExperimentClosed({ ...updated, sufficient: false }),
-          };
-        });
-        return advanceWithinLoop(next);
-      }, CONVEX_LENS_SCENE_ID);
-    },
+    (experimentId: LensExperimentId, form: LensExperimentForm): LensDomainOutcome =>
+      captureLensAction((current) => applyLensReflectionSave(current, experimentId, form)),
     [],
   );
 
@@ -525,7 +379,7 @@ export function useConvexLensLearningSession() {
           }),
         ],
       };
-      return evaluation.sufficient ? advanceWithinLoop(next) : next;
+      return evaluation.sufficient ? advanceLensLoop(next) : next;
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
@@ -566,7 +420,7 @@ export function useConvexLensLearningSession() {
           }),
         ],
       };
-      return attempt.correctStructure ? advanceWithinLoop(next) : next;
+      return attempt.correctStructure ? advanceLensLoop(next) : next;
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
@@ -604,7 +458,7 @@ export function useConvexLensLearningSession() {
           }),
         ],
       };
-      return attempt.accepted ? advanceWithinLoop(next) : next;
+      return attempt.accepted ? advanceLensLoop(next) : next;
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
@@ -637,7 +491,7 @@ export function useConvexLensLearningSession() {
           }),
         ],
       };
-      return advanceWithinLoop(next);
+      return advanceLensLoop(next);
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
@@ -723,7 +577,7 @@ export function useConvexLensLearningSession() {
             }),
           ],
         };
-        return advanceWithinLoop(next);
+        return advanceLensLoop(next);
       }, CONVEX_LENS_SCENE_ID);
     },
     [],
@@ -844,32 +698,14 @@ export function useConvexLensLearningSession() {
   };
 }
 
-function advanceWithinLoop(session: LearningSession): LearningSession {
-  const target = nextStage(session.stage);
-  if (!target || !(LENS_PHASE_STAGES as readonly LearningStage[]).includes(target)) {
-    return session;
-  }
-  return advanceIfReady(session);
-}
-
-function patchIncompleteEvidence(
-  session: LearningSession,
-  experimentId: LensExperimentId,
-  updater: (evidence: ExperimentEvidence) => ExperimentEvidence,
-): LearningSession {
-  const index = [...session.experimentEvidence]
-    .map((item, itemIndex) => ({ item, itemIndex }))
-    .reverse()
-    .find(
-      ({ item }) => item.experimentId === experimentId && item.sufficient !== true,
-    )?.itemIndex;
-  if (index == null) {
-    return session;
-  }
-  return {
-    ...session,
-    experimentEvidence: session.experimentEvidence.map((item, itemIndex) =>
-      itemIndex === index ? updater(item) : item,
-    ),
-  };
+function captureLensAction(
+  apply: (session: LearningSession) => { session: LearningSession; outcome: LensDomainOutcome },
+): LensDomainOutcome {
+  let outcome: LensDomainOutcome = { kind: "blocked" };
+  updateSession((current) => {
+    const result = apply(current);
+    outcome = result.outcome;
+    return result.session;
+  }, CONVEX_LENS_SCENE_ID);
+  return outcome;
 }

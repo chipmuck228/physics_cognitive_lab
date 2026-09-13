@@ -37,6 +37,7 @@ export function LensTransferTask({
   return (
     <div className="space-y-4" data-testid="lens-transfer-task" data-target={target.id}>
       <Card className="space-y-5 p-4">
+        <fieldset disabled={reviewOnly} className="space-y-5 border-0 p-0">
         <p className="text-sm font-medium">先看这个新情境</p>
         <p className="text-sm leading-relaxed">{target.scenario}</p>
         <QuestionGroup
@@ -107,8 +108,10 @@ export function LensTransferTask({
             onChange={(event) =>
               onChange({ ...draft, studentExplanation: event.target.value })
             }
+            disabled={reviewOnly}
           />
         </label>
+        </fieldset>
         {needMore ? (
           <ValidationMessage kind="missing">{LENS_COPY.transferNeedMore}</ValidationMessage>
         ) : null}

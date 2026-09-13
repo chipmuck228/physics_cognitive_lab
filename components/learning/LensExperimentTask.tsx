@@ -30,6 +30,12 @@ interface LensExperimentTaskProps {
   onSaveReflection: () => void;
   observedNeedMore: boolean;
   reflectionNeedMore?: boolean;
+  canSaveObserved?: boolean;
+  canSaveComparison?: boolean;
+  canSaveReflection?: boolean;
+  observedDisabledReason?: string;
+  comparisonDisabledReason?: string;
+  reflectionDisabledReason?: string;
   reviewOnly?: boolean;
 }
 
@@ -53,6 +59,12 @@ export function LensExperimentTask({
   onSaveReflection,
   observedNeedMore,
   reflectionNeedMore = false,
+  canSaveObserved = true,
+  canSaveComparison = true,
+  canSaveReflection = true,
+  observedDisabledReason,
+  comparisonDisabledReason,
+  reflectionDisabledReason,
   reviewOnly = false,
 }: LensExperimentTaskProps) {
   return (
@@ -82,7 +94,7 @@ export function LensExperimentTask({
           ) : null}
         </section>
         {hasRun ? (
-          <>
+          <fieldset disabled={reviewOnly} className="space-y-4 border-0 p-0">
             <section className="space-y-3">
               <p className="text-sm font-medium">③ 实际看到什么</p>
               <QuestionGroup
@@ -110,8 +122,16 @@ export function LensExperimentTask({
                 <ValidationMessage kind="missing">先记下光屏和像分别怎样了。</ValidationMessage>
               ) : null}
               {reviewOnly ? null : (
-                <div className="flex justify-end">
-                  <Button variant="secondary" onClick={onSaveObserved}>
+                <div className="flex flex-col items-end gap-2">
+                  {!canSaveObserved && observedDisabledReason ? (
+                    <ValidationMessage kind="info">{observedDisabledReason}</ValidationMessage>
+                  ) : null}
+                  <Button
+                    variant="secondary"
+                    onClick={onSaveObserved}
+                    disabled={!canSaveObserved}
+                    data-testid="lens-save-observed"
+                  >
                     {LENS_COPY.observeSubmitExperiment}
                   </Button>
                 </div>
@@ -130,8 +150,16 @@ export function LensExperimentTask({
                 options={[...LENS_COMPARE_OPTIONS]}
               />
               {reviewOnly ? null : (
-                <div className="flex justify-end">
-                  <Button variant="secondary" onClick={onSaveComparison}>
+                <div className="flex flex-col items-end gap-2">
+                  {!canSaveComparison && comparisonDisabledReason ? (
+                    <ValidationMessage kind="info">{comparisonDisabledReason}</ValidationMessage>
+                  ) : null}
+                  <Button
+                    variant="secondary"
+                    onClick={onSaveComparison}
+                    disabled={!canSaveComparison}
+                    data-testid="lens-save-comparison"
+                  >
                     {LENS_COPY.compareSubmit}
                   </Button>
                 </div>
@@ -153,12 +181,21 @@ export function LensExperimentTask({
                 <ValidationMessage kind="missing">先写下你现在怎么想，再记下。</ValidationMessage>
               ) : null}
               {reviewOnly ? null : (
-                <div className="flex justify-end">
-                  <Button onClick={onSaveReflection}>{LENS_COPY.reflectionSubmit}</Button>
+                <div className="flex flex-col items-end gap-2">
+                  {!canSaveReflection && reflectionDisabledReason ? (
+                    <ValidationMessage kind="info">{reflectionDisabledReason}</ValidationMessage>
+                  ) : null}
+                  <Button
+                    onClick={onSaveReflection}
+                    disabled={!canSaveReflection}
+                    data-testid="lens-save-reflection"
+                  >
+                    {LENS_COPY.reflectionSubmit}
+                  </Button>
                 </div>
               )}
             </section>
-          </>
+          </fieldset>
         ) : null}
       </Card>
     </div>

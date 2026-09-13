@@ -464,7 +464,7 @@ A Scene that claims runtime v1 compliance MUST have tests for:
 3. Help intents and hint text ⊆ current `VisibleInteractionContext`. Context must match the rendered UI, not a stage-only declaration. Look-at language requires a rendered or constructed reference.  
 4. AI_OFF has zero help / Tutor chrome and zero Tutor requests.  
 5. Uncommitted draft survives help / review-preview session writes.  
-6. Enabled control never silent-no-ops.  
+6. Enabled control never silent-no-ops. Scene 07 tests must reproduce the prior EXPERIMENT reflection failure, not only the happy path.  
 7. `failureKind` maps to a non-answer feedback kind.  
 8. Existing physics, PRI, evidence, adapter, and E2E tests stay green.
 

@@ -28,6 +28,7 @@ export function LensDescribeTask({
   return (
     <div data-testid="lens-describe-task" className="space-y-4">
       <Card className="space-y-5 p-4">
+        <fieldset disabled={reviewOnly} className="space-y-5 border-0 p-0">
         <QuestionGroup
           id="lens-describe-object"
           question={LENS_COPY.describeObject}
@@ -68,8 +69,10 @@ export function LensDescribeTask({
             onChange={(event) =>
               onChange({ ...value, studentDescription: event.target.value })
             }
+            disabled={reviewOnly}
           />
         </label>
+        </fieldset>
         {needStructure ? (
           <ValidationMessage kind="missing">{LENS_COPY.describeNeedStructure}</ValidationMessage>
         ) : null}

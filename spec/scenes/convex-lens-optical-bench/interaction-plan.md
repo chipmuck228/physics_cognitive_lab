@@ -277,19 +277,23 @@ Student action
   按 预测 → 动手 → 看见 → 对照 → 想法 走完这一轮。
 
 Response type  
-  applied / committed / missing / advanced  
-  empty reflection must surface missing, not silent no-op
+  applied / committed / missing / blocked / advanced  
+  Enabled “记下这次想法” must never silent-no-op.
 
 Draft ownership  
   persisted-key `experimentFormDraft`  
-  Hydrate when experiment id or evidence count changes.
+  Hydrate when experiment id or evidence count changes.  
+  Reflection submit reads the same visible form (observed + comparison + reflection).
 
 Evaluator  
   experiment closure / `hasClosedLensExperiment` (existing)
 
 Feedback mapping  
   incomplete observed result → missing  
-  empty reflection → missing
+  empty / non-own-words reflection → missing  
+  visible form missing observed or comparison → missing  
+  already-closed trial → disabled + blocked reason  
+  review → save hidden; fields disabled
 
 Help intents  
   what-now, where-look, what-compare

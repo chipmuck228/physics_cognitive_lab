@@ -176,6 +176,28 @@ export function authoredBeforeIntervention(
   return committedAt <= interventionAt;
 }
 
+export function patchIncompleteLensEvidence(
+  session: LearningSession,
+  experimentId: LensExperimentId,
+  updater: (evidence: ExperimentEvidence) => ExperimentEvidence,
+): LearningSession {
+  const index = [...session.experimentEvidence]
+    .map((item, itemIndex) => ({ item, itemIndex }))
+    .reverse()
+    .find(
+      ({ item }) => item.experimentId === experimentId && item.sufficient !== true,
+    )?.itemIndex;
+  if (index == null) {
+    return session;
+  }
+  return {
+    ...session,
+    experimentEvidence: session.experimentEvidence.map((item, itemIndex) =>
+      itemIndex === index ? updater(item) : item,
+    ),
+  };
+}
+
 function isLensExperimentId(value: string): value is LensExperimentId {
   return (LENS_EXPERIMENT_ORDER as readonly string[]).includes(value);
 }
