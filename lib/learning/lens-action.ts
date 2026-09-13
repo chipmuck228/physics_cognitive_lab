@@ -49,8 +49,10 @@ import {
   type LensModelDraft,
 } from "@/lib/learning/lens-model";
 import {
-  evaluateLensObservation,
+  evaluateLensObservationEligibility,
   lensObservationLabelsFor,
+  lensObserveMissingMessage,
+  lensPerformedObserveInteraction,
 } from "@/lib/learning/lens-observe";
 import {
   evaluateLensPrediction,
@@ -459,12 +461,16 @@ export function applyLensObservationSave(
   if (isLensRevisiting(session) || session.stage !== LearningStage.OBSERVE) {
     return blocked(session, LENS_COPY.reviewCannotEdit);
   }
-  const evaluation = evaluateLensObservation(selectedOptionIds);
+  const performedInteraction = lensPerformedObserveInteraction(session);
+  const evaluation = evaluateLensObservationEligibility(
+    selectedOptionIds,
+    performedInteraction,
+  );
   const observation: ObservationEvidence = {
     text: lensObservationLabelsFor(selectedOptionIds),
     timestamp: new Date().toISOString(),
     selectedOptionIds: evaluation.selectedOptionIds,
-    watchedFullCycle: session.sceneData.watchedObserveDemo === true,
+    watchedFullCycle: performedInteraction,
     sufficient: evaluation.sufficient,
   };
   const next = {
@@ -482,7 +488,10 @@ export function applyLensObservationSave(
   if (!evaluation.sufficient) {
     return {
       session: next,
-      outcome: { kind: "missing", message: LENS_COPY.observeNeedMore },
+      outcome: {
+        kind: "missing",
+        message: lensObserveMissingMessage(evaluation.missingKind),
+      },
     };
   }
   const advanced = advanceLensLoop(next);
@@ -995,6 +1004,7 @@ export function applyLensObjectStationChange(
   const next = appendLensInteractionTrace(
     {
       ...session,
+      sceneData: withLensWatchedDemo(session.sceneData, true),
       physicsState: wrapConvexLensPhysicsState(nextState),
     },
     {
@@ -1042,6 +1052,7 @@ export function applyLensScreenChange(
     session: appendLensInteractionTrace(
       {
         ...session,
+        sceneData: withLensWatchedDemo(session.sceneData, true),
         physicsState: wrapConvexLensPhysicsState(nextState),
       },
       {

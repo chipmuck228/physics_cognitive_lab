@@ -23,7 +23,9 @@ export const LENS_COPY = {
   screenOffImage: "光屏离开像的位置",
   observePrompt: "动过之后，你注意到了什么？只勾你确实看见的。",
   observeSubmit: "提交观察",
-  observeNeedMore: "再动一动物体或光屏，把你确实看见的变化记下来。",
+  observeNeedInteraction: "先换一个物体位置，或移动一次光屏，看光屏上有什么变化。",
+  observeNeedRecord: "你已经动过光具座。把你确实看见的变化勾下来。",
+  observeNeedMore: "你已经动过光具座。把你确实看见的变化勾下来。",
   describeInstruction: "对着光具座，把左边的物体、中间的透镜、F / 2F、像和光屏分开说。",
   describeObject: "光具座上，你现在看的整套装置是什么？",
   describeQuantities: "左边的物体、透镜上的 F / 2F、像，和右边的光屏，是同一件东西吗？",
@@ -76,6 +78,7 @@ export const LENS_COPY = {
   modelAccepted: "模型已经记下，可以看新情境。",
   modelFrozenCaption: "这是你正在建构的光路，不是一张已经画好的标准图。",
   transferSubmit: "检查迁移",
+  transferFirstSaved: "刚才那个新情境已经记下。现在看下一个。",
   transferOwnWords: "用自己的话说明这个新情境里，物体相对焦点在哪里、光线怎样会聚。",
   transferNeedMore: "先选出物距站点、会聚方式和像的后果，再写出理由。",
   transferSurfaceCue: "都有凸透镜，所以和刚才完全一样",
@@ -146,7 +149,7 @@ export const LENS_TASK_FRAMES: Partial<
     context: "光具座上，物体可以换位置，光屏也可以左右移。",
     goal: "先看见变化，不解释五种成像。",
     focus: "先看光屏上有没有变化，再看透过透镜能不能看见像。",
-    action: "先动手，再记下你看见的。",
+    action: "先换物体位置或移动光屏，看光屏上有什么变化，再勾你看见的。",
   },
   [LearningStage.DESCRIBE]: {
     context: "你刚在光具座上动过物体或光屏。",
@@ -438,6 +441,10 @@ export function lensObservedLabel(
 
 export function lensModelRepairLabel(step: number): string {
   return `回到第 ${step} 步修改`;
+}
+
+export function lensTransferProgressLabel(current: number, total: number): string {
+  return `第 ${current} / ${total} 个新情境`;
 }
 
 export function lensChoiceLabel(

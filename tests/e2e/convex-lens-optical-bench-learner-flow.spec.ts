@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 
 import {
   LENS_COPY,
+  LENS_OBSERVE_OPTIONS,
+  LENS_OBSERVE_REQUIRED_IDS,
   LENS_STAGE_PROMPTS,
   lensModelRepairLabel,
 } from "../../lib/content/convex-lens-optical-bench";
@@ -28,6 +30,32 @@ import {
 } from "./lens-helpers";
 
 test.describe("Scene 07 learner-visible flow", () => {
+  test("OBSERVE checkboxes alone cannot skip the bench interaction", async ({ page }) => {
+    await openLensLab(page);
+    await startLensLesson(page);
+    await expect(page.getByTestId("lens-observe-task")).toBeVisible();
+    await expect(page.getByTestId("station-hit-between-f-and-2f")).toBeVisible();
+    const required = new Set<string>(LENS_OBSERVE_REQUIRED_IDS);
+    for (const option of LENS_OBSERVE_OPTIONS) {
+      if (required.has(option.id)) {
+        await page.getByLabel(option.label).click();
+      }
+    }
+    await page.getByRole("button", { name: LENS_COPY.observeSubmit }).click();
+    await expect(
+      page.getByRole("heading", { name: lensStageHeading(LearningStage.OBSERVE) }),
+    ).toBeVisible();
+    await expect(page.getByTestId("lens-observe-need-more")).toContainText(
+      LENS_COPY.observeNeedInteraction,
+    );
+    await expect(page.getByTestId("lens-observe-need-more")).not.toContainText("勾下来");
+    await page.getByTestId("lens-play-demo").click();
+    await page.getByRole("button", { name: LENS_COPY.observeSubmit }).click();
+    await expect(
+      page.getByRole("heading", { name: lensStageHeading(LearningStage.DESCRIBE) }),
+    ).toBeVisible();
+  });
+
   test("a first-time learner can finish PREDICT through COMPLETE from visible UI only", async ({
     page,
   }) => {

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { LENS_OBSERVE_REQUIRED_IDS } from "@/lib/content/convex-lens-optical-bench";
+import {
+  LENS_COPY,
+  LENS_OBSERVE_REQUIRED_IDS,
+} from "@/lib/content/convex-lens-optical-bench";
 import {
   applyLensComparisonSave,
   applyLensDescriptionSave,
@@ -233,15 +236,21 @@ describe("Scene 07 authoritative stage actions", () => {
       "screen-can-change",
     ]);
     expect(result.outcome.kind).toBe("missing");
+    expect(result.outcome.kind === "missing" && result.outcome.message).toBe(
+      LENS_COPY.observeNeedInteraction,
+    );
     expect(result.session.observations[0]?.sufficient).toBe(false);
   });
 
   it("OBSERVE required selection commits from the Scene action", () => {
-    const result = applyLensObservationSave(stageSession(LearningStage.OBSERVE), [
-      ...LENS_OBSERVE_REQUIRED_IDS,
-    ]);
+    const moved = applyLensObjectStationChange(
+      stageSession(LearningStage.OBSERVE),
+      "between-f-and-2f",
+    ).session;
+    const result = applyLensObservationSave(moved, [...LENS_OBSERVE_REQUIRED_IDS]);
     expect(result.outcome.kind).toBe("committed");
     expect(result.session.observations[0]?.sufficient).toBe(true);
+    expect(result.session.observations[0]?.watchedFullCycle).toBe(true);
   });
 
   it("MODEL incomplete labels are missing, not accepted", () => {

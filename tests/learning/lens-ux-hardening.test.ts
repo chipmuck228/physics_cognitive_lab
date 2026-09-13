@@ -238,7 +238,8 @@ describe("Scene 07 revisit navigation", () => {
 
 describe("Scene 07 Observe and framing contracts", () => {
   it("does not tell the student to select all visible Observe options", () => {
-    expect(LENS_COPY.observeNeedMore).not.toMatch(/都要勾/);
+    expect(LENS_COPY.observeNeedRecord).not.toMatch(/都要勾/);
+    expect(LENS_COPY.observeNeedInteraction).not.toMatch(/都要勾/);
     expect(LENS_COPY.observePrompt).not.toMatch(/三项都/);
     expect(LENS_OBSERVE_OPTIONS.map((option) => option.id)).toEqual([
       "screen-can-change",

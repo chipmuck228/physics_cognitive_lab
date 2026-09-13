@@ -47,6 +47,7 @@ export function emptyLensSceneData(): Record<string, unknown> {
   return { [LENS_WATCHED_DEMO_KEY]: false };
 }
 
+/** True after an OBSERVE-stage bench action: demo, object station, or screen. Trace ≠ Evidence. */
 export function lensWatchedObserveDemo(session: LearningSession): boolean {
   return session.sceneData[LENS_WATCHED_DEMO_KEY] === true;
 }

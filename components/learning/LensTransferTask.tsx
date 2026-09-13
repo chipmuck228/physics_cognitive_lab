@@ -11,6 +11,7 @@ import {
   LENS_SIDE_OPTIONS,
   LENS_SIZE_OPTIONS,
   LENS_STATION_OPTIONS,
+  lensTransferProgressLabel,
 } from "@/lib/content/convex-lens-optical-bench";
 import type { LensTransferDraft } from "@/lib/learning/lens-transfer";
 import type { TransferTarget } from "@/types/physics-model";
@@ -23,6 +24,9 @@ interface LensTransferTaskProps {
   needMore: boolean;
   lastFailure?: string | null;
   reviewOnly?: boolean;
+  currentIndex?: number;
+  totalCount?: number;
+  firstComplete?: boolean;
 }
 
 export function LensTransferTask({
@@ -33,11 +37,29 @@ export function LensTransferTask({
   needMore,
   lastFailure,
   reviewOnly = false,
+  currentIndex = 1,
+  totalCount = 2,
+  firstComplete = false,
 }: LensTransferTaskProps) {
   return (
-    <div className="space-y-4" data-testid="lens-transfer-task" data-target={target.id}>
+    <div
+      className="space-y-4"
+      data-testid="lens-transfer-task"
+      data-target={target.id}
+      data-transfer-current={String(currentIndex)}
+      data-transfer-total={String(totalCount)}
+    >
       <Card className="space-y-5 p-4">
         <fieldset disabled={reviewOnly} className="space-y-5 border-0 p-0">
+        <p
+          className="text-sm text-[var(--ink-muted)]"
+          data-testid="lens-transfer-progress"
+        >
+          {lensTransferProgressLabel(currentIndex, totalCount)}
+        </p>
+        {firstComplete && currentIndex > 1 ? (
+          <p className="text-sm text-[var(--ink-muted)]">{LENS_COPY.transferFirstSaved}</p>
+        ) : null}
         <p className="text-sm font-medium">先看这个新情境</p>
         <p className="text-sm leading-relaxed">{target.scenario}</p>
         <QuestionGroup

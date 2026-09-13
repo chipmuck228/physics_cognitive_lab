@@ -172,6 +172,27 @@ export function activeLensTransferTargetId(attempts: TransferAttempt[]): string 
   );
 }
 
+export function lensTransferProgress(attempts: TransferAttempt[]): {
+  current: number;
+  total: number;
+  firstComplete: boolean;
+} {
+  const total = LENS_TRANSFER_REQUIRED_IDS.length;
+  const passed = LENS_TRANSFER_REQUIRED_IDS.filter((id) =>
+    attempts.some(
+      (attempt) => attempt.accepted && (attempt.targetId ?? attempt.scenarioId) === id,
+    ),
+  ).length;
+  if (passed >= total) {
+    return { current: total, total, firstComplete: total > 1 };
+  }
+  return {
+    current: passed + 1,
+    total,
+    firstComplete: passed >= 1,
+  };
+}
+
 export function completeLensTransferDraft(targetId: string): LensTransferDraft {
   const station =
     targetId === "far-magnifying-glass-virtual" ? "inside-f" : "between-f-and-2f";

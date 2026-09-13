@@ -11,6 +11,7 @@ interface LensObserveTaskProps {
   onMoveScreen: () => void;
   screenAtImagePlane: boolean;
   needMore: boolean;
+  needMoreMessage?: string;
   saved: boolean;
   reviewOnly?: boolean;
 }
@@ -23,6 +24,7 @@ export function LensObserveTask({
   onMoveScreen,
   screenAtImagePlane,
   needMore,
+  needMoreMessage,
   saved,
   reviewOnly = false,
 }: LensObserveTaskProps) {
@@ -63,7 +65,9 @@ export function LensObserveTask({
           ))}
         </fieldset>
         {needMore ? (
-          <ValidationMessage kind="missing">{LENS_COPY.observeNeedMore}</ValidationMessage>
+          <ValidationMessage kind="missing" testId="lens-observe-need-more">
+            {needMoreMessage ?? LENS_COPY.observeNeedRecord}
+          </ValidationMessage>
         ) : null}
         {saved && !needMore ? (
           <ValidationMessage kind="info">已经记下你看见的。</ValidationMessage>

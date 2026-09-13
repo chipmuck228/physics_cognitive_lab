@@ -93,7 +93,12 @@ import {
 } from "@/lib/learning/lens-revisit";
 import { hasSufficientLensDescription } from "@/lib/learning/lens-describe";
 import { hasSufficientLensExplanation } from "@/lib/learning/lens-explain";
-import { hasSufficientLensObservation } from "@/lib/learning/lens-observe";
+import {
+  evaluateLensObservationEligibility,
+  hasSufficientLensObservation,
+  lensObserveMissingMessage,
+  lensPerformedObserveInteraction,
+} from "@/lib/learning/lens-observe";
 import {
   firstCommittedLensPrediction,
   lensPredictLabel,
@@ -117,6 +122,7 @@ import {
   activeLensTransferTargetId,
   emptyLensTransferDraft,
   hasCompletedLensTransfer,
+  lensTransferProgress,
   lensTransferTarget,
 } from "@/lib/learning/lens-transfer";
 import {
@@ -170,6 +176,7 @@ export function ConvexLensOpticalBenchLab() {
 
   const [selectedOptionIds, setSelectedOptionIds] = useState<string[]>([]);
   const [observeNeedMore, setObserveNeedMore] = useState(false);
+  const [observeNeedMoreMessage, setObserveNeedMoreMessage] = useState("");
   const [describe, setDescribe] = useState(emptyLensDescribeInput());
   const [describeNeedStructure, setDescribeNeedStructure] = useState(false);
   const [predictOutcome, setPredictOutcome] = useState("");
@@ -207,6 +214,7 @@ export function ConvexLensOpticalBenchLab() {
         session.transferAttempts.length,
         session.examAttempts.length,
         session.independentAssessment?.challengeAttempts?.length ?? 0,
+        lensPerformedObserveInteraction(session) ? "watched" : "unwatched",
       ].join("|")
     : "";
 
@@ -215,13 +223,20 @@ export function ConvexLensOpticalBenchLab() {
       return;
     }
     const latestObservation = session.observations.at(-1);
-    setSelectedOptionIds(
-      lensObserveDraft(session) ?? latestObservation?.selectedOptionIds ?? [],
+    const selectedIds =
+      lensObserveDraft(session) ?? latestObservation?.selectedOptionIds ?? [];
+    setSelectedOptionIds(selectedIds);
+    const observeEligibility = evaluateLensObservationEligibility(
+      selectedIds,
+      lensPerformedObserveInteraction(session),
     );
-    setObserveNeedMore(
+    const observeMissing =
       session.stage === LearningStage.OBSERVE &&
-        Boolean(latestObservation) &&
-        !hasSufficientLensObservation(session.observations),
+      Boolean(latestObservation) &&
+      !observeEligibility.sufficient;
+    setObserveNeedMore(observeMissing);
+    setObserveNeedMoreMessage(
+      observeMissing ? lensObserveMissingMessage(observeEligibility.missingKind) : "",
     );
     const draft = lensDescribeDraft(session);
     const latestDescription = session.descriptions.at(-1);
@@ -388,6 +403,7 @@ export function ConvexLensOpticalBenchLab() {
   const latestModel = session.modelAttempts.at(-1);
   const latestTransfer = session.transferAttempts.at(-1);
   const transferTarget = lensTransferTarget(transferDraft.targetId);
+  const transferProgress = lensTransferProgress(session.transferAttempts);
   const examOpen = isLensExamSessionOpen(session.examAttempts, examDraft);
   const examPatternId =
     currentLensExamPatternId(session.examAttempts, examDraft) ?? examDraft.currentPatternId;
@@ -526,9 +542,11 @@ export function ConvexLensOpticalBenchLab() {
       onSubmit={() => {
         const outcome = saveObservation(selectedOptionIds);
         setObserveNeedMore(outcome.kind === "missing");
+        setObserveNeedMoreMessage(outcome.kind === "missing" ? outcome.message ?? "" : "");
         presentAction(outcome);
       }}
       needMore={observeNeedMore}
+      needMoreMessage={observeNeedMoreMessage}
       saved={observeComplete}
       reviewOnly={revisiting}
     />
@@ -696,6 +714,9 @@ export function ConvexLensOpticalBenchLab() {
           : null
       }
       reviewOnly={revisiting}
+      currentIndex={transferProgress.current}
+      totalCount={transferProgress.total}
+      firstComplete={transferProgress.firstComplete}
     />
   ) : isExam && examPattern && (examOpen || revisiting) ? (
     <LensExamTask

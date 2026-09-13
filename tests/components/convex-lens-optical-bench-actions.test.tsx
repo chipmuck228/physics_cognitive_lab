@@ -3,7 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { ConvexLensOpticalBenchLab } from "@/components/learning/ConvexLensOpticalBenchLab";
-import { LENS_COPY } from "@/lib/content/convex-lens-optical-bench";
+import {
+  LENS_COPY,
+  LENS_OBSERVE_OPTIONS,
+  LENS_OBSERVE_REQUIRED_IDS,
+} from "@/lib/content/convex-lens-optical-bench";
 import { STUDENT_CHROME } from "@/lib/content/student-language";
 import { applyLensHelpIntent } from "@/lib/learning/lens-help-intents";
 import { completeLensModelDraft } from "@/lib/learning/lens-model";
@@ -208,6 +212,56 @@ describe("Scene 07 enabled-action contract", () => {
       "data-response-class",
       "missing",
     );
+  });
+
+  it("OBSERVE checkboxes without a bench action show the interaction reason", async () => {
+    const user = userEvent.setup();
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-observe-no-bench", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.OBSERVE,
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    const required = new Set<string>(LENS_OBSERVE_REQUIRED_IDS);
+    for (const option of LENS_OBSERVE_OPTIONS) {
+      if (required.has(option.id)) {
+        await user.click(screen.getByLabelText(option.label));
+      }
+    }
+    await user.click(screen.getByRole("button", { name: LENS_COPY.observeSubmit }));
+    expect(screen.getByTestId("lens-observe-need-more")).toHaveTextContent(
+      LENS_COPY.observeNeedInteraction,
+    );
+    expect(screen.getByTestId("lens-action-response")).toHaveAttribute(
+      "data-response-class",
+      "missing",
+    );
+    expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.OBSERVE);
+  });
+
+  it("TRANSFER progress chrome shows 1 / 2 then 2 / 2", () => {
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-transfer-progress-1", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.TRANSFER,
+    });
+    const { unmount } = render(<ConvexLensOpticalBenchLab />);
+    expect(screen.getByTestId("lens-transfer-progress")).toHaveTextContent("第 1 / 2 个新情境");
+    unmount();
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-transfer-progress-2", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.TRANSFER,
+      transferAttempts: [
+        {
+          scenarioId: LENS_TRANSFER_REQUIRED_IDS[0],
+          targetId: LENS_TRANSFER_REQUIRED_IDS[0],
+          accepted: true,
+          response: "投影仪。",
+          timestamp: "t1",
+        },
+      ],
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    expect(screen.getByTestId("lens-transfer-progress")).toHaveTextContent("第 2 / 2 个新情境");
+    expect(screen.getByText(LENS_COPY.transferFirstSaved)).toBeInTheDocument();
   });
 
   it("OBSERVE submit and screen move always produce a visible response class", async () => {

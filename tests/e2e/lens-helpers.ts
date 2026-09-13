@@ -256,6 +256,7 @@ export async function fillOneRay(
 
 export async function completeLensProjectorTransfer(page: Page) {
   await expect(page.getByTestId("lens-transfer-task")).toBeVisible();
+  await expect(page.getByTestId("lens-transfer-progress")).toHaveText("第 1 / 2 个新情境");
   await fillImagingStructure(page, "between-f-and-2f", "lens-transfer");
   await page.getByTestId("lens-transfer-explanation").fill(
     "幻灯片在 F 和 2F 之间，光线真正会聚，所以成倒立放大的实像，幕布放到像的位置才能接到。",
@@ -265,6 +266,7 @@ export async function completeLensProjectorTransfer(page: Page) {
 
 export async function completeLensMagnifierTransfer(page: Page) {
   await expect(page.getByTestId("lens-transfer-task")).toBeVisible();
+  await expect(page.getByTestId("lens-transfer-progress")).toHaveText("第 2 / 2 个新情境");
   await fillImagingStructure(page, "inside-f", "lens-transfer");
   await page.getByTestId("lens-transfer-explanation").fill(
     "邮票在焦点以内，光线发散，反向延长线相交，所以是正立放大的虚像，屏接不到。",
