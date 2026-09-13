@@ -30,14 +30,14 @@ export function LensExplainTask({
         <fieldset disabled={reviewOnly} className="space-y-5 border-0 p-0">
         <QuestionGroup
           id="lens-explain-meeting"
-          question="光线会怎样相交？"
+          question={LENS_COPY.explainMeeting}
           value={value.meetingFragment}
           onChange={(meetingFragment) => onChange({ ...value, meetingFragment })}
           options={[...LENS_EXPLAIN_MEETING]}
         />
         <QuestionGroup
           id="lens-explain-screen"
-          question="光屏和像是什么关系？"
+          question={LENS_COPY.explainScreen}
           value={value.screenFragment}
           onChange={(screenFragment) => onChange({ ...value, screenFragment })}
           options={[...LENS_EXPLAIN_SCREEN]}
@@ -57,7 +57,7 @@ export function LensExplainTask({
         </fieldset>
         {needMore ? (
           <ValidationMessage kind="missing">
-            先选出一段会聚或接收关系，再用自己的话写。只背“2F 外倒立缩小实像”还不够。
+            {LENS_COPY.explainNeedMore}
           </ValidationMessage>
         ) : null}
         {reviewOnly ? null : (

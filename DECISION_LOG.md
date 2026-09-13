@@ -761,3 +761,15 @@ Default Scene-scoped review request: `spec/prompts/review-physics-representation
 
 ---
 
+## D064 — Model-aligned surface fields; presentation must not infer action results
+
+**Date:** 2026-09-13
+
+**Decision:** Do not create `spec/architecture/model-aligned-interaction-contract.md`. Refine `learner-interaction-design-template.md` and `learner-interaction-runtime-contract.md`. Every Scene interaction-plan stage / substep must name student question, expected response shape, surface justification, protected future structure, and primary CTA meaning. Scene 07 EXPLAIN stays an L3 fragment account of already-seen screen results (decision A). Do not move ray construction into EXPLAIN. For any action that writes Evidence, Progress, accepted/rejected, or Physics, Scene 07 returns one `LensActionResult`. Presentation must not re-evaluate. `lensModelMissingLabels` may justify `missing` only; complete labels do not imply accepted MODEL.
+
+**Why:** Correct physics and evaluators still allowed UI to drift from the current cognitive task, and React + hook were two truth paths for DESCRIBE / EXPLAIN / MODEL / TRANSFER (and OBSERVE / EXAM / AI_OFF submits).
+
+**Consequence:** Scene 07 is the first consumer. No UniversalActionEngine. No Scene DSL / Interaction Shell change. No Scene 03. Evaluator predicates and L3/L4 meanings unchanged.
+
+---
+

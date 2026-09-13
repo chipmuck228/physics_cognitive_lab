@@ -1,14 +1,27 @@
 import { describe, expect, it } from "vitest";
 
+import { LENS_OBSERVE_REQUIRED_IDS } from "@/lib/content/convex-lens-optical-bench";
 import {
   applyLensComparisonSave,
+  applyLensDescriptionSave,
+  applyLensExplanationSave,
+  applyLensModelSubmit,
+  applyLensObservationSave,
   applyLensObservedSave,
   applyLensPredictionCommit,
   applyLensReflectionSave,
+  applyLensTransferSubmit,
   lensReflectionEligibility,
 } from "@/lib/learning/lens-action";
 import { presentLensActionResponse } from "@/lib/learning/lens-action-response";
+import { completeLensExplainInput } from "@/lib/learning/lens-explain";
+import { completeLensModelDraft } from "@/lib/learning/lens-model";
 import { applyLensGoBack, applyLensReturnToProgress } from "@/lib/learning/lens-revisit";
+import {
+  completeLensTransferDraft,
+  emptyLensTransferDraft,
+  LENS_TRANSFER_REQUIRED_IDS,
+} from "@/lib/learning/lens-transfer";
 import { createSession } from "@/lib/learning/session";
 import { CONVEX_LENS_SCENE_ID, LearningStage, type LearningSession } from "@/types/learning";
 import { LENS_EXPERIMENT_A } from "@/lib/physics/convex-lens-optical-bench";
@@ -151,5 +164,132 @@ describe("Scene 07 experiment action eligibility", () => {
     );
     expect(result.session).toBe(session);
     expect(result.outcome.kind).toBe("missing");
+  });
+});
+
+function stageSession(stage: LearningStage): LearningSession {
+  const session = createSession(() => "t0", () => `lens-${stage}`, CONVEX_LENS_SCENE_ID);
+  return {
+    ...session,
+    stage,
+    events: [
+      ...session.events,
+      { type: "stage_entered", timestamp: "t1", stage },
+    ],
+  };
+}
+
+const completeDescribe = {
+  object: "optical-bench" as const,
+  quantities: "object-f-image-screen" as const,
+  change: "object-or-screen-changes-view" as const,
+  studentDescription: "物体、透镜、F 和光屏不是同一件东西，刚才动的是物体。",
+};
+
+describe("Scene 07 authoritative stage actions", () => {
+  it("DESCRIBE evaluates once and missing stays missing", () => {
+    const result = applyLensDescriptionSave(stageSession(LearningStage.DESCRIBE), {
+      ...completeDescribe,
+      studentDescription: "变了",
+    });
+    expect(result.outcome.kind).toBe("missing");
+    expect(result.session.descriptions[0]?.sufficient).toBe(false);
+    expect(result.session.stage).toBe(LearningStage.DESCRIBE);
+  });
+
+  it("DESCRIBE sufficient commits from the Scene action", () => {
+    const result = applyLensDescriptionSave(
+      stageSession(LearningStage.DESCRIBE),
+      completeDescribe,
+    );
+    expect(result.outcome.kind).toBe("committed");
+    expect(result.session.descriptions[0]?.sufficient).toBe(true);
+  });
+
+  it("EXPLAIN missing is owned by the Scene action", () => {
+    const result = applyLensExplanationSave(stageSession(LearningStage.EXPLAIN), {
+      meetingFragment: "",
+      screenFragment: "",
+      studentExplanation: "变了",
+    });
+    expect(result.outcome.kind).toBe("missing");
+    expect(result.session.stage).toBe(LearningStage.EXPLAIN);
+  });
+
+  it("EXPLAIN sufficient commits from the Scene action", () => {
+    const result = applyLensExplanationSave(
+      stageSession(LearningStage.EXPLAIN),
+      completeLensExplainInput(),
+    );
+    expect(result.outcome.kind).toBe("committed");
+    expect(result.session.explanations[0]?.sufficient).toBe(true);
+  });
+
+  it("OBSERVE incomplete is missing", () => {
+    const result = applyLensObservationSave(stageSession(LearningStage.OBSERVE), [
+      "screen-can-change",
+    ]);
+    expect(result.outcome.kind).toBe("missing");
+    expect(result.session.observations[0]?.sufficient).toBe(false);
+  });
+
+  it("OBSERVE required selection commits from the Scene action", () => {
+    const result = applyLensObservationSave(stageSession(LearningStage.OBSERVE), [
+      ...LENS_OBSERVE_REQUIRED_IDS,
+    ]);
+    expect(result.outcome.kind).toBe("committed");
+    expect(result.session.observations[0]?.sufficient).toBe(true);
+  });
+
+  it("MODEL incomplete labels are missing, not accepted", () => {
+    const result = applyLensModelSubmit(
+      stageSession(LearningStage.MODEL),
+      completeLensModelDraft(),
+    );
+    const incomplete = applyLensModelSubmit(stageSession(LearningStage.MODEL), {
+      ...completeLensModelDraft(),
+      studentReasoning: "",
+      meetingMode: "",
+    });
+    expect(result.outcome.kind).toBe("committed");
+    expect(incomplete.outcome.kind).toBe("missing");
+    expect(incomplete.session.modelAttempts[0]?.correctStructure).toBe(false);
+    expect(incomplete.session.stage).toBe(LearningStage.MODEL);
+  });
+
+  it("MODEL complete-but-incorrect is rejected, not committed", () => {
+    const draft = {
+      ...completeLensModelDraft("beyond-2f"),
+      meetingMode: "backward-extension",
+    };
+    const result = applyLensModelSubmit(stageSession(LearningStage.MODEL), draft);
+    expect(result.session.modelAttempts[0]?.correctStructure).toBe(false);
+    expect(result.outcome.kind).toBe("rejected");
+    expect(presentLensActionResponse(result.outcome)).toBe("rejected");
+    expect(result.session.stage).toBe(LearningStage.MODEL);
+  });
+
+  it("TRANSFER incomplete is missing", () => {
+    const result = applyLensTransferSubmit(
+      stageSession(LearningStage.TRANSFER),
+      emptyLensTransferDraft(),
+    );
+    expect(result.outcome.kind).toBe("missing");
+    expect(result.session.transferAttempts[0]?.accepted).not.toBe(true);
+  });
+
+  it("TRANSFER rejected is not presented as committed", () => {
+    const accepted = completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]);
+    const draft = {
+      ...accepted,
+      meetingMode:
+        accepted.meetingMode === "actual-convergence"
+          ? "backward-extension"
+          : "actual-convergence",
+    };
+    const result = applyLensTransferSubmit(stageSession(LearningStage.TRANSFER), draft);
+    expect(result.session.transferAttempts[0]?.accepted).toBe(false);
+    expect(result.outcome.kind).toBe("rejected");
+    expect(presentLensActionResponse(result.outcome)).toBe("rejected");
   });
 });

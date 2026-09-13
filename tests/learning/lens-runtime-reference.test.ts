@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { evaluateConvexLensModelConstruction } from "@/content/physics-models/convex-lens-imaging/construction";
@@ -279,6 +280,18 @@ describe("Scene 07 framing and trace", () => {
     ]);
     expect(items.find((item) => item.id === "observe")?.summary).toMatch(/光屏/);
     expect(JSON.stringify(evidenceSnapshot(session))).toBe(before);
+  });
+
+  it("presentation must not re-evaluate Scene-owned action results", () => {
+    const lab = readFileSync("components/learning/ConvexLensOpticalBenchLab.tsx", "utf8");
+    expect(lab).not.toMatch(/evaluateLensObservation\(/);
+    expect(lab).not.toMatch(/evaluateLensDescription\(/);
+    expect(lab).not.toMatch(/evaluateLensExplanation\(/);
+    expect(lab).not.toMatch(/buildLensExamAttempt\(/);
+    expect(lab).not.toMatch(/canCommitLensExamAttempt\(/);
+    expect(lab).not.toMatch(/canCommitLensAiOffResponse\(/);
+    expect(lab).not.toMatch(/if \(missing\.length === 0\)/);
+    expect(lab).toMatch(/presentAction\(outcome\)/);
   });
 
   it("14. Official MODEL evaluator is unchanged", () => {

@@ -3,6 +3,31 @@ import { hasOwnWords } from "@/lib/learning/engine-describe";
 import { advanceIfReady } from "@/lib/learning/advance";
 import type { LensDomainOutcome } from "@/lib/learning/lens-action-response";
 import {
+  applyLensAiOffPostCheck,
+  buildLensAiOffAssessment,
+  buildLensAiOffAttempt,
+  canCommitLensAiOffResponse,
+  lensTutorUsedDuringIndependent,
+  nextLensAiOffDraft,
+  type LensAiOffDraft,
+} from "@/lib/learning/lens-ai-off";
+import {
+  evaluateLensDescription,
+  type LensDescribeInput,
+} from "@/lib/learning/lens-describe";
+import {
+  buildLensExamAttempt,
+  canCommitLensExamAttempt,
+  nextLensExamDraft,
+  summarizeLensExamAttempt,
+  type LensExamInput,
+} from "@/lib/learning/lens-exam";
+import {
+  evaluateLensExplanation,
+  type LensExplainInput,
+} from "@/lib/learning/lens-explain";
+import { lensFeedbackForFailureKind, lensTransferFeedback } from "@/lib/learning/lens-feedback";
+import {
   activeIncompleteLensEvidence,
   authoredBeforeIntervention,
   canRunLensExperiment,
@@ -16,10 +41,38 @@ import {
   type LensObservedResult,
 } from "@/lib/learning/lens-experiment";
 import {
+  buildLensModelAttempt,
+  draftToConvexLensAttempt,
+  lensModelMissingLabels,
+  type LensModelDraft,
+} from "@/lib/learning/lens-model";
+import {
+  evaluateLensObservation,
+  lensObservationLabelsFor,
+} from "@/lib/learning/lens-observe";
+import {
   evaluateLensPrediction,
   firstCommittedLensPrediction,
 } from "@/lib/learning/lens-predict";
 import { isLensRevisiting } from "@/lib/learning/lens-revisit";
+import {
+  lensAiOffDraft,
+  lensExamDraft,
+  withLensAiOffDraft,
+  withLensDescribeDraft,
+  withLensExamDraft,
+  withLensExplainDraft,
+  withLensModelDraft,
+  withLensObserveDraft,
+  withLensTransferDraft,
+} from "@/lib/learning/lens-scene-data";
+import {
+  activeLensTransferTargetId,
+  buildLensTransferAttempt,
+  draftToLensTransferAttempt,
+  emptyLensTransferDraft,
+  type LensTransferDraft,
+} from "@/lib/learning/lens-transfer";
 import { createLearningEvent } from "@/lib/learning/events";
 import { nextStage } from "@/lib/learning/state-machine";
 import {
@@ -34,8 +87,11 @@ import {
 } from "@/lib/runtime/physics-state";
 import {
   LearningStage,
+  type DescriptionEvidence,
   type ExperimentEvidence,
+  type ExplanationEvidence,
   type LearningSession,
+  type ObservationEvidence,
   type PredictionEvidence,
 } from "@/types/learning";
 
@@ -333,6 +389,387 @@ export function applyLensRunExperiment(
       kind: "physics-applied",
       review: false,
       message: "已经开始这一次验证。",
+    },
+  };
+}
+
+export function applyLensObservationSave(
+  session: LearningSession,
+  selectedOptionIds: string[],
+): LensActionResult {
+  if (isLensRevisiting(session) || session.stage !== LearningStage.OBSERVE) {
+    return blocked(session, LENS_COPY.reviewCannotEdit);
+  }
+  const evaluation = evaluateLensObservation(selectedOptionIds);
+  const observation: ObservationEvidence = {
+    text: lensObservationLabelsFor(selectedOptionIds),
+    timestamp: new Date().toISOString(),
+    selectedOptionIds: evaluation.selectedOptionIds,
+    watchedFullCycle: session.sceneData.watchedObserveDemo === true,
+    sufficient: evaluation.sufficient,
+  };
+  const next = {
+    ...session,
+    sceneData: withLensObserveDraft(session.sceneData, selectedOptionIds),
+    observations: [...session.observations, observation],
+    events: [
+      ...session.events,
+      createLearningEvent("student_response", session.stage, {
+        kind: "observation",
+        sufficient: evaluation.sufficient,
+      }),
+    ],
+  };
+  if (!evaluation.sufficient) {
+    return {
+      session: next,
+      outcome: { kind: "missing", message: LENS_COPY.observeNeedMore },
+    };
+  }
+  const advanced = advanceLensLoop(next);
+  return {
+    session: advanced,
+    outcome: {
+      kind: "committed",
+      advanced: advanced.stage !== session.stage,
+      message: "已经记下你看见的。",
+    },
+  };
+}
+
+export function applyLensDescriptionSave(
+  session: LearningSession,
+  input: LensDescribeInput,
+): LensActionResult {
+  if (isLensRevisiting(session) || session.stage !== LearningStage.DESCRIBE) {
+    return blocked(session, LENS_COPY.reviewCannotEdit);
+  }
+  const evaluation = evaluateLensDescription(input);
+  const description: DescriptionEvidence = {
+    text: input.studentDescription.trim(),
+    object: input.object,
+    quantity: input.quantities,
+    change: input.change,
+    sufficient: evaluation.sufficient,
+    timestamp: new Date().toISOString(),
+  };
+  const next = {
+    ...session,
+    sceneData: withLensDescribeDraft(session.sceneData, input),
+    descriptions: [...session.descriptions, description],
+    events: [
+      ...session.events,
+      createLearningEvent("student_response", session.stage, {
+        kind: "description",
+        sufficient: evaluation.sufficient,
+      }),
+    ],
+  };
+  if (!evaluation.sufficient) {
+    return {
+      session: next,
+      outcome: { kind: "missing", message: LENS_COPY.describeNeedStructure },
+    };
+  }
+  const advanced = advanceLensLoop(next);
+  return {
+    session: advanced,
+    outcome: {
+      kind: "committed",
+      advanced: advanced.stage !== session.stage,
+    },
+  };
+}
+
+export function applyLensExplanationSave(
+  session: LearningSession,
+  input: LensExplainInput,
+): LensActionResult {
+  if (isLensRevisiting(session) || session.stage !== LearningStage.EXPLAIN) {
+    return blocked(session, LENS_COPY.reviewCannotEdit);
+  }
+  const evaluation = evaluateLensExplanation(input);
+  const explanation: ExplanationEvidence = {
+    text: input.studentExplanation.trim(),
+    timestamp: new Date().toISOString(),
+    lensAnswers: {
+      meetingFragment: input.meetingFragment,
+      screenFragment: input.screenFragment,
+    },
+    sufficient: evaluation.sufficient,
+  };
+  const next = {
+    ...session,
+    sceneData: withLensExplainDraft(session.sceneData, input),
+    explanations: [...session.explanations, explanation],
+    events: [
+      ...session.events,
+      createLearningEvent("student_response", session.stage, {
+        kind: "explanation",
+        sufficient: evaluation.sufficient,
+      }),
+    ],
+  };
+  if (!evaluation.sufficient) {
+    return {
+      session: next,
+      outcome: { kind: "missing", message: LENS_COPY.explainNeedMore },
+    };
+  }
+  const advanced = advanceLensLoop(next);
+  return {
+    session: advanced,
+    outcome: {
+      kind: "committed",
+      advanced: advanced.stage !== session.stage,
+    },
+  };
+}
+
+export function applyLensModelSubmit(
+  session: LearningSession,
+  draft: LensModelDraft,
+): LensActionResult {
+  if (isLensRevisiting(session) || session.stage !== LearningStage.MODEL) {
+    return blocked(session, LENS_COPY.reviewCannotEdit);
+  }
+  const attempt = buildLensModelAttempt(draft, new Date().toISOString());
+  const next = {
+    ...session,
+    sceneData: withLensModelDraft(session.sceneData, draft),
+    modelAttempts: [...session.modelAttempts, attempt],
+    events: [
+      ...session.events,
+      createLearningEvent("model_submitted", session.stage, {
+        correctStructure: attempt.correctStructure,
+        completenessOnly: attempt.completenessOnly,
+        failureKinds: attempt.failureKinds,
+      }),
+    ],
+  };
+  if (!attempt.correctStructure) {
+    const incomplete = !draftToConvexLensAttempt(draft);
+    if (incomplete || attempt.failureKinds?.includes("missing-required-construction-pair")) {
+      return {
+        session: next,
+        outcome: {
+          kind: "missing",
+          message: lensFeedbackForFailureKind(
+            attempt.failureKinds?.[0],
+            lensModelMissingLabels(draft),
+          ).message,
+        },
+      };
+    }
+    return {
+      session: next,
+      outcome: {
+        kind: "rejected",
+        message: lensFeedbackForFailureKind(attempt.failureKinds?.[0], []).message,
+      },
+    };
+  }
+  const advanced = advanceLensLoop(next);
+  return {
+    session: advanced,
+    outcome: {
+      kind: "committed",
+      advanced: advanced.stage !== session.stage,
+    },
+  };
+}
+
+export function applyLensTransferSubmit(
+  session: LearningSession,
+  draft: LensTransferDraft,
+): LensActionResult {
+  if (isLensRevisiting(session) || session.stage !== LearningStage.TRANSFER) {
+    return blocked(session, LENS_COPY.reviewCannotEdit);
+  }
+  const structured = draftToLensTransferAttempt(draft);
+  const attempt = buildLensTransferAttempt(draft, new Date().toISOString());
+  const nextAttempts = [...session.transferAttempts, attempt];
+  const nextTarget = attempt.accepted
+    ? activeLensTransferTargetId(nextAttempts)
+    : draft.targetId;
+  const nextDraft = attempt.accepted ? emptyLensTransferDraft(nextTarget) : draft;
+  const next = {
+    ...session,
+    transferAttempts: nextAttempts,
+    sceneData: withLensTransferDraft(session.sceneData, nextDraft),
+    events: [
+      ...session.events,
+      createLearningEvent("transfer_attempted", session.stage, {
+        targetId: attempt.targetId,
+        accepted: attempt.accepted,
+      }),
+    ],
+  };
+  if (!structured) {
+    return {
+      session: next,
+      outcome: { kind: "missing", message: LENS_COPY.transferNeedMore },
+    };
+  }
+  if (!attempt.accepted) {
+    return {
+      session: next,
+      outcome: {
+        kind: "rejected",
+        message: lensTransferFeedback(attempt.failureKinds?.[0]).message,
+      },
+    };
+  }
+  const advanced = advanceLensLoop(next);
+  return {
+    session: advanced,
+    outcome: {
+      kind: "committed",
+      advanced: advanced.stage !== session.stage,
+    },
+  };
+}
+
+export function applyLensExamSubmit(
+  session: LearningSession,
+  input: LensExamInput,
+): LensActionResult {
+  if (isLensRevisiting(session) || session.stage !== LearningStage.EXAM) {
+    return blocked(session, LENS_COPY.reviewCannotEdit);
+  }
+  if (!canCommitLensExamAttempt(input)) {
+    return {
+      session,
+      outcome: {
+        kind: "missing",
+        message: "先判断物体处在哪个成像区域，再选用关系，最后作答。",
+      },
+    };
+  }
+  const attempt = buildLensExamAttempt(input);
+  const nextAttempts = [...session.examAttempts, attempt];
+  const nextDraft = nextLensExamDraft(nextAttempts, lensExamDraft(session), input.patternId);
+  const next = {
+    ...session,
+    examAttempts: nextAttempts,
+    sceneData: withLensExamDraft(session.sceneData, nextDraft),
+    events: [
+      ...session.events,
+      createLearningEvent("exam_answered", session.stage, {
+        patternId: attempt.patternId,
+        correct: attempt.correct,
+      }),
+    ],
+  };
+  const advanced = advanceLensLoop(next);
+  if (!attempt.correct) {
+    return {
+      session: advanced,
+      outcome: {
+        kind: "rejected",
+        message: summarizeLensExamAttempt(attempt),
+      },
+    };
+  }
+  return {
+    session: advanced,
+    outcome: {
+      kind: "committed",
+      advanced: advanced.stage !== session.stage,
+    },
+  };
+}
+
+export function applyLensAiOffCommit(
+  session: LearningSession,
+  draft: LensAiOffDraft,
+): LensActionResult {
+  if (isLensRevisiting(session) || session.stage !== LearningStage.AI_OFF) {
+    return blocked(session, LENS_COPY.reviewCannotEdit);
+  }
+  if (!canCommitLensAiOffResponse(draft)) {
+    return {
+      session,
+      outcome: { kind: "missing", message: "先选出判断，再写下理由。" },
+    };
+  }
+  const llmUsed = lensTutorUsedDuringIndependent(session);
+  const attempt = buildLensAiOffAttempt(draft, new Date().toISOString(), [], llmUsed);
+  const attempts = [
+    ...(session.independentAssessment?.challengeAttempts ?? []),
+    attempt,
+  ];
+  const assessment = buildLensAiOffAssessment(attempts, llmUsed);
+  return {
+    session: {
+      ...session,
+      independentAssessment: assessment,
+      sceneData: withLensAiOffDraft(session.sceneData, {
+        ...draft,
+        step: "post-check",
+        postCheckSelections: [],
+      }),
+      events: [
+        ...session.events,
+        createLearningEvent("student_response", session.stage, {
+          kind: "lens-ai-off-commit",
+          challengeId: attempt.challengeId,
+        }),
+      ],
+    },
+    outcome: { kind: "committed" },
+  };
+}
+
+export function applyLensAiOffPostCheckSave(
+  session: LearningSession,
+  input: { challengeId: string; postCheckIds: string[] },
+): LensActionResult {
+  if (isLensRevisiting(session) || session.stage !== LearningStage.AI_OFF) {
+    return blocked(session, LENS_COPY.reviewCannotEdit);
+  }
+  const attempts = [...(session.independentAssessment?.challengeAttempts ?? [])];
+  const index = [...attempts]
+    .reverse()
+    .findIndex((attempt) => attempt.challengeId === input.challengeId);
+  if (index < 0) {
+    return blocked(session, "先提交判断，再做对照。");
+  }
+  const actualIndex = attempts.length - 1 - index;
+  const original = attempts[actualIndex];
+  if (!original) {
+    return blocked(session, "先提交判断，再做对照。");
+  }
+  const llmUsed = lensTutorUsedDuringIndependent(session);
+  attempts[actualIndex] = applyLensAiOffPostCheck(
+    original,
+    lensAiOffDraft(session),
+    input.postCheckIds,
+    llmUsed,
+  );
+  const assessment = buildLensAiOffAssessment(attempts, llmUsed);
+  const next = {
+    ...session,
+    independentAssessment: assessment,
+    sceneData: withLensAiOffDraft(
+      session.sceneData,
+      nextLensAiOffDraft(assessment, lensAiOffDraft(session), input.challengeId),
+    ),
+    events: [
+      ...session.events,
+      createLearningEvent("student_response", session.stage, {
+        kind: "lens-ai-off-post-check",
+        challengeId: input.challengeId,
+        accepted: attempts[actualIndex]?.accepted,
+      }),
+    ],
+  };
+  const advanced = advanceLensLoop(next);
+  return {
+    session: advanced,
+    outcome: {
+      kind: "committed",
+      advanced: advanced.stage !== session.stage,
     },
   };
 }

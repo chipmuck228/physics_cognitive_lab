@@ -65,8 +65,17 @@ When documents disagree: the designated owner above still wins for its domain. T
 The runtime MAY own:
 
 1. Distinguishing Progress / Draft / View / Review / Evidence / Physics at the interaction layer.  
-2. Task framing: context, goal, focus, action (student language).  
-3. The current `VisibleInteractionContext` (operable capabilities **and** mentionable references).  
+2. Task framing: context, goal, focus, action, **student question**, and **expected response shape** (student language; no official answer).  
+3. The current `VisibleInteractionContext` (operable capabilities **and** mentionable references). Every meaningful learner-facing element must be traceable:
+
+```text
+Physics Model
+  → current cognitive objective
+  → current evidence requirement
+  → current learner task
+  → current surface
+```
+
 4. The **vocabulary and presentation** of action→response classes — not the domain outcome.  
 5. Feedback kinds: missing / inconsistent / think_again / blocked / loading / error — **mapped from** deterministic `failureKind` or Scene/evaluator/progression results.  
 6. Help availability bound to stage + substep + `VisibleInteractionContext`.  
@@ -121,6 +130,22 @@ learner-visible response
 
 The runtime never reverses this direction. It does not decide whether a draft was committed, an attempt was rejected, Progress advanced, physics changed, or Evidence was written.
 
+**Presentation must not infer an authoritative action result** when the Scene / evaluator / progression already owns that result.
+
+Forbidden split:
+
+```text
+React evaluates / guesses committed | missing | rejected | advanced
+  while
+hook / Scene action separately evaluates / writes Evidence / advances
+```
+
+For any action that can affect Evidence, Progress, accepted/rejected state, a domain attempt result, or Physics state, the Scene handler returns one authoritative result object. React only passes the current draft, receives the outcome, and presents it.
+
+Do not create a generic UniversalActionEngine. Scene-local result types (Scene 07: `LensActionResult`) are enough.
+
+Trivial local chrome (radio select, draft keystroke, exam step continue that only writes Draft) does not need that object.
+
 ---
 
 ## 6. Stage / substep model
@@ -152,6 +177,10 @@ Every student-visible stage from OBSERVE through EXAM SHOULD supply:
 | goal | 这一步要解决什么 | use internal IDs (TRANSFER, L4) |
 | focus | 先看 / 比较什么 | name a control that is not visible |
 | action | 现在要做什么 | be a second copy of the footer |
+| student question | 现在要回答哪一句 | be the official answer |
+| expected response shape | 用什么形式答 | list the official choice or formula |
+
+A framing field that cannot be traced to the current model objective and evidence requirement does not belong on the surface.
 
 Presentation may fold these into natural sentences. Do not expose developer labels (`context:`) if unnatural.
 
@@ -261,6 +290,8 @@ student action
 ```
 
 Do not introduce a second progression or evaluator system inside the Interaction Runtime. The runtime may only map a result the Scene already produced.
+
+Missing construction labels may justify a `missing` presentation. Completing those labels does **not** imply the attempt was accepted. Acceptance, rejection, and Progress advance come only from the Scene / evaluator / progression result.
 
 ---
 
@@ -466,7 +497,8 @@ A Scene that claims runtime v1 compliance MUST have tests for:
 5. Uncommitted draft survives help / review-preview session writes.  
 6. Enabled control never silent-no-ops. Scene 07 tests must reproduce the prior EXPERIMENT reflection failure, not only the happy path.  
 7. `failureKind` maps to a non-answer feedback kind.  
-8. Existing physics, PRI, evidence, adapter, and E2E tests stay green.
+8. Existing physics, PRI, evidence, adapter, and E2E tests stay green.  
+9. Presentation does not re-run Scene evaluators to decide committed / rejected / advanced. Scene 07 tests must show: MODEL complete-but-incorrect → `rejected` not `committed`; TRANSFER not accepted → not presented as `committed`; DESCRIBE / EXPLAIN / OBSERVE have one evaluation path.
 
 Do not replace evaluator adversarial tests with UX tests.
 

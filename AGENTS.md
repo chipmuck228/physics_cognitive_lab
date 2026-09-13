@@ -91,9 +91,12 @@ Canonical ownership:
   owns HOW UPLP stages, Physics Models, and Evidence claims appear
   and behave in the learner UI: task framing, VisibleInteractionContext,
   action→response chrome, help binding, revisit, cognitive trace.
-  It does not own physics correctness, L-levels, evaluators, Scene DSL,
-  or Interaction Shell freeze. Scene 01–07 are not claimed
-  runtime-v1 compliant as a set.
+  Framing and visible elements must be traceable Model → objective →
+  evidence requirement → task. Presentation must not infer an
+  authoritative action result the Scene / evaluator / progression
+  already owns. It does not own physics correctness, L-levels,
+  evaluators, Scene DSL, or Interaction Shell freeze. Scene 01–07
+  are not claimed runtime-v1 compliant as a set.
 
 - `architecture/learner-interaction-state-contract.md`
   owns the Progress ≠ Draft ≠ View ≠ Review ≠ Evidence ≠ Physics

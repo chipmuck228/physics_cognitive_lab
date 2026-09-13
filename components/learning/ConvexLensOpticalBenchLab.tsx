@@ -44,20 +44,16 @@ import {
 } from "@/lib/content/convex-lens-optical-bench";
 import { STUDENT_CHROME } from "@/lib/content/student-language";
 import {
-  canCommitLensAiOffResponse,
   currentLensAiOffChallengeId,
   isLensAiOffSessionOpen,
   retryLensAiOffDraft,
 } from "@/lib/learning/lens-ai-off";
-import { emptyLensDescribeInput, evaluateLensDescription } from "@/lib/learning/lens-describe";
+import { emptyLensDescribeInput } from "@/lib/learning/lens-describe";
 import {
-  buildLensExamAttempt,
-  canCommitLensExamAttempt,
   currentLensExamPatternId,
   emptyLensExamDraft,
   isLensExamSessionOpen,
   lensExamPattern,
-  nextLensExamDraft,
   summarizeLensExamAttempt,
 } from "@/lib/learning/lens-exam";
 import {
@@ -67,7 +63,7 @@ import {
   emptyLensObservedResult,
   firstClosedLensEvidence,
 } from "@/lib/learning/lens-experiment";
-import { emptyLensExplainInput, evaluateLensExplanation } from "@/lib/learning/lens-explain";
+import { emptyLensExplainInput } from "@/lib/learning/lens-explain";
 import { lensFeedbackForFailureKind, lensTransferFeedback } from "@/lib/learning/lens-feedback";
 import { lensCognitiveTraceItems } from "@/lib/learning/lens-cognitive-trace";
 import {
@@ -82,7 +78,6 @@ import {
 } from "@/lib/learning/lens-interaction-context";
 import {
   emptyLensModelDraft,
-  hasCompletedLensModel,
   lensModelMissingLabels,
   visibleLensStudentRays,
 } from "@/lib/learning/lens-model";
@@ -94,10 +89,7 @@ import {
 } from "@/lib/learning/lens-revisit";
 import { hasSufficientLensDescription } from "@/lib/learning/lens-describe";
 import { hasSufficientLensExplanation } from "@/lib/learning/lens-explain";
-import {
-  evaluateLensObservation,
-  hasSufficientLensObservation,
-} from "@/lib/learning/lens-observe";
+import { hasSufficientLensObservation } from "@/lib/learning/lens-observe";
 import {
   firstCommittedLensPrediction,
   lensPredictLabel,
@@ -182,7 +174,6 @@ export function ConvexLensOpticalBenchLab() {
   const [explain, setExplain] = useState(emptyLensExplainInput());
   const [explainNeedMore, setExplainNeedMore] = useState(false);
   const [modelDraft, setModelDraft] = useState(emptyLensModelDraft());
-  const [modelNeedStructure, setModelNeedStructure] = useState(false);
   const [transferDraft, setTransferDraft] = useState(emptyLensTransferDraft());
   const [transferNeedMore, setTransferNeedMore] = useState(false);
   const [examDraft, setExamDraft] = useState(emptyLensExamDraft());
@@ -243,16 +234,10 @@ export function ConvexLensOpticalBenchLab() {
         Boolean(latestExplanation) &&
         !hasSufficientLensExplanation(session.explanations),
     );
-    const latestModel = session.modelAttempts.at(-1);
     setModelDraft(
       session.sceneData[LENS_MODEL_DRAFT_KEY]
         ? lensModelDraft(session)
         : emptyLensModelDraft(),
-    );
-    setModelNeedStructure(
-      session.stage === LearningStage.MODEL &&
-        Boolean(latestModel) &&
-        !hasCompletedLensModel(session.modelAttempts),
     );
     const transfer = lensTransferDraft(session);
     const activeTarget = activeLensTransferTargetId(session.transferAttempts);
@@ -496,14 +481,9 @@ export function ConvexLensOpticalBenchLab() {
       }}
       screenAtImagePlane={physicsState.screenAtImagePlane}
       onSubmit={() => {
-        const evaluation = evaluateLensObservation(selectedOptionIds);
-        saveObservation(selectedOptionIds);
-        setObserveNeedMore(!evaluation.sufficient);
-        presentAction(
-          evaluation.sufficient
-            ? { kind: "committed", advanced: true, message: "已经记下你看见的。" }
-            : { kind: "missing", message: LENS_COPY.observeNeedMore },
-        );
+        const outcome = saveObservation(selectedOptionIds);
+        setObserveNeedMore(outcome.kind === "missing");
+        presentAction(outcome);
       }}
       needMore={observeNeedMore}
       saved={observeComplete}
@@ -517,14 +497,9 @@ export function ConvexLensOpticalBenchLab() {
         saveDescribeDraft(next);
       }}
       onSubmit={() => {
-        const evaluation = evaluateLensDescription(describe);
-        saveDescription(describe);
-        setDescribeNeedStructure(!evaluation.sufficient);
-        presentAction(
-          evaluation.sufficient
-            ? { kind: "committed", advanced: true }
-            : { kind: "missing", message: LENS_COPY.describeNeedStructure },
-        );
+        const outcome = saveDescription(describe);
+        setDescribeNeedStructure(outcome.kind === "missing");
+        presentAction(outcome);
       }}
       needStructure={describeNeedStructure && !describeComplete}
       reviewOnly={revisiting}
@@ -606,14 +581,9 @@ export function ConvexLensOpticalBenchLab() {
         saveExplainDraft(next);
       }}
       onSubmit={() => {
-        const evaluation = evaluateLensExplanation(explain);
-        saveExplanation(explain);
-        setExplainNeedMore(!evaluation.sufficient);
-        presentAction(
-          evaluation.sufficient
-            ? { kind: "committed", advanced: true }
-            : { kind: "missing", message: "先选出一段会聚或接收关系，再用自己的话写。" },
-        );
+        const outcome = saveExplanation(explain);
+        setExplainNeedMore(outcome.kind === "missing");
+        presentAction(outcome);
       }}
       reviewOnly={revisiting}
     />
@@ -624,32 +594,18 @@ export function ConvexLensOpticalBenchLab() {
         latestModel && !latestModel.correctStructure
           ? lensFeedbackForFailureKind(
               latestModel.failureKinds?.[0],
-              lensModelMissingLabels(modelDraft),
+              latestModel.failureKinds?.includes("missing-required-construction-pair")
+                ? lensModelMissingLabels(modelDraft)
+                : [],
             )
-          : modelNeedStructure
-            ? lensFeedbackForFailureKind(
-                latestModel?.failureKinds?.[0],
-                lensModelMissingLabels(modelDraft),
-              )
-            : null
+          : null
       }
       onChange={(next) => {
         setModelDraft(next);
         saveModelDraft(next);
       }}
       onSubmit={() => {
-        const missing = lensModelMissingLabels(modelDraft);
-        if (missing.length > 0) {
-          setModelNeedStructure(true);
-          presentAction({
-            kind: "missing",
-            message: `还有没写完的：${missing.join("；")}。`,
-          });
-        }
-        saveModelAttempt(modelDraft);
-        if (missing.length === 0) {
-          presentAction({ kind: "committed" });
-        }
+        presentAction(saveModelAttempt(modelDraft));
       }}
       reviewOnly={revisiting}
     />
@@ -662,8 +618,9 @@ export function ConvexLensOpticalBenchLab() {
         saveTransferDraft(next);
       }}
       onSubmit={() => {
-        saveTransferAttempt(transferDraft);
-        presentAction({ kind: "committed" });
+        const outcome = saveTransferAttempt(transferDraft);
+        setTransferNeedMore(outcome.kind === "missing" || outcome.kind === "rejected");
+        presentAction(outcome);
       }}
       needMore={transferNeedMore}
       lastFailure={
@@ -739,32 +696,16 @@ export function ConvexLensOpticalBenchLab() {
         presentAction({ kind: "committed", message: "已经进入下一步。" });
       }}
       onSubmit={() => {
-        const input = {
+        const outcome = saveExamAttempt({
           patternId: examPatternId,
           representation: examDraft.representation,
           modelRecognition: examDraft.modelRecognition,
           selectedAnswer: examDraft.selectedAnswer,
           reasoning: examDraft.reasoning,
           timestamp: new Date().toISOString(),
-        };
-        if (!canCommitLensExamAttempt(input)) {
-          setExamNeedSteps(true);
-          presentAction({
-            kind: "missing",
-            message: "先判断物体处在哪个成像区域，再选用关系，最后作答。",
-          });
-          return;
-        }
-        setExamNeedSteps(false);
-        saveExamAttempt(input);
-        setExamDraft(
-          nextLensExamDraft(
-            [...session.examAttempts, buildLensExamAttempt(input)],
-            examDraft,
-            examPatternId,
-          ),
-        );
-        presentAction({ kind: "committed" });
+        });
+        setExamNeedSteps(outcome.kind === "missing");
+        presentAction(outcome);
       }}
       onNext={() => {
         const next = retireLensExamDraft(session.examAttempts, examDraft);
@@ -789,33 +730,20 @@ export function ConvexLensOpticalBenchLab() {
         saveAiOffDraft(next);
       }}
       onCommit={() => {
-        if (!canCommitLensAiOffResponse({ ...aiOffDraft, currentChallengeId: aiOffChallengeId })) {
-          setAiOffNeedResponse(true);
-          presentAction({
-            kind: "missing",
-            message: "先选出判断，再写下理由。",
-          });
-          return;
-        }
-        setAiOffNeedResponse(false);
-        saveAiOffIndependentResponse({
+        const outcome = saveAiOffIndependentResponse({
           ...aiOffDraft,
           currentChallengeId: aiOffChallengeId,
         });
-        setAiOffDraft({
-          ...aiOffDraft,
-          currentChallengeId: aiOffChallengeId,
-          step: "post-check",
-          postCheckSelections: [],
-        });
-        presentAction({ kind: "committed" });
+        setAiOffNeedResponse(outcome.kind === "missing");
+        presentAction(outcome);
       }}
       onSubmitPostCheck={() => {
-        saveAiOffPostCheck({
-          challengeId: aiOffChallengeId,
-          postCheckIds: aiOffDraft.postCheckSelections,
-        });
-        presentAction({ kind: "committed" });
+        presentAction(
+          saveAiOffPostCheck({
+            challengeId: aiOffChallengeId,
+            postCheckIds: aiOffDraft.postCheckSelections,
+          }),
+        );
       }}
       onRetry={() => {
         const next = retryLensAiOffDraft(aiOffDraft, aiOffChallengeId);

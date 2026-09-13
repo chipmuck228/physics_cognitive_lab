@@ -6,7 +6,16 @@ import { ConvexLensOpticalBenchLab } from "@/components/learning/ConvexLensOptic
 import { LENS_COPY, lensExperimentTitle } from "@/lib/content/convex-lens-optical-bench";
 import { STUDENT_CHROME } from "@/lib/content/student-language";
 import { applyLensHelpIntent } from "@/lib/learning/lens-help-intents";
-import { withLensExperimentFormDraft } from "@/lib/learning/lens-scene-data";
+import { completeLensModelDraft } from "@/lib/learning/lens-model";
+import {
+  LENS_MODEL_DRAFT_KEY,
+  LENS_TRANSFER_DRAFT_KEY,
+  withLensExperimentFormDraft,
+} from "@/lib/learning/lens-scene-data";
+import {
+  completeLensTransferDraft,
+  LENS_TRANSFER_REQUIRED_IDS,
+} from "@/lib/learning/lens-transfer";
 import { createSession } from "@/lib/learning/session";
 import {
   getSessionSnapshot,
@@ -218,5 +227,53 @@ describe("Scene 07 enabled-action contract", () => {
       "data-response-class",
       "missing",
     );
+  });
+
+  it("MODEL complete-but-incorrect presents rejected, not committed", async () => {
+    const user = userEvent.setup();
+    const draft = {
+      ...completeLensModelDraft("beyond-2f"),
+      meetingMode: "backward-extension",
+      constructionStep: 7,
+    };
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-model-action", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.MODEL,
+      sceneData: { [LENS_MODEL_DRAFT_KEY]: draft },
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    await user.click(screen.getByRole("button", { name: LENS_COPY.modelSubmit }));
+    expect(screen.getByTestId("lens-action-response")).toHaveAttribute(
+      "data-response-class",
+      "rejected",
+    );
+    expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).modelAttempts[0]?.correctStructure).toBe(
+      false,
+    );
+    expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.MODEL);
+  });
+
+  it("TRANSFER rejected is not presented as committed", async () => {
+    const user = userEvent.setup();
+    const accepted = completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]);
+    const draft = {
+      ...accepted,
+      meetingMode:
+        accepted.meetingMode === "actual-convergence"
+          ? "backward-extension"
+          : "actual-convergence",
+    };
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-transfer-action", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.TRANSFER,
+      sceneData: { [LENS_TRANSFER_DRAFT_KEY]: draft },
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    await user.click(screen.getByRole("button", { name: LENS_COPY.transferSubmit }));
+    expect(screen.getByTestId("lens-action-response")).toHaveAttribute(
+      "data-response-class",
+      "rejected",
+    );
+    expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).transferAttempts[0]?.accepted).toBe(false);
   });
 });

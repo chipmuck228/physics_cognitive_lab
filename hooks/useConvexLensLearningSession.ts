@@ -5,35 +5,29 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { advanceIfReady } from "@/lib/learning/advance";
 import {
   advanceLensLoop,
+  applyLensAiOffCommit,
+  applyLensAiOffPostCheckSave,
   applyLensComparisonSave,
+  applyLensDescriptionSave,
+  applyLensExamSubmit,
+  applyLensExplanationSave,
+  applyLensModelSubmit,
+  applyLensObservationSave,
   applyLensObservedSave,
   applyLensPredictionCommit,
   applyLensReflectionSave,
   applyLensRunExperiment,
+  applyLensTransferSubmit,
   type LensExperimentForm,
 } from "@/lib/learning/lens-action";
 import type { LensDomainOutcome } from "@/lib/learning/lens-action-response";
 import {
-  applyLensAiOffPostCheck,
-  buildLensAiOffAssessment,
-  buildLensAiOffAttempt,
   hasCompletedLensAiOff,
-  lensTutorUsedDuringIndependent,
-  nextLensAiOffDraft,
   type LensAiOffDraft,
 } from "@/lib/learning/lens-ai-off";
-import {
-  evaluateLensDescription,
-  type LensDescribeInput,
-} from "@/lib/learning/lens-describe";
+import { type LensDescribeInput } from "@/lib/learning/lens-describe";
 import { type LensObservedResult } from "@/lib/learning/lens-experiment";
 import {
-  evaluateLensObservation,
-  lensObservationLabelsFor,
-} from "@/lib/learning/lens-observe";
-import {
-  lensAiOffDraft,
-  lensExamDraft,
   lensModelDraft,
   withLensAiOffDraft,
   withLensDescribeDraft,
@@ -46,27 +40,14 @@ import {
   withLensTransferDraft,
   withLensWatchedDemo,
 } from "@/lib/learning/lens-scene-data";
+import { type LensExplainInput } from "@/lib/learning/lens-explain";
 import {
-  evaluateLensExplanation,
-  type LensExplainInput,
-} from "@/lib/learning/lens-explain";
-import {
-  buildLensExamAttempt,
   hasCompletedLensExam,
-  nextLensExamDraft,
   type LensExamDraft,
   type LensExamInput,
 } from "@/lib/learning/lens-exam";
-import {
-  buildLensModelAttempt,
-  type LensModelDraft,
-} from "@/lib/learning/lens-model";
-import {
-  activeLensTransferTargetId,
-  buildLensTransferAttempt,
-  emptyLensTransferDraft,
-  type LensTransferDraft,
-} from "@/lib/learning/lens-transfer";
+import { type LensModelDraft } from "@/lib/learning/lens-model";
+import { type LensTransferDraft } from "@/lib/learning/lens-transfer";
 import {
   applyLensHelpIntent,
   applyLensHelpNext,
@@ -80,7 +61,6 @@ import {
   canLensGoBack,
   isLensRevisiting,
 } from "@/lib/learning/lens-revisit";
-import { createLearningEvent } from "@/lib/learning/events";
 import { canLeaveStage } from "@/lib/learning/progression";
 import {
   getServerSessionSnapshot,
@@ -101,10 +81,7 @@ import {
 import {
   CONVEX_LENS_SCENE_ID,
   LearningStage,
-  type DescriptionEvidence,
-  type ExplanationEvidence,
   type LearningSession,
-  type ObservationEvidence,
 } from "@/types/learning";
 import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
 
@@ -264,63 +241,17 @@ export function useConvexLensLearningSession() {
     updatePhysics((state) => ({ ...state, objectStation: station }));
   }, [updatePhysics]);
 
-  const saveObservation = useCallback((selectedOptionIds: string[]) => {
-    updateSession((current) => {
-      if (isLensRevisiting(current) || current.stage !== LearningStage.OBSERVE) {
-        return current;
-      }
-      const evaluation = evaluateLensObservation(selectedOptionIds);
-      const observation: ObservationEvidence = {
-        text: lensObservationLabelsFor(selectedOptionIds),
-        timestamp: new Date().toISOString(),
-        selectedOptionIds: evaluation.selectedOptionIds,
-        watchedFullCycle: current.sceneData.watchedObserveDemo === true,
-        sufficient: evaluation.sufficient,
-      };
-      const next = {
-        ...current,
-        observations: [...current.observations, observation],
-        events: [
-          ...current.events,
-          createLearningEvent("student_response", current.stage, {
-            kind: "observation",
-            sufficient: evaluation.sufficient,
-          }),
-        ],
-      };
-      return evaluation.sufficient ? advanceLensLoop(next) : next;
-    }, CONVEX_LENS_SCENE_ID);
-  }, []);
+  const saveObservation = useCallback(
+    (selectedOptionIds: string[]): LensDomainOutcome =>
+      captureLensAction((current) => applyLensObservationSave(current, selectedOptionIds)),
+    [],
+  );
 
-  const saveDescription = useCallback((input: LensDescribeInput) => {
-    updateSession((current) => {
-      if (isLensRevisiting(current) || current.stage !== LearningStage.DESCRIBE) {
-        return current;
-      }
-      const evaluation = evaluateLensDescription(input);
-      const description: DescriptionEvidence = {
-        text: input.studentDescription.trim(),
-        object: input.object,
-        quantity: input.quantities,
-        change: input.change,
-        sufficient: evaluation.sufficient,
-        timestamp: new Date().toISOString(),
-      };
-      const next = {
-        ...current,
-        sceneData: withLensDescribeDraft(current.sceneData, input),
-        descriptions: [...current.descriptions, description],
-        events: [
-          ...current.events,
-          createLearningEvent("student_response", current.stage, {
-            kind: "description",
-            sufficient: evaluation.sufficient,
-          }),
-        ],
-      };
-      return evaluation.sufficient ? advanceLensLoop(next) : next;
-    }, CONVEX_LENS_SCENE_ID);
-  }, []);
+  const saveDescription = useCallback(
+    (input: LensDescribeInput): LensDomainOutcome =>
+      captureLensAction((current) => applyLensDescriptionSave(current, input)),
+    [],
+  );
 
   const commitPrediction = useCallback(
     (experimentId: LensExperimentId, outcome: string, reason: string): LensDomainOutcome =>
@@ -352,36 +283,11 @@ export function useConvexLensLearningSession() {
     [],
   );
 
-  const saveExplanation = useCallback((input: LensExplainInput) => {
-    updateSession((current) => {
-      if (isLensRevisiting(current) || current.stage !== LearningStage.EXPLAIN) {
-        return current;
-      }
-      const evaluation = evaluateLensExplanation(input);
-      const explanation: ExplanationEvidence = {
-        text: input.studentExplanation.trim(),
-        timestamp: new Date().toISOString(),
-        lensAnswers: {
-          meetingFragment: input.meetingFragment,
-          screenFragment: input.screenFragment,
-        },
-        sufficient: evaluation.sufficient,
-      };
-      const next = {
-        ...current,
-        sceneData: withLensExplainDraft(current.sceneData, input),
-        explanations: [...current.explanations, explanation],
-        events: [
-          ...current.events,
-          createLearningEvent("student_response", current.stage, {
-            kind: "explanation",
-            sufficient: evaluation.sufficient,
-          }),
-        ],
-      };
-      return evaluation.sufficient ? advanceLensLoop(next) : next;
-    }, CONVEX_LENS_SCENE_ID);
-  }, []);
+  const saveExplanation = useCallback(
+    (input: LensExplainInput): LensDomainOutcome =>
+      captureLensAction((current) => applyLensExplanationSave(current, input)),
+    [],
+  );
 
   const saveExplainDraft = useCallback((input: LensExplainInput) => {
     updateSession((current) => {
@@ -401,28 +307,11 @@ export function useConvexLensLearningSession() {
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
-  const saveModelAttempt = useCallback((draft: LensModelDraft) => {
-    updateSession((current) => {
-      if (isLensRevisiting(current) || current.stage !== LearningStage.MODEL) {
-        return current;
-      }
-      const attempt = buildLensModelAttempt(draft, new Date().toISOString());
-      const next = {
-        ...current,
-        sceneData: withLensModelDraft(current.sceneData, draft),
-        modelAttempts: [...current.modelAttempts, attempt],
-        events: [
-          ...current.events,
-          createLearningEvent("model_submitted", current.stage, {
-            correctStructure: attempt.correctStructure,
-            completenessOnly: attempt.completenessOnly,
-            failureKinds: attempt.failureKinds,
-          }),
-        ],
-      };
-      return attempt.correctStructure ? advanceLensLoop(next) : next;
-    }, CONVEX_LENS_SCENE_ID);
-  }, []);
+  const saveModelAttempt = useCallback(
+    (draft: LensModelDraft): LensDomainOutcome =>
+      captureLensAction((current) => applyLensModelSubmit(current, draft)),
+    [],
+  );
 
   const saveTransferDraft = useCallback((draft: LensTransferDraft) => {
     updateSession((current) => {
@@ -433,34 +322,11 @@ export function useConvexLensLearningSession() {
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
-  const saveTransferAttempt = useCallback((draft: LensTransferDraft) => {
-    updateSession((current) => {
-      if (isLensRevisiting(current) || current.stage !== LearningStage.TRANSFER) {
-        return current;
-      }
-      const attempt = buildLensTransferAttempt(draft, new Date().toISOString());
-      const nextAttempts = [...current.transferAttempts, attempt];
-      const nextTarget = attempt.accepted
-        ? activeLensTransferTargetId(nextAttempts)
-        : draft.targetId;
-      const nextDraft = attempt.accepted
-        ? emptyLensTransferDraft(nextTarget)
-        : draft;
-      const next = {
-        ...current,
-        transferAttempts: nextAttempts,
-        sceneData: withLensTransferDraft(current.sceneData, nextDraft),
-        events: [
-          ...current.events,
-          createLearningEvent("transfer_attempted", current.stage, {
-            targetId: attempt.targetId,
-            accepted: attempt.accepted,
-          }),
-        ],
-      };
-      return attempt.accepted ? advanceLensLoop(next) : next;
-    }, CONVEX_LENS_SCENE_ID);
-  }, []);
+  const saveTransferAttempt = useCallback(
+    (draft: LensTransferDraft): LensDomainOutcome =>
+      captureLensAction((current) => applyLensTransferSubmit(current, draft)),
+    [],
+  );
 
   const saveExamDraft = useCallback((draft: LensExamDraft) => {
     updateSession((current) => {
@@ -471,29 +337,11 @@ export function useConvexLensLearningSession() {
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
-  const saveExamAttempt = useCallback((input: LensExamInput) => {
-    updateSession((current) => {
-      if (isLensRevisiting(current) || current.stage !== LearningStage.EXAM) {
-        return current;
-      }
-      const attempt = buildLensExamAttempt(input);
-      const nextAttempts = [...current.examAttempts, attempt];
-      const nextDraft = nextLensExamDraft(nextAttempts, lensExamDraft(current), input.patternId);
-      const next = {
-        ...current,
-        examAttempts: nextAttempts,
-        sceneData: withLensExamDraft(current.sceneData, nextDraft),
-        events: [
-          ...current.events,
-          createLearningEvent("exam_answered", current.stage, {
-            patternId: attempt.patternId,
-            correct: attempt.correct,
-          }),
-        ],
-      };
-      return advanceLensLoop(next);
-    }, CONVEX_LENS_SCENE_ID);
-  }, []);
+  const saveExamAttempt = useCallback(
+    (input: LensExamInput): LensDomainOutcome =>
+      captureLensAction((current) => applyLensExamSubmit(current, input)),
+    [],
+  );
 
   const saveAiOffDraft = useCallback((draft: LensAiOffDraft) => {
     updateSession((current) => {
@@ -504,82 +352,15 @@ export function useConvexLensLearningSession() {
     }, CONVEX_LENS_SCENE_ID);
   }, []);
 
-  const saveAiOffIndependentResponse = useCallback((draft: LensAiOffDraft) => {
-    updateSession((current) => {
-      if (isLensRevisiting(current) || current.stage !== LearningStage.AI_OFF) {
-        return current;
-      }
-      const llmUsed = lensTutorUsedDuringIndependent(current);
-      const attempt = buildLensAiOffAttempt(draft, new Date().toISOString(), [], llmUsed);
-      const attempts = [
-        ...(current.independentAssessment?.challengeAttempts ?? []),
-        attempt,
-      ];
-      const assessment = buildLensAiOffAssessment(attempts, llmUsed);
-      return {
-        ...current,
-        independentAssessment: assessment,
-        sceneData: withLensAiOffDraft(current.sceneData, {
-          ...draft,
-          step: "post-check",
-          postCheckSelections: [],
-        }),
-        events: [
-          ...current.events,
-          createLearningEvent("student_response", current.stage, {
-            kind: "lens-ai-off-commit",
-            challengeId: attempt.challengeId,
-          }),
-        ],
-      };
-    }, CONVEX_LENS_SCENE_ID);
-  }, []);
+  const saveAiOffIndependentResponse = useCallback(
+    (draft: LensAiOffDraft): LensDomainOutcome =>
+      captureLensAction((current) => applyLensAiOffCommit(current, draft)),
+    [],
+  );
 
   const saveAiOffPostCheck = useCallback(
-    (input: { challengeId: string; postCheckIds: string[] }) => {
-      updateSession((current) => {
-        if (isLensRevisiting(current) || current.stage !== LearningStage.AI_OFF) {
-          return current;
-        }
-        const attempts = [...(current.independentAssessment?.challengeAttempts ?? [])];
-        const index = [...attempts]
-          .reverse()
-          .findIndex((attempt) => attempt.challengeId === input.challengeId);
-        if (index < 0) {
-          return current;
-        }
-        const actualIndex = attempts.length - 1 - index;
-        const original = attempts[actualIndex];
-        if (!original) {
-          return current;
-        }
-        const llmUsed = lensTutorUsedDuringIndependent(current);
-        attempts[actualIndex] = applyLensAiOffPostCheck(
-          original,
-          lensAiOffDraft(current),
-          input.postCheckIds,
-          llmUsed,
-        );
-        const assessment = buildLensAiOffAssessment(attempts, llmUsed);
-        const next = {
-          ...current,
-          independentAssessment: assessment,
-          sceneData: withLensAiOffDraft(
-            current.sceneData,
-            nextLensAiOffDraft(assessment, lensAiOffDraft(current), input.challengeId),
-          ),
-          events: [
-            ...current.events,
-            createLearningEvent("student_response", current.stage, {
-              kind: "lens-ai-off-post-check",
-              challengeId: input.challengeId,
-              accepted: attempts[actualIndex]?.accepted,
-            }),
-          ],
-        };
-        return advanceLensLoop(next);
-      }, CONVEX_LENS_SCENE_ID);
-    },
+    (input: { challengeId: string; postCheckIds: string[] }): LensDomainOutcome =>
+      captureLensAction((current) => applyLensAiOffPostCheckSave(current, input)),
     [],
   );
 

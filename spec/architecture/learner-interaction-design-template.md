@@ -43,6 +43,21 @@ Copy this block for each stage.
 Cognitive objective
   What the student must think or do (one sentence). UPLP action, not the official result.
 
+Student question
+  The exact question the learner is answering now.
+  One learner-facing question. Not the official answer.
+
+Expected response shape
+  The form of thinking / output expected. Examples:
+  - choose one state
+  - compare A and B
+  - object + quantity + change
+  - when ___ changes, ___ changes
+  - cause → mechanism → consequence
+  - construct one relation
+  - select relation + write own words
+  Do NOT put the official answer here.
+
 Context
   现在是什么情况
 
@@ -60,8 +75,23 @@ Visible references
   Learner-visible objects / representations that help may mention now
   (screen, image, ray, meter, arrow, …). Visibility only — no Physics Truth.
 
+Surface justification
+  Why each important visible element belongs on this screen now.
+  Trace: Physics Model → current cognitive objective → current evidence
+  requirement → current learner task. If an element cannot be traced, it
+  does not belong.
+
+Protected future structure
+  What the learner must not see yet (later-stage grammar, official
+  diagram, finished table, hidden official rays, exam options, …).
+
 Student action
   The primary thing they do (manipulate, select, write, construct, return).
+
+Primary CTA meaning
+  What exactly will happen when the main action is used
+  (evaluate + write evidence + maybe advance; run physics; save draft
+  step; …). Not a second copy of the button label.
 
 Response type
   applied | committed | advanced | missing | rejected | blocked | loading | system-error | review-applied | discarded
@@ -170,6 +200,10 @@ Terminal. No mastery claim. No Tutor.
 - [ ] No new Scene DSL fields proposed “because the form repeats.”  
 - [ ] No `UniversalModelBoard` implied by the MODEL block.  
 - [ ] Leak boundary reviewed against UPLP stage permissions.
+- [ ] Every stage / substep names the student question and expected response shape.
+- [ ] Every important visible element has a surface justification.
+- [ ] Protected future structure is named (what must not appear yet).
+- [ ] Primary CTA meaning is named (what the main action actually does).
 
 ---
 
