@@ -83,8 +83,21 @@ export const LENS_COPY = {
   modelFrozenCaption: "这是你正在建构的光路，不是一张已经画好的标准图。",
   transferSubmit: "检查迁移",
   transferFirstSaved: "刚才那个新情境已经记下。现在看下一个。",
-  transferOwnWords: "用自己的话说明这个新情境里，物体相对焦点在哪里、光线怎样会聚。",
-  transferNeedMore: "先选出物距站点、会聚方式和像的后果，再写出理由。",
+  transferOwnWords: "用一句话说说：光线怎样相遇，为什么会得到这样的像？",
+  transferNeedMore: "还有几项没有选完，先把这个情境搭完整。",
+  transferStructureIncomplete: "还有几项没有选完，先把这个情境搭完整。",
+  transferStructureInconsistent:
+    "你选的物体位置、光线关系和像的结果还对不上。先回到前面的选择看看。",
+  transferMeetingMissing: "还要说清楚光线是怎样相遇的。",
+  transferConsequenceMissing: "还要接着说，这样相遇后会形成什么样的像。",
+  transferBindMissing:
+    "光线怎样相遇、会形成什么像你都写到了。再用一句话把这两件事连起来。",
+  transferAuthoredContradicts:
+    "你写的光线关系和前面选的判断对不上。先看一眼你刚才选的光线关系。",
+  transferSloganOnly:
+    "“都有凸透镜”不够。要说这个新情境里光线怎样相遇，为什么会得到这样的像。",
+  transferTableRowOnly: "这句话还只是在背表。先说光线怎样相遇，再接到会形成什么样的像。",
+  transferJudgmentTitle: "我的判断",
   transferSurfaceCue: "都有凸透镜，所以和刚才完全一样",
   examSubmit: "提交答案",
   aiOffCommit: "提交判断",
@@ -330,7 +343,7 @@ export const LENS_TUTOR_GOALS: Partial<Record<LearningStage, string>> = {
   [LearningStage.EXPERIMENT]: "问学生刚改变的是物体位置还是光屏位置。",
   [LearningStage.EXPLAIN]: "问光线是真的相交，还是只有延长线相交。",
   [LearningStage.MODEL]: "问光线关系和像的性质之间还缺什么联系。",
-  [LearningStage.TRANSFER]: "问新情境里物体相对焦点的位置是什么。",
+  [LearningStage.TRANSFER]: "问这个新情境里光线怎样相遇，为什么会得到这样的像。",
   [LearningStage.EXAM]: "提醒先判断物体处在哪个成像区域。",
 };
 

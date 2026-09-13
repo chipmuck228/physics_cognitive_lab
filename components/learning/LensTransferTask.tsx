@@ -13,7 +13,10 @@ import {
   LENS_STATION_OPTIONS,
   lensTransferProgressLabel,
 } from "@/lib/content/convex-lens-optical-bench";
-import type { LensTransferDraft } from "@/lib/learning/lens-transfer";
+import {
+  lensTransferJudgmentRecap,
+  type LensTransferDraft,
+} from "@/lib/learning/lens-transfer";
 import type { TransferTarget } from "@/types/physics-model";
 
 interface LensTransferTaskProps {
@@ -21,8 +24,8 @@ interface LensTransferTaskProps {
   draft: LensTransferDraft;
   onChange: (next: LensTransferDraft) => void;
   onSubmit: () => void;
-  needMore: boolean;
-  lastFailure?: string | null;
+  repairMessage?: string | null;
+  repairKind?: "missing" | "incorrect";
   reviewOnly?: boolean;
   currentIndex?: number;
   totalCount?: number;
@@ -34,13 +37,14 @@ export function LensTransferTask({
   draft,
   onChange,
   onSubmit,
-  needMore,
-  lastFailure,
+  repairMessage = null,
+  repairKind = "incorrect",
   reviewOnly = false,
   currentIndex = 1,
   totalCount = 2,
   firstComplete = false,
 }: LensTransferTaskProps) {
+  const recap = lensTransferJudgmentRecap(draft);
   return (
     <div
       className="space-y-4"
@@ -114,6 +118,7 @@ export function LensTransferTask({
         <label className="flex items-start gap-3 text-sm">
           <input
             type="checkbox"
+            data-testid="lens-transfer-surface-cue"
             checked={draft.surfaceCueSelected}
             onChange={(event) =>
               onChange({ ...draft, surfaceCueSelected: event.target.checked })
@@ -121,6 +126,18 @@ export function LensTransferTask({
           />
           <span>{LENS_COPY.transferSurfaceCue}</span>
         </label>
+        <div
+          className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] px-4 py-3 text-sm"
+          data-testid="lens-transfer-recap"
+        >
+          <p className="font-medium">{LENS_COPY.transferJudgmentTitle}</p>
+          <ul className="mt-2 space-y-1 text-[var(--ink-muted)]">
+            <li>物体位置：{recap.station}</li>
+            <li>光线关系：{recap.meeting}</li>
+            <li>像：{recap.image}</li>
+            <li>光屏：{recap.screen}</li>
+          </ul>
+        </div>
         <label className="block space-y-2">
           <span className="text-sm font-medium">{LENS_COPY.transferOwnWords}</span>
           <textarea
@@ -134,11 +151,10 @@ export function LensTransferTask({
           />
         </label>
         </fieldset>
-        {needMore ? (
-          <ValidationMessage kind="missing">{LENS_COPY.transferNeedMore}</ValidationMessage>
-        ) : null}
-        {lastFailure ? (
-          <ValidationMessage kind="incorrect">{lastFailure}</ValidationMessage>
+        {repairMessage ? (
+          <ValidationMessage kind={repairKind} testId="lens-transfer-repair">
+            {repairMessage}
+          </ValidationMessage>
         ) : null}
         {reviewOnly ? null : (
           <div className="flex justify-end">

@@ -281,7 +281,7 @@ async function chooseGroupOption(page: Page, groupId: string, name: RegExp) {
   await page.getByTestId(groupId).getByRole("radio", { name }).click();
 }
 
-async function fillImagingStructure(
+export async function fillImagingStructure(
   page: Page,
   station: "beyond-2f" | "between-f-and-2f" | "inside-f",
   prefix: "lens-transfer" | "lens-ai-off",

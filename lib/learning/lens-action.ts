@@ -26,7 +26,11 @@ import {
   evaluateLensExplanation,
   type LensExplainInput,
 } from "@/lib/learning/lens-explain";
-import { lensFeedbackForFailureKind, lensTransferFeedback } from "@/lib/learning/lens-feedback";
+import {
+  lensFeedbackForFailureKind,
+  lensTransferFeedback,
+  lensTransferRepairFeedback,
+} from "@/lib/learning/lens-feedback";
 import {
   activeIncompleteLensEvidence,
   activeLensExperimentId,
@@ -677,10 +681,11 @@ export function applyLensTransferSubmit(
       }),
     ],
   };
+  const repair = lensTransferRepairFeedback(draft);
   if (!structured) {
     return {
       session: next,
-      outcome: { kind: "missing", message: LENS_COPY.transferNeedMore },
+      outcome: { kind: "missing", message: repair?.message ?? LENS_COPY.transferStructureIncomplete },
     };
   }
   if (!attempt.accepted) {
@@ -688,7 +693,7 @@ export function applyLensTransferSubmit(
       session: next,
       outcome: {
         kind: "rejected",
-        message: lensTransferFeedback(attempt.failureKinds?.[0]).message,
+        message: repair?.message ?? lensTransferFeedback(attempt.failureKinds?.[0]).message,
       },
     };
   }

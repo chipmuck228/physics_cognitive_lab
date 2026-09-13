@@ -1,3 +1,11 @@
+import { analyzeConvexLensAuthored } from "@/content/physics-models/convex-lens-imaging/construction";
+import { LENS_COPY } from "@/lib/content/convex-lens-optical-bench";
+import {
+  draftToLensTransferAttempt,
+  type LensTransferDraft,
+} from "@/lib/learning/lens-transfer";
+import { evaluateConvexLensTransfer } from "@/content/physics-models/convex-lens-imaging/construction";
+
 export type LensFeedbackKind =
   | "missing"
   | "inconsistent"
@@ -90,21 +98,118 @@ export function lensFeedbackForFailureKind(
   };
 }
 
-export function lensTransferFeedback(failureKind: string | undefined): LensFeedback {
-  if (failureKind === "surface-convex-lens-slogan") {
+export function lensTransferRepairFeedback(draft: LensTransferDraft): LensFeedback | null {
+  const structured = draftToLensTransferAttempt(draft);
+  if (!structured) {
     return {
-      kind: "think_again",
-      message: "“都有凸透镜”不够。先说这个新情境里物体相对焦点在哪里。",
+      kind: "missing",
+      message: LENS_COPY.transferStructureIncomplete,
     };
   }
-  if (failureKind === "wrong-target-structure") {
+  const evaluation = evaluateConvexLensTransfer(structured);
+  if (evaluation.ok) {
+    return null;
+  }
+  if (
+    evaluation.failureKind === "wrong-target-structure" ||
+    evaluation.failureKind === "unknown-or-unrequired-target"
+  ) {
     return {
       kind: "inconsistent",
-      message: "这个新情境的物距、会聚方式和像还对不上。先回到物体相对焦点的位置。",
+      message: LENS_COPY.transferStructureInconsistent,
+    };
+  }
+  if (evaluation.failureKind === "surface-convex-lens-slogan") {
+    return {
+      kind: "think_again",
+      message: LENS_COPY.transferSloganOnly,
+    };
+  }
+  if (evaluation.failureKind === "table-row-only") {
+    return {
+      kind: "think_again",
+      message: LENS_COPY.transferTableRowOnly,
+    };
+  }
+  const authored = analyzeConvexLensAuthored(structured.explanation);
+  if (
+    authored.hasMeetingLanguage &&
+    authored.meetingKind &&
+    authored.meetingKind !== "mixed" &&
+    authored.meetingKind !== structured.meetingMode
+  ) {
+    return {
+      kind: "inconsistent",
+      message: LENS_COPY.transferAuthoredContradicts,
+    };
+  }
+  if (authored.missingKind === "contradiction") {
+    return {
+      kind: "inconsistent",
+      message: LENS_COPY.transferAuthoredContradicts,
+    };
+  }
+  if (
+    authored.missingKind === "meeting" ||
+    authored.generic ||
+    !authored.hasMeetingLanguage
+  ) {
+    return {
+      kind: "think_again",
+      message: LENS_COPY.transferMeetingMissing,
+    };
+  }
+  if (authored.missingKind === "consequence") {
+    return {
+      kind: "think_again",
+      message: LENS_COPY.transferConsequenceMissing,
+    };
+  }
+  if (authored.missingKind === "relation") {
+    return {
+      kind: "think_again",
+      message: LENS_COPY.transferBindMissing,
+    };
+  }
+  if (authored.tableRowOnly || authored.nounSandwich) {
+    return {
+      kind: "think_again",
+      message: LENS_COPY.transferTableRowOnly,
     };
   }
   return {
     kind: "think_again",
-    message: "先选出物距、会聚方式和像的后果，再用自己的话连起来。",
+    message: LENS_COPY.transferBindMissing,
+  };
+}
+
+export function lensTransferFeedback(failureKind: string | undefined): LensFeedback {
+  if (failureKind === "incomplete-target-structure") {
+    return {
+      kind: "missing",
+      message: LENS_COPY.transferStructureIncomplete,
+    };
+  }
+  if (failureKind === "surface-convex-lens-slogan") {
+    return {
+      kind: "think_again",
+      message: LENS_COPY.transferSloganOnly,
+    };
+  }
+  if (failureKind === "wrong-target-structure" || failureKind === "unknown-or-unrequired-target") {
+    return {
+      kind: "inconsistent",
+      message: LENS_COPY.transferStructureInconsistent,
+    };
+  }
+  if (failureKind === "table-row-only") {
+    return {
+      kind: "think_again",
+      message: LENS_COPY.transferTableRowOnly,
+    };
+  }
+  return {
+    kind: "think_again",
+    message: LENS_COPY.transferBindMissing,
   };
 }

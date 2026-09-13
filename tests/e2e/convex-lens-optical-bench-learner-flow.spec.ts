@@ -21,6 +21,7 @@ import {
   completeLensPredictA,
   completeLensProjectorTransfer,
   expectNoTutorChrome,
+  fillImagingStructure,
   fillOneRay,
   lensStageHeading,
   openLensLab,
@@ -319,5 +320,53 @@ test.describe("Scene 07 learner-visible flow", () => {
     );
     await expect(page.getByTestId("lens-ray-construction")).toHaveAttribute("data-step", "6");
     await expect(page.getByTestId("lens-model-review")).toHaveCount(0);
+  });
+
+  test("TRANSFER authored explanation asks for the bind, not a restatement", async ({
+    page,
+  }) => {
+    test.setTimeout(300_000);
+    await reachLensModel(page);
+    await completeLensModel(page);
+    await expect(page.getByTestId("lens-transfer-task")).toBeVisible();
+    await expect(page.getByTestId("lens-transfer-progress")).toHaveText("第 1 / 2 个新情境");
+    await expect(page.getByText(LENS_COPY.transferOwnWords)).toBeVisible();
+    await expect(page.getByText(LENS_COPY.transferOwnWords)).not.toContainText(
+      "物体相对焦点在哪里",
+    );
+
+    await fillImagingStructure(page, "between-f-and-2f", "lens-transfer");
+    const recap = page.getByTestId("lens-transfer-recap");
+    await expect(recap).toContainText(LENS_COPY.transferJudgmentTitle);
+    await expect(recap).toContainText("物体在 F 和 2F 之间");
+    await expect(recap).toContainText("出射光线真正会聚");
+    await expect(recap).toContainText("比物体大");
+
+    const explanation = page.getByTestId("lens-transfer-explanation");
+    const restatement = "光线在另一侧真正汇聚。";
+    await explanation.fill(restatement);
+    await page.getByTestId("lens-transfer-surface-cue").check();
+    await expect(explanation).toHaveValue(restatement);
+
+    await page.getByRole("button", { name: LENS_COPY.transferSubmit }).click();
+    const orange = page.locator(
+      '[data-validation-kind="missing"], [data-validation-kind="incorrect"]',
+    );
+    await expect(page.getByTestId("lens-transfer-repair")).toHaveText(
+      LENS_COPY.transferConsequenceMissing,
+    );
+    await expect(orange).toHaveCount(1);
+    await expect(page.getByTestId("lens-action-response")).toHaveCount(0);
+
+    await explanation.fill("幻灯片放在这里。");
+    await expect(page.getByTestId("lens-transfer-repair")).toHaveCount(0);
+
+    await explanation.fill(
+      "光线真正会聚，所以成倒立放大的实像，幕布放到像的位置才能接到。",
+    );
+    await page.getByRole("button", { name: LENS_COPY.transferSubmit }).click();
+    await expect(page.getByTestId("lens-transfer-repair")).toHaveCount(0);
+    await expect(page.getByTestId("lens-transfer-progress")).toHaveText("第 2 / 2 个新情境");
+    await expect(page.getByText(LENS_COPY.transferFirstSaved)).toBeVisible();
   });
 });

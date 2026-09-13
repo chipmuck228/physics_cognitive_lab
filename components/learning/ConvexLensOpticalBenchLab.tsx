@@ -66,7 +66,11 @@ import {
 } from "@/lib/learning/lens-experiment";
 import { lensTrialSpec, nextLensTrialId } from "@/lib/learning/lens-trial-intervention";
 import { emptyLensExplainInput } from "@/lib/learning/lens-explain";
-import { lensFeedbackForFailureKind, lensTransferFeedback } from "@/lib/learning/lens-feedback";
+import {
+  lensFeedbackForFailureKind,
+  lensTransferRepairFeedback,
+  type LensFeedback,
+} from "@/lib/learning/lens-feedback";
 import { lensCognitiveTraceItems } from "@/lib/learning/lens-cognitive-trace";
 import { lensInteractionTraces } from "@/lib/learning/lens-interaction-trace";
 import {
@@ -194,7 +198,7 @@ export function ConvexLensOpticalBenchLab() {
   const [step6Checking, setStep6Checking] = useState(false);
   const [step6CheckMessage, setStep6CheckMessage] = useState<string | null>(null);
   const [transferDraft, setTransferDraft] = useState(emptyLensTransferDraft());
-  const [transferNeedMore, setTransferNeedMore] = useState(false);
+  const [transferRepair, setTransferRepair] = useState<LensFeedback | null>(null);
   const [examDraft, setExamDraft] = useState(emptyLensExamDraft());
   const [examNeedSteps, setExamNeedSteps] = useState(false);
   const [aiOffDraft, setAiOffDraft] = useState(
@@ -268,16 +272,17 @@ export function ConvexLensOpticalBenchLab() {
     );
     const transfer = lensTransferDraft(session);
     const activeTarget = activeLensTransferTargetId(session.transferAttempts);
-    setTransferDraft(
-      session.sceneData[LENS_TRANSFER_DRAFT_KEY]
-        ? { ...transfer, targetId: activeTarget }
-        : emptyLensTransferDraft(activeTarget),
-    );
+    const nextTransferDraft = session.sceneData[LENS_TRANSFER_DRAFT_KEY]
+      ? { ...transfer, targetId: activeTarget }
+      : emptyLensTransferDraft(activeTarget);
+    setTransferDraft(nextTransferDraft);
     const latestTransfer = session.transferAttempts.at(-1);
-    setTransferNeedMore(
+    setTransferRepair(
       session.stage === LearningStage.TRANSFER &&
-        Boolean(latestTransfer) &&
-        latestTransfer?.accepted !== true,
+        latestTransfer &&
+        latestTransfer.accepted !== true
+        ? lensTransferRepairFeedback(nextTransferDraft)
+        : null,
     );
     setExamDraft(
       session.sceneData[LENS_EXAM_DRAFT_KEY]
@@ -404,7 +409,6 @@ export function ConvexLensOpticalBenchLab() {
     setActionOutcome(outcome);
   };
   const latestModel = session.modelAttempts.at(-1);
-  const latestTransfer = session.transferAttempts.at(-1);
   const transferTarget = lensTransferTarget(transferDraft.targetId);
   const transferProgress = lensTransferProgress(session.transferAttempts);
   const examOpen = isLensExamSessionOpen(session.examAttempts, examDraft);
@@ -732,18 +736,16 @@ export function ConvexLensOpticalBenchLab() {
       onChange={(next) => {
         setTransferDraft(next);
         saveTransferDraft(next);
+        setTransferRepair(null);
       }}
       onSubmit={() => {
+        const repair = lensTransferRepairFeedback(transferDraft);
         const outcome = saveTransferAttempt(transferDraft);
-        setTransferNeedMore(outcome.kind === "missing" || outcome.kind === "rejected");
+        setTransferRepair(outcome.kind === "committed" ? null : repair);
         presentAction(outcome);
       }}
-      needMore={transferNeedMore}
-      lastFailure={
-        latestTransfer && latestTransfer.accepted !== true
-          ? lensTransferFeedback(latestTransfer.failureKinds?.[0]).message
-          : null
-      }
+      repairMessage={transferRepair?.message ?? null}
+      repairKind={transferRepair?.kind === "missing" ? "missing" : "incorrect"}
       reviewOnly={revisiting}
       currentIndex={transferProgress.current}
       totalCount={transferProgress.total}
@@ -949,7 +951,11 @@ export function ConvexLensOpticalBenchLab() {
           action={frame.action}
         />
       ) : null}
-      {actionView ? (
+      {actionView &&
+      !(
+        isTransfer &&
+        (actionView.className === "missing" || actionView.className === "rejected")
+      ) ? (
         <div data-testid="lens-action-response" data-response-class={actionView.className}>
           <ValidationMessage kind={actionView.tone} testId="lens-action-response-message">
             {actionView.message}

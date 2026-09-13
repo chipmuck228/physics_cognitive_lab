@@ -161,11 +161,20 @@ export function resolveLensHelpContext(
   );
 }
 
+const TRANSFER_HOW_SAY = [
+  "先看你刚才选的光线关系，再想它为什么会得到这样的像。",
+  "写的时候先说光线怎样相遇，再用“所以”接到像会怎样。",
+  "不要只把前面选过的位置再抄一遍。",
+] as const;
+
 export function lensHelpLadder(
   intentId: LensHelpIntentId,
   context?: LensVisibleInteractionContext,
 ): readonly string[] {
   const canLookAtRays = context ? lensContextLookableReference(context, "ray") : false;
+  if (intentId === "how-say" && context?.stage === LearningStage.TRANSFER) {
+    return TRANSFER_HOW_SAY;
+  }
   if (intentId === "how-meeting" && !canLookAtRays) {
     return HOW_MEETING_TEXTUAL;
   }

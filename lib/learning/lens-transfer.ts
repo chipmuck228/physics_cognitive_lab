@@ -9,6 +9,15 @@ import {
 } from "@/content/physics-models/convex-lens-imaging/construction";
 import { PRODUCTION_TRANSFER_REQUIRED_IDS } from "@/content/physics-models/convex-lens-imaging/implementation-contract";
 import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
+import {
+  LENS_MEETING_OPTIONS,
+  LENS_NATURE_OPTIONS,
+  LENS_ORIENTATION_OPTIONS,
+  LENS_RECEIVE_OPTIONS,
+  LENS_SIDE_OPTIONS,
+  LENS_SIZE_OPTIONS,
+  LENS_STATION_OPTIONS,
+} from "@/lib/content/convex-lens-optical-bench";
 import type { TransferAttempt } from "@/types/learning";
 import type { TransferTarget } from "@/types/physics-model";
 
@@ -66,9 +75,6 @@ export function draftToLensTransferAttempt(
   ) {
     return null;
   }
-  const explanation = draft.surfaceCueSelected
-    ? `${draft.studentExplanation} 都有凸透镜`
-    : draft.studentExplanation;
   return {
     targetId: draft.targetId,
     objectStation: draft.objectStation as ObjectStation,
@@ -80,7 +86,43 @@ export function draftToLensTransferAttempt(
       size: draft.size as ImageConsequence["size"],
       screenReceivable: draft.screenReceivable === "true",
     },
-    explanation,
+    explanation: draft.studentExplanation,
+  };
+}
+
+export function isLensTransferDraftComplete(draft: LensTransferDraft): boolean {
+  return draftToLensTransferAttempt(draft) !== null;
+}
+
+function optionLabel(
+  options: readonly { value: string; label: string }[],
+  value: string,
+): string {
+  return options.find((option) => option.value === value)?.label ?? "";
+}
+
+export interface LensTransferJudgmentRecap {
+  station: string;
+  meeting: string;
+  image: string;
+  screen: string;
+}
+
+export function lensTransferJudgmentRecap(
+  draft: LensTransferDraft,
+): LensTransferJudgmentRecap {
+  const unset = "还没选";
+  const imageParts = [
+    optionLabel(LENS_SIDE_OPTIONS, draft.side),
+    optionLabel(LENS_NATURE_OPTIONS, draft.nature),
+    optionLabel(LENS_ORIENTATION_OPTIONS, draft.orientation),
+    optionLabel(LENS_SIZE_OPTIONS, draft.size),
+  ].filter(Boolean);
+  return {
+    station: optionLabel(LENS_STATION_OPTIONS, draft.objectStation) || unset,
+    meeting: optionLabel(LENS_MEETING_OPTIONS, draft.meetingMode) || unset,
+    image: imageParts.length > 0 ? imageParts.join(" · ") : unset,
+    screen: optionLabel(LENS_RECEIVE_OPTIONS, draft.screenReceivable) || unset,
   };
 }
 
@@ -91,11 +133,11 @@ export function buildLensTransferAttempt(
   const structured = draftToLensTransferAttempt(draft);
   const evaluation = structured
     ? evaluateConvexLensTransfer(structured)
-    : { ok: false, failureKind: "wrong-target-structure" as const };
+    : { ok: false, failureKind: "incomplete-target-structure" as const };
   return {
     scenarioId: draft.targetId,
     targetId: draft.targetId,
-    response: structured?.explanation ?? draft.studentExplanation,
+    response: draft.studentExplanation,
     timestamp,
     accepted: evaluation.ok,
     failureKinds: evaluation.ok ? [] : [evaluation.failureKind],

@@ -13,7 +13,7 @@ Contract: [`../../interaction-alignment-audit.md`](../../interaction-alignment-a
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Repair re-audit 2026-09-13: IA-07-01 / 02 / 03 / 04 are PASS. IA-07-04 now includes the Scene07-local Step 6 semantic-parse pilot. Not a universal semantic engine.
+Repair re-audit 2026-09-13: IA-07-01 / 02 / 03 / 04 / 05 are PASS. IA-07-04 is the Scene07-local Step 6 semantic-parse pilot. IA-07-05 is the TRANSFER authored-explanation repair. Not a universal Transfer or semantic engine.
 
 ---
 
@@ -38,7 +38,7 @@ Known prior defects checked against **current** code:
 
 ## Confirmed Alignment Defects
 
-None open after the 2026-09-13 OBSERVE / TRANSFER repair and the MODEL Step 6 semantic repair.
+None open after the 2026-09-13 OBSERVE / TRANSFER / MODEL Step 6 / TRANSFER authored-explanation repairs.
 
 ### IA-07-01 — repaired PASS
 
@@ -99,6 +99,21 @@ None open after the 2026-09-13 OBSERVE / TRANSFER repair and the MODEL Step 6 se
 | Implementation evidence | Learner sentence maps on the deterministic fast path to actual-convergence + real + bind. `碰到一起` uses mocked LLM parse then the same validator. `evaluateLensAuthoredSemanticClaim` is the local/final owner. Parse provenance is `system-derived`. |
 | Learner consequence | Equivalent meeting language is not rejected as “先写出真正相交”. Parser failure shows “这句话我还没判断清楚…”, not a false PASS. |
 | Repair boundary used | Scene07-local semantic parse pilot only. No universal judge. Physics Truth / L4 / seven-step structure unchanged. |
+
+### IA-07-05 — repaired PASS
+
+| Field | Result |
+|---|---|
+| ID | IA-07-05 |
+| Severity | **P1** |
+| Stage | TRANSFER |
+| Audit Unit | Authored explanation after structured model construction |
+| Invariant | **IA-1**, **IA-3**, **IA-5**, **IA-6** |
+| Current status | **PASS (repaired).** Structured radios own station / meeting / image. The textarea asks only “光线怎样相遇，为什么会得到这样的像？”. One submit shows one primary repair. Incomplete fields are not called “wrong”. `studentExplanation` stays learner-authored. |
+| Expected behavior | Authored language measures the meeting→image bind. Feedback names the next repair. Surface checkbox does not rewrite the sentence. Completing TRANSFER still does not write L5 without valid MODEL + both targets. |
+| Implementation evidence | `LENS_COPY.transferOwnWords`; `lens-transfer-recap` mirrors draft labels; `lensTransferRepairFeedback` first-match priority; `LensTransferTask` `lens-transfer-repair` is the only fail surface; action chrome hidden on TRANSFER missing/rejected; `draftToLensTransferAttempt` no longer appends `都有凸透镜`. `evaluateConvexLensTransfer` acceptance unchanged. |
+| Learner consequence | After correct radios, a restatement is repaired as missing consequence/bind, not as “先选出物距站点”. One orange block. Recap shows the learner’s current choices, including wrong ones. |
+| Repair boundary used | Scene07 TRANSFER copy, recap, feedback ownership, and adapter provenance only. No LLM. No evaluator / L5 / pair-semantics change. |
 
 ---
 
@@ -555,20 +570,42 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 | Field | Result |
 |---|---|
 | Stage / Subtask | TRANSFER / submit one target |
-| Cognitive task | Apply meeting→image structure to a new apparatus (not “都有凸透镜”) |
-| Required capability | submit-transfer |
-| Visible control / surface | `LensTransferTask`; bench hidden; `lens-transfer-progress` `第 N / 2 个新情境` |
+| Cognitive task | Apply meeting→image structure to a new apparatus; authored text owns only the bind |
+| Required capability | submit-transfer / author-transfer-reason |
+| Visible control / surface | `LensTransferTask`; bench hidden; `lens-transfer-progress` `第 N / 2 个新情境`; read-only `lens-transfer-recap` |
 | Semantic learner action | `applyLensTransferSubmit` |
 | Authoritative owner | `evaluateConvexLensTransfer` / `evaluateRequiredTransferPair` |
 | Expected state consequence | Attempt `accepted` or rejected; stay until both required IDs pass |
 | Expected visible consequence | 1/2 then 2/2 + “刚才那个新情境已经记下”; EXAM when pair complete |
-| Blocked condition + visible reason | Missing / `lensTransferFeedback`; form stays editable (no step-repair button) |
+| Blocked condition + visible reason | One `lens-transfer-repair` from `lensTransferRepairFeedback`; form stays editable |
 | Progression condition | Both required targets accepted |
-| Evidence input / provenance | L5 only after valid MODEL + both targets. Surface cue poisons explanation |
+| Evidence input / provenance | L5 only after valid MODEL + both targets. `studentExplanation` is learner text only; `surfaceCueSelected` is separate |
 | IA-1 | PASS |
 | IA-2 | PASS |
 | IA-3 | PASS |
 | IA-4 | PASS |
+| IA-5 | PASS |
+| IA-6 | PASS |
+
+### 21a. TRANSFER / authored explanation after structured construction (IA-07-05)
+
+| Field | Result |
+|---|---|
+| Stage / Subtask | TRANSFER / authored bind after radios |
+| Cognitive task | Meeting relation → why it leads to → image consequence |
+| Required capability | author-transfer-reason |
+| Visible control / surface | Textarea + `我的判断` recap |
+| Semantic learner action | Type a causal sentence; `检查迁移` |
+| Authoritative owner | `evaluateConvexLensTransfer` (accept) + `lensTransferRepairFeedback` (one repair message) |
+| Expected state consequence | Fail keeps the draft; accept advances the required target |
+| Expected visible consequence | Prompt does not re-ask station. One repair. Recap is draft, not official truth |
+| Blocked condition + visible reason | Incomplete / inconsistent / authored missing-kind / slogan / table-row; first match only |
+| Progression condition | Unchanged pair gate |
+| Evidence input / provenance | Authored evidence is the typed sentence. Checkbox does not append slogan text |
+| IA-1 | PASS |
+| IA-2 | N/A |
+| IA-3 | PASS |
+| IA-4 | N/A |
 | IA-5 | PASS |
 | IA-6 | PASS |
 
@@ -668,7 +705,7 @@ Read: `tests/e2e/convex-lens-optical-bench-learner-flow.spec.ts`, `happy-path.sp
 | Cover testid / attrs after click | That leftover is a learner-clarity problem (it is an IA-allowed cross-step) |
 | MODEL incoherent ray cannot Next | All `failureKind` → repair mappings in the browser |
 | MODEL wrong official size → reject → step 5 | That leftover is a learner-clarity problem (it is an IA-allowed cross-step) |
-| TRANSFER both targets via helpers | Learner discovers target 2 without oracle `officialImageConsequence` |
+| TRANSFER both targets via helpers; authored restatement gets one bind repair then accept | Learner discovers target 2 without oracle `officialImageConsequence` |
 | EXAM / AI_OFF happy path; AI_OFF has no Help | Wrong EXAM still leaving the stage; EXAM is not L6 |
 | Back/revisit does not mutate experiment progress | Pedagogical understanding |
 
@@ -697,7 +734,7 @@ The dedicated OBSERVE E2E now submits checkboxes before any bench action and ass
 
 | Metric | Count |
 |---|---|
-| Audit units | 24 |
+| Audit units | 25 |
 | IA-1 FAIL | 0 |
 | IA-2 FAIL | 0 |
 | IA-3 FAIL | 0 |
@@ -716,6 +753,6 @@ The dedicated OBSERVE E2E now submits checkboxes before any bench action and ass
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Re-audit of IA-07-01 / 02 / 03 / 04 after the Scene07-local repairs: all PASS. This is not a learner-validation claim.
+Re-audit of IA-07-01 / 02 / 03 / 04 / 05 after the Scene07-local repairs: all PASS. This is not a learner-validation claim.
 
 This is not learner validation.
