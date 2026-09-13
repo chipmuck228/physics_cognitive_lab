@@ -5,10 +5,11 @@ import {
   svgClientXToBenchX,
 } from "@/lib/learning/lens-semantic-action";
 import {
+  createInitialConvexLensState,
   nearestObjectStationFromBenchX,
+  OBJECT_BENCH_X,
   officialBenchDisplay,
 } from "@/lib/physics/convex-lens-optical-bench";
-import { createInitialConvexLensState } from "@/lib/physics/convex-lens-optical-bench";
 
 describe("Scene 07 gesture → semantic station", () => {
   it("maps object-side bench units to a named station, not a pixel case", () => {
@@ -40,5 +41,18 @@ describe("Scene 07 gesture → semantic station", () => {
     });
     expect(official.station).toBe("at-2f");
     expect(official.geometry.objectX).not.toBe(320 - 2 * 72);
+  });
+
+  it("keeps SVG / bench coordinates as adapter units, not official physics values", () => {
+    const benchX = svgClientXToBenchX(100, 640);
+    const station = nearestObjectStationFromBenchX(benchX);
+    expect(station).toBeTruthy();
+    const official = officialBenchDisplay({
+      ...createInitialConvexLensState(),
+      objectStation: station!,
+    });
+    expect(official.geometry.objectX).toBe(OBJECT_BENCH_X[station!]);
+    expect(official.geometry.objectX).not.toBe(100);
+    expect(official.station).toBe(station);
   });
 });

@@ -1,10 +1,6 @@
 import type { CanonicalRayChoice } from "@/content/physics-models/convex-lens-imaging/construction";
 import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
-import {
-  nearestObjectStationFromBenchX,
-  officialBenchDisplay,
-  type ConvexLensSceneState,
-} from "@/lib/physics/convex-lens-optical-bench";
+import { nearestObjectStationFromBenchX } from "@/lib/physics/convex-lens-optical-bench";
 import type { LensRayDraft } from "@/lib/learning/lens-model";
 import { asCompletedLensRay } from "@/lib/learning/lens-model";
 
@@ -78,12 +74,4 @@ export function interpretConstructedRay(
     slot,
     ray: asCompletedLensRay(draft),
   };
-}
-
-export function benchUnitsAreNotPhysicsTruth(
-  state: ConvexLensSceneState,
-  benchX: number,
-): boolean {
-  const official = officialBenchDisplay(state);
-  return official.geometry.objectX !== benchX || official.station === state.objectStation;
 }

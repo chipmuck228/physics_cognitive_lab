@@ -6,6 +6,10 @@ import {
   svgClientXToBenchX,
 } from "@/lib/learning/lens-semantic-action";
 import {
+  projectLearnerRay,
+  type LensProjectedRaySegment,
+} from "@/lib/learning/lens-student-ray-geometry";
+import {
   OBJECT_BENCH_X,
   officialBenchDisplay,
   type ConvexLensSceneState,
@@ -79,6 +83,7 @@ export function ConvexLensOpticalBench({
       data-cover-complete={cover.imageComplete ? "true" : "false"}
       data-cover-brightness={cover.brightness}
       data-frozen={frozen ? "true" : "false"}
+      data-official-rays="hidden"
     >
       {caption ? (
         <p className="text-center text-sm text-[var(--ink-muted)]">{caption}</p>
@@ -214,9 +219,8 @@ export function ConvexLensOpticalBench({
           <StudentRay
             key={`${ray.kind}-${index}`}
             ray={ray}
-            objectX={objectX}
-            imageX={imageX}
-            virtual={virtual}
+            station={state.objectStation}
+            objectHeight={geometry.objectHeight}
           />
         ))}
         {rays.length > 0 ? (
@@ -297,75 +301,51 @@ function ArrowObject({
 
 function StudentRay({
   ray,
-  objectX,
-  imageX,
-  virtual,
+  station,
+  objectHeight,
 }: {
   ray: CanonicalRayChoice;
-  objectX: number;
-  imageX: number | null;
-  virtual: boolean;
+  station: ObjectStation;
+  objectHeight: number;
 }) {
-  const backwardOnly = ray.incidentPath === "backward-extension";
-  const throughCenter = ray.kind === "through-center";
-  const beforeY = throughCenter ? AXIS_Y - 28 : AXIS_Y - 36;
-  const lensY = throughCenter ? AXIS_Y : beforeY;
-  const outgoingY = throughCenter ? AXIS_Y + 18 : AXIS_Y - 20;
-  const rightEnd = CX + 196;
-  const showBackwardToImage = virtual && !backwardOnly && imageX !== null;
+  const projection = projectLearnerRay(ray, station, objectHeight);
+  const hasOutgoing = projection.segments.some((segment) => segment.role === "outgoing-actual");
+  const hasBackward = projection.segments.some((segment) => segment.role === "backward-extension");
   return (
     <g
       data-testid={`ray-${ray.kind}`}
       data-owner="learner"
-      data-ray-style={backwardOnly ? "dashed" : "solid"}
-      data-outgoing-style={backwardOnly ? "none" : "solid"}
-      data-backward-style={showBackwardToImage || backwardOnly ? "dashed" : "none"}
+      data-before-lens={ray.beforeLens}
+      data-after-lens={ray.afterLens}
+      data-incident-path={ray.incidentPath}
+      data-representable={projection.representable ? "true" : "false"}
+      data-ray-style={ray.incidentPath === "backward-extension" ? "dashed" : "solid"}
+      data-outgoing-style={hasOutgoing ? "solid" : "none"}
+      data-backward-style={hasBackward ? "dashed" : "none"}
     >
-      <line
-        x1={objectX}
-        y1={beforeY}
-        x2={CX}
-        y2={lensY}
-        stroke="#1d4ed8"
-        strokeWidth="2"
-        strokeDasharray={backwardOnly ? "6 4" : undefined}
-        data-ray-segment="incident"
-      />
-      {backwardOnly ? null : (
-        <line
-          x1={CX}
-          y1={lensY}
-          x2={rightEnd}
-          y2={outgoingY}
-          stroke="#1d4ed8"
-          strokeWidth="2"
-          data-ray-segment="outgoing-actual"
-        />
-      )}
-      {showBackwardToImage ? (
-        <line
-          x1={CX}
-          y1={lensY}
-          x2={imageX}
-          y2={AXIS_Y - 48}
-          stroke="#1d4ed8"
-          strokeWidth="2"
-          strokeDasharray="6 4"
-          data-ray-segment="backward-extension"
-        />
-      ) : null}
-      {backwardOnly && imageX !== null ? (
-        <line
-          x1={objectX}
-          y1={beforeY}
-          x2={imageX}
-          y2={AXIS_Y - 48}
-          stroke="#1d4ed8"
-          strokeWidth="2"
-          strokeDasharray="6 4"
-          data-ray-segment="backward-extension"
-        />
-      ) : null}
+      {projection.segments.map((segment, index) => (
+        <StudentRaySegment key={`${segment.role}-${index}`} segment={segment} />
+      ))}
     </g>
+  );
+}
+
+function StudentRaySegment({ segment }: { segment: LensProjectedRaySegment }) {
+  const dashed = segment.role === "backward-extension";
+  return (
+    <line
+      x1={toX(segment.x1)}
+      y1={AXIS_Y - segment.y1 * UNIT}
+      x2={toX(segment.x2)}
+      y2={AXIS_Y - segment.y2 * UNIT}
+      stroke="#1d4ed8"
+      strokeWidth="2"
+      strokeDasharray={dashed ? "6 4" : undefined}
+      data-ray-segment={segment.role}
+      data-bench-x1={segment.x1}
+      data-bench-y1={segment.y1}
+      data-bench-x2={segment.x2}
+      data-bench-y2={segment.y2}
+    />
   );
 }

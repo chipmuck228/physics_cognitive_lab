@@ -123,6 +123,46 @@ describe("Scene 07 PRI", () => {
     expect(enlarged).toHaveAttribute("data-image-side", "other-side");
   });
 
+  it("does not silently redraw an invalid learner pairing as the official parallel ray", () => {
+    render(
+      <ConvexLensOpticalBench
+        state={createInitialConvexLensState()}
+        hideOfficialRays
+        studentRays={[
+          {
+            kind: "parallel-axis",
+            beforeLens: "parallel-to-principal-axis",
+            afterLens: "undeviated",
+            incidentPath: "actual",
+          },
+        ]}
+      />,
+    );
+    const outgoing = screen
+      .getByTestId("ray-parallel-axis")
+      .querySelector('[data-ray-segment="outgoing-actual"]');
+    expect(outgoing).toBeTruthy();
+    expect(outgoing).toHaveAttribute("data-bench-y1", outgoing!.getAttribute("data-bench-y2"));
+    const y1 = Number(outgoing!.getAttribute("data-bench-y1"));
+    expect(y1).not.toBeCloseTo(0);
+  });
+
+  it("keeps official rays hidden while learner rays are on the bench", () => {
+    render(
+      <ConvexLensOpticalBench
+        state={createInitialConvexLensState()}
+        hideOfficialRays
+        studentRays={[...twoStandardRays()]}
+      />,
+    );
+    const bench = screen.getByTestId("convex-lens-optical-bench");
+    expect(bench).toHaveAttribute("data-official-rays", "hidden");
+    expect(screen.getByTestId("ray-parallel-axis")).toHaveAttribute("data-owner", "learner");
+    expect(screen.getByTestId("ray-through-center")).toHaveAttribute("data-owner", "learner");
+    expect(screen.queryByTestId("official-ray-parallel-axis")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("official-ray-through-center")).not.toBeInTheDocument();
+  });
+
   it("keeps F and 2F as distinct landmarks", () => {
     render(<ConvexLensOpticalBench state={createInitialConvexLensState()} />);
     expect(screen.getByTestId("near-f")).toHaveAttribute("data-quantity-id", "focal-point");

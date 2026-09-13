@@ -119,6 +119,7 @@ import { canRunLensExperiment } from "@/lib/learning/lens-experiment";
 import {
   LENS_EXPERIMENT_A,
   LENS_EXPERIMENT_ORDER,
+  isObjectStation,
   type LensExperimentId,
 } from "@/lib/physics/convex-lens-optical-bench";
 import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
@@ -402,11 +403,15 @@ export function ConvexLensOpticalBenchLab() {
 
   const physicsState = lensPreviewPhysics(session);
   const studentRays = isModel ? visibleLensStudentRays(modelDraft) : [];
+  const modelDisplayState =
+    isModel && isObjectStation(modelDraft.objectStation)
+      ? { ...physicsState, objectStation: modelDraft.objectStation }
+      : physicsState;
   const hideScene = isExam || isAiOff || isComplete || isTransfer;
   const scene = hideScene ? undefined : (
     <div className="w-full max-w-3xl space-y-3">
       <ConvexLensOpticalBench
-        state={physicsState}
+        state={modelDisplayState}
         frozen={isModel}
         showOfficialImage={!isModel}
         hideOfficialRays
