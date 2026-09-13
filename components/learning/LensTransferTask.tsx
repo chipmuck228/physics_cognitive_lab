@@ -22,6 +22,7 @@ interface LensTransferTaskProps {
   onSubmit: () => void;
   needMore: boolean;
   lastFailure?: string | null;
+  reviewOnly?: boolean;
 }
 
 export function LensTransferTask({
@@ -31,10 +32,12 @@ export function LensTransferTask({
   onSubmit,
   needMore,
   lastFailure,
+  reviewOnly = false,
 }: LensTransferTaskProps) {
   return (
     <div className="space-y-4" data-testid="lens-transfer-task" data-target={target.id}>
       <Card className="space-y-5 p-4">
+        <p className="text-sm font-medium">先看这个新情境</p>
         <p className="text-sm leading-relaxed">{target.scenario}</p>
         <QuestionGroup
           id="lens-transfer-station"
@@ -112,9 +115,11 @@ export function LensTransferTask({
         {lastFailure ? (
           <ValidationMessage kind="incorrect">{lastFailure}</ValidationMessage>
         ) : null}
-        <div className="flex justify-end">
-          <Button onClick={onSubmit}>{LENS_COPY.transferSubmit}</Button>
-        </div>
+        {reviewOnly ? null : (
+          <div className="flex justify-end">
+            <Button onClick={onSubmit}>{LENS_COPY.transferSubmit}</Button>
+          </div>
+        )}
       </Card>
     </div>
   );

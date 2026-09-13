@@ -11,9 +11,12 @@ import { LensDescribeTask } from "@/components/learning/LensDescribeTask";
 import { LensExamTask } from "@/components/learning/LensExamTask";
 import { LensExperimentTask } from "@/components/learning/LensExperimentTask";
 import { LensExplainTask } from "@/components/learning/LensExplainTask";
+import { LensHelpPanel } from "@/components/learning/LensHelpPanel";
 import { LensObserveTask } from "@/components/learning/LensObserveTask";
 import { LensPredictTask } from "@/components/learning/LensPredictTask";
 import { LensRayConstruction } from "@/components/learning/LensRayConstruction";
+import { LensReviewBanner } from "@/components/learning/LensReviewBanner";
+import { LensTaskFrame } from "@/components/learning/LensTaskFrame";
 import { LensTransferTask } from "@/components/learning/LensTransferTask";
 import { TutorPanel } from "@/components/tutor/TutorPanel";
 import { useConvexLensLearningSession } from "@/hooks/useConvexLensLearningSession";
@@ -25,6 +28,8 @@ import {
   LENS_PHASE_STAGES,
   LENS_STAGE_LABELS,
   LENS_STAGE_PROMPTS,
+  LENS_TASK_FRAMES,
+  lensChangedVariable,
   lensExperimentTitle,
   lensPredictQuestion,
   lensReflectionPrompt,
@@ -56,17 +61,29 @@ import {
   hasCompleteLensObservedResult,
 } from "@/lib/learning/lens-experiment";
 import { emptyLensExplainInput } from "@/lib/learning/lens-explain";
-import { revealedLensHints, nextLensHint } from "@/lib/learning/lens-hint-ladder";
+import { lensFeedbackForFailureKind, lensTransferFeedback } from "@/lib/learning/lens-feedback";
+import {
+  lensHelpAllowed,
+  lensHelpPrompts,
+  lensHelpState,
+} from "@/lib/learning/lens-help-intents";
 import {
   draftToConvexLensAttempt,
   emptyLensModelDraft,
   hasCompletedLensModel,
   lensModelMissingLabels,
-  lensModelStudentFeedback,
 } from "@/lib/learning/lens-model";
+import {
+  isLensRevisiting,
+  lensDisplayStage,
+  lensViewingStage,
+} from "@/lib/learning/lens-revisit";
 import { hasSufficientLensDescription } from "@/lib/learning/lens-describe";
 import { hasSufficientLensExplanation } from "@/lib/learning/lens-explain";
-import { hasSufficientLensObservation } from "@/lib/learning/lens-observe";
+import {
+  evaluateLensObservation,
+  hasSufficientLensObservation,
+} from "@/lib/learning/lens-observe";
 import {
   firstCommittedLensPrediction,
   lensPredictLabel,
@@ -93,6 +110,7 @@ import {
   createInitialConvexLensState,
   isConvexLensSceneState,
   LENS_EXPERIMENT_A,
+  LENS_EXPERIMENT_ORDER,
   type LensExperimentId,
 } from "@/lib/physics/convex-lens-optical-bench";
 import { LearningStage, type ExamAttempt } from "@/types/learning";
@@ -103,6 +121,9 @@ export function ConvexLensOpticalBenchLab() {
     hydrated,
     startLesson,
     goBack,
+    returnToProgress,
+    selectHelpIntent,
+    revealHelpNext,
     markDemoWatched,
     setScreenAtImagePlane,
     saveObservation,
@@ -123,7 +144,6 @@ export function ConvexLensOpticalBenchLab() {
     saveAiOffDraft,
     saveAiOffIndependentResponse,
     saveAiOffPostCheck,
-    revealHint,
     startOver,
     canGoBack,
   } = useConvexLensLearningSession();
@@ -215,10 +235,12 @@ export function ConvexLensOpticalBenchLab() {
     setAiOffDraft(lensAiOffDraft(session));
   }, [session]);
 
-  const experimentKey = session ? experimentKeyFor(session.stage, session) : "";
+  const experimentKey = session
+    ? experimentKeyFor(lensDisplayStage(session), session)
+    : "";
   if (session && experimentKey !== formKey) {
     setFormKey(experimentKey);
-    const experimentId = activeExperimentId(session);
+    const experimentId = activeExperimentId(session, lensDisplayStage(session));
     const prediction = experimentId
       ? firstCommittedLensPrediction(session.predictions, experimentId)
       : undefined;
@@ -249,22 +271,27 @@ export function ConvexLensOpticalBenchLab() {
     );
   }
 
-  const isEntry = session.stage === LearningStage.ENTRY;
-  const isObserve = session.stage === LearningStage.OBSERVE;
-  const isDescribe = session.stage === LearningStage.DESCRIBE;
-  const isPredict = session.stage === LearningStage.PREDICT;
-  const isExperiment = session.stage === LearningStage.EXPERIMENT;
-  const isExplain = session.stage === LearningStage.EXPLAIN;
-  const isModel = session.stage === LearningStage.MODEL;
-  const isTransfer = session.stage === LearningStage.TRANSFER;
-  const isExam = session.stage === LearningStage.EXAM;
-  const isAiOff = session.stage === LearningStage.AI_OFF;
-  const isComplete = session.stage === LearningStage.COMPLETE;
+  const displayStage = lensDisplayStage(session);
+  const viewingStage = lensViewingStage(session);
+  const revisiting = isLensRevisiting(session);
+  const isEntry = displayStage === LearningStage.ENTRY;
+  const isObserve = displayStage === LearningStage.OBSERVE;
+  const isDescribe = displayStage === LearningStage.DESCRIBE;
+  const isPredict = displayStage === LearningStage.PREDICT;
+  const isExperiment = displayStage === LearningStage.EXPERIMENT;
+  const isExplain = displayStage === LearningStage.EXPLAIN;
+  const isModel = displayStage === LearningStage.MODEL;
+  const isTransfer = displayStage === LearningStage.TRANSFER;
+  const isExam = displayStage === LearningStage.EXAM;
+  const isAiOff = displayStage === LearningStage.AI_OFF;
+  const isComplete = displayStage === LearningStage.COMPLETE;
+  const authoritativeAiOff = session.stage === LearningStage.AI_OFF;
+  const authoritativeComplete = session.stage === LearningStage.COMPLETE;
   const observeComplete = hasSufficientLensObservation(session.observations);
   const describeComplete = hasSufficientLensDescription(session.descriptions);
   const explainComplete = hasSufficientLensExplanation(session.explanations);
   const transferComplete = hasCompletedLensTransfer(session.transferAttempts);
-  const activeExperiment = activeExperimentId(session);
+  const activeExperiment = activeExperimentId(session, displayStage);
   const activeEvidence = activeExperiment
     ? activeIncompleteLensEvidence(session, activeExperiment) ??
       firstClosedLensEvidence(session, activeExperiment)
@@ -277,8 +304,6 @@ export function ConvexLensOpticalBenchLab() {
     activeExperiment && canRunLensExperiment(session, activeExperiment),
   );
   const hasRun = Boolean(activeEvidence?.interventionAt);
-  const hints = revealedLensHints(session.events, session.stage);
-  const canRevealHint = Boolean(nextLensHint(session.events, session.stage));
   const latestModel = session.modelAttempts.at(-1);
   const latestTransfer = session.transferAttempts.at(-1);
   const transferTarget = lensTransferTarget(transferDraft.targetId);
@@ -372,12 +397,13 @@ export function ConvexLensOpticalBenchLab() {
       screenAtImagePlane={physicsState.screenAtImagePlane}
       onSubmit={() => {
         saveObservation(selectedOptionIds);
-        if (selectedOptionIds.length < 3) {
+        if (!evaluateLensObservation(selectedOptionIds).sufficient) {
           setObserveNeedMore(true);
         }
       }}
       needMore={observeNeedMore}
       saved={observeComplete}
+      reviewOnly={revisiting}
     />
   ) : isDescribe ? (
     <LensDescribeTask
@@ -385,15 +411,22 @@ export function ConvexLensOpticalBenchLab() {
       onChange={setDescribe}
       onSubmit={() => saveDescription(describe)}
       needStructure={describeNeedStructure && !describeComplete}
+      reviewOnly={revisiting}
     />
   ) : isPredict && activeExperiment ? (
     predictTask
   ) : isExperiment && activeExperiment ? (
     <div className="space-y-6">
-      {predictTask}
+      {!predictionLocked ? predictTask : null}
       <LensExperimentTask
         experimentId={activeExperiment}
         title={lensExperimentTitle(activeExperiment)}
+        changedVariable={lensChangedVariable(activeExperiment)}
+        committedPrediction={
+          committedPrediction
+            ? `${lensPredictLabel(committedPrediction.prediction)}。${committedPrediction.reasoning}`
+            : null
+        }
         canRun={canRun}
         hasRun={hasRun}
         observed={observed}
@@ -426,38 +459,36 @@ export function ConvexLensOpticalBenchLab() {
           saveReflection(activeExperiment, reflection);
         }}
         observedNeedMore={observedNeedMore}
+        reviewOnly={revisiting}
       />
     </div>
   ) : isExplain ? (
     <LensExplainTask
       value={explain}
       needMore={explainNeedMore && !explainComplete}
-      hints={hints}
-      canRevealHint={canRevealHint}
       onChange={(next) => {
         setExplain(next);
         saveExplainDraft(next);
       }}
       onSubmit={() => saveExplanation(explain)}
-      onRevealHint={revealHint}
+      reviewOnly={revisiting}
     />
   ) : isModel ? (
     <LensRayConstruction
       draft={modelDraft}
       feedback={
         latestModel && !latestModel.correctStructure
-          ? lensModelStudentFeedback(modelDraft, latestModel)
+          ? lensFeedbackForFailureKind(
+              latestModel.failureKinds?.[0],
+              lensModelMissingLabels(modelDraft),
+            )
           : modelNeedStructure
-            ? lensModelStudentFeedback(modelDraft, latestModel ?? {
-                nodes: [],
-                connections: [],
-                correctStructure: false,
-                timestamp: "",
-              })
+            ? lensFeedbackForFailureKind(
+                latestModel?.failureKinds?.[0],
+                lensModelMissingLabels(modelDraft),
+              )
             : null
       }
-      hints={hints}
-      canRevealHint={canRevealHint}
       onChange={(next) => {
         setModelDraft(next);
         saveModelDraft(next);
@@ -468,9 +499,9 @@ export function ConvexLensOpticalBenchLab() {
         }
         saveModelAttempt(modelDraft);
       }}
-      onRevealHint={revealHint}
+      reviewOnly={revisiting}
     />
-  ) : isTransfer && !transferComplete && transferTarget ? (
+  ) : isTransfer && transferTarget && (!transferComplete || revisiting) ? (
     <LensTransferTask
       target={transferTarget}
       draft={transferDraft}
@@ -482,11 +513,12 @@ export function ConvexLensOpticalBenchLab() {
       needMore={transferNeedMore}
       lastFailure={
         latestTransfer && latestTransfer.accepted !== true
-          ? "这次还不能算迁移成功。不要只写“都有凸透镜”，要把会聚方式和像连起来。"
+          ? lensTransferFeedback(latestTransfer.failureKinds?.[0]).message
           : null
       }
+      reviewOnly={revisiting}
     />
-  ) : isExam && examOpen && examPattern ? (
+  ) : isExam && examPattern && (examOpen || revisiting) ? (
     <LensExamTask
       pattern={examPattern}
       questionIndex={examQuestionIndex}
@@ -499,8 +531,8 @@ export function ConvexLensOpticalBenchLab() {
       feedback={latestExamAttempt ? summarizeLensExamAttempt(latestExamAttempt) : null}
       needSteps={examNeedSteps}
       canRetry={examCanRetry}
-      hints={isExam ? hints : []}
-      canRevealHint={isExam && canRevealHint}
+      hints={[]}
+      canRevealHint={false}
       onRepresentationChange={(value) => {
         const next = { ...examDraft, representation: value };
         setExamDraft(next);
@@ -569,7 +601,7 @@ export function ConvexLensOpticalBenchLab() {
         setExamDraft(next);
         saveExamDraft(next);
       }}
-      onRevealHint={revealHint}
+      onRevealHint={() => undefined}
     />
   ) : isAiOff && aiOffOpen ? (
     <LensAiOffTask
@@ -636,6 +668,38 @@ export function ConvexLensOpticalBenchLab() {
     />
   ) : null;
 
+  const frame = LENS_TASK_FRAMES[displayStage];
+  const help = lensHelpState(session, displayStage);
+  const showHelp =
+    lensHelpAllowed(displayStage) && !revisiting && !authoritativeAiOff;
+  const framedTask = (
+    <div className="space-y-5">
+      {revisiting && viewingStage ? (
+        <LensReviewBanner
+          viewingStage={viewingStage}
+          authoritativeStage={session.stage}
+          onReturn={returnToProgress}
+        />
+      ) : null}
+      {frame && !isEntry && !isAiOff && !isComplete ? (
+        <LensTaskFrame
+          context={frame.context}
+          focus={frame.focus}
+          action={frame.action}
+        />
+      ) : null}
+      {task}
+      {showHelp ? (
+        <LensHelpPanel
+          intentId={help.intentId}
+          prompts={help.intentId ? lensHelpPrompts(help.intentId, help.revealed) : []}
+          onSelectIntent={selectHelpIntent}
+          onRevealNext={revealHelpNext}
+        />
+      ) : null}
+    </div>
+  );
+
   const tutorStudentText = isObserve
     ? selectedOptionIds.join("，")
     : isDescribe
@@ -652,12 +716,15 @@ export function ConvexLensOpticalBenchLab() {
     <LearningShell
       stage={session.stage}
       stageLabels={LENS_STAGE_LABELS}
-      stagePrompts={LENS_STAGE_PROMPTS}
+      stagePrompts={revisiting ? {} : LENS_STAGE_PROMPTS}
       progressStages={[...LENS_PHASE_STAGES]}
       scene={scene}
-      task={task}
+      task={framedTask}
       tutor={
-        tutor.allowed && !isAiOff && !isComplete ? (
+        tutor.allowed &&
+        !authoritativeAiOff &&
+        !authoritativeComplete &&
+        !revisiting ? (
           <TutorPanel
             message={tutor.message}
             loading={tutor.loading}
@@ -667,7 +734,11 @@ export function ConvexLensOpticalBenchLab() {
           />
         ) : null
       }
-      examNotice={isExam ? LENS_EXAM_COPY.notice : undefined}
+      examNotice={
+        displayStage === LearningStage.EXAM && !revisiting
+          ? LENS_EXAM_COPY.notice
+          : undefined
+      }
       actions={
         isEntry ? (
           <Button size="lg" onClick={startLesson} aria-label={LENS_COPY.startLesson}>
@@ -686,12 +757,19 @@ export function ConvexLensOpticalBenchLab() {
 
 function activeExperimentId(
   session: NonNullable<ReturnType<typeof useConvexLensLearningSession>["session"]>,
+  displayStage: LearningStage,
 ): LensExperimentId | null {
-  if (session.stage === LearningStage.PREDICT) {
+  if (displayStage === LearningStage.PREDICT) {
     return LENS_EXPERIMENT_A;
   }
-  if (session.stage === LearningStage.EXPERIMENT) {
-    return activeLensExperimentId(session);
+  if (displayStage === LearningStage.EXPERIMENT) {
+    return (
+      activeLensExperimentId(session) ??
+      [...LENS_EXPERIMENT_ORDER]
+        .reverse()
+        .find((id) => firstClosedLensEvidence(session, id)) ??
+      LENS_EXPERIMENT_A
+    );
   }
   return null;
 }
@@ -704,7 +782,7 @@ function experimentKeyFor(
     return LENS_EXPERIMENT_A;
   }
   if (stage === LearningStage.EXPERIMENT) {
-    return activeLensExperimentId(session) ?? "experiment-done";
+    return activeExperimentId(session, stage) ?? "experiment-done";
   }
   return stage;
 }

@@ -61,9 +61,10 @@ export function LensExamTask({
 
   return (
     <div className="space-y-5" data-testid="lens-exam-world" data-pattern={pattern.id}>
+      <p className="text-sm text-[var(--ink-muted)]">{LENS_EXAM_COPY.worldTrail}</p>
       <article className="space-y-4 border border-[var(--line)] bg-[var(--paper)] px-5 py-5">
         <p className="text-xs tracking-[0.16em] text-[var(--ink-muted)]">
-          {`第 ${questionIndex + 1} 题 / 共 ${totalCount} 题`}
+          {`第 ${questionIndex + 1} 题 / 共 ${totalCount} 题 · ${LENS_EXAM_COPY.stemLabel}`}
         </p>
         <h2 className="font-serif text-xl leading-relaxed" data-testid="lens-exam-stem">
           {pattern.stem}
@@ -169,9 +170,11 @@ export function LensExamTask({
           ))}
         </Card>
       ) : null}
-      <Button variant="ghost" onClick={onRevealHint} disabled={!canRevealHint}>
-        {canRevealHint ? "给我一个台阶" : "这一题的台阶用完了"}
-      </Button>
+      {canRevealHint ? (
+        <Button variant="ghost" onClick={onRevealHint}>
+          给我一个台阶
+        </Button>
+      ) : null}
     </div>
   );
 }

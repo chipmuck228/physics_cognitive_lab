@@ -3,6 +3,7 @@ import { expect, type Page } from "@playwright/test";
 import {
   LENS_COPY,
   LENS_OBSERVE_OPTIONS,
+  LENS_OBSERVE_REQUIRED_IDS,
   LENS_STAGE_PROMPTS,
 } from "../../lib/content/convex-lens-optical-bench";
 import { STUDENT_CHROME } from "../../lib/content/student-language";
@@ -39,8 +40,11 @@ export async function startLensLesson(page: Page) {
 export async function completeLensObserve(page: Page) {
   await page.getByTestId("lens-play-demo").click();
   await page.getByTestId("lens-move-screen").click();
+  const required = new Set<string>(LENS_OBSERVE_REQUIRED_IDS);
   for (const option of LENS_OBSERVE_OPTIONS) {
-    await page.getByLabel(option.label).click();
+    if (required.has(option.id)) {
+      await page.getByLabel(option.label).click();
+    }
   }
   await page.getByRole("button", { name: LENS_COPY.observeSubmit }).click();
   await expect(
@@ -49,9 +53,9 @@ export async function completeLensObserve(page: Page) {
 }
 
 export async function completeLensDescribe(page: Page) {
-  await page.getByRole("radio", { name: /光具座上的物体、凸透镜和光屏/ }).click();
-  await page.getByRole("radio", { name: /物体、F\/2F、像和光屏不是同一个东西/ }).click();
-  await page.getByRole("radio", { name: /改物体位置或光屏位置，看见的结果会变/ }).click();
+  await page.getByRole("radio", { name: /左边的物体、中间的凸透镜，还有可以移动的光屏/ }).click();
+  await page.getByRole("radio", { name: /物体、F \/ 2F、像和光屏要分开认/ }).click();
+  await page.getByRole("radio", { name: /我改了物体位置或光屏位置，看见的结果跟着变/ }).click();
   await page.getByLabel(LENS_COPY.describeQuestion).fill("物体、透镜、像和光屏不是同一个东西。");
   await page.getByRole("button", { name: LENS_COPY.describeSubmit }).click();
   await expect(
@@ -111,31 +115,50 @@ export async function completeLensExplain(page: Page) {
 export async function completeLensModel(page: Page) {
   await expect(page.getByTestId("lens-ray-construction")).toBeVisible();
   await chooseGroupOption(page, "lens-model-station", /物体在 2F 以外/);
-  await fillRequiredRayPair(page, "第一条光线", "第二条光线");
+  await page.getByTestId("lens-model-next").click();
+  await fillOneRay(page, "第一条光线", {
+    kind: "平行主光轴的光线",
+    incident: "这是实际光线（实线）",
+    before: "到达透镜前：平行主光轴",
+    after: "过透镜后：经过另一侧焦点",
+  });
+  await page.getByTestId("lens-model-next").click();
+  await fillOneRay(page, "第二条光线", {
+    kind: "过光心的光线",
+    incident: "这是实际光线（实线）",
+    before: "到达透镜前：朝向光心",
+    after: "过透镜后：方向不变",
+  });
+  await page.getByTestId("lens-model-next").click();
   await chooseGroupOption(page, "lens-model-meeting", /出射光线真正会聚/);
+  await page.getByTestId("lens-model-next").click();
   await chooseGroupOption(page, "lens-model-side", /像在透镜另一侧/);
   await chooseGroupOption(page, "lens-model-nature", / 实像$/);
   await chooseGroupOption(page, "lens-model-orientation", /？ 倒立$/);
   await chooseGroupOption(page, "lens-model-size", /比物体小/);
   await chooseGroupOption(page, "lens-model-receive", /光屏放到像的位置可以接到/);
+  await page.getByTestId("lens-model-next").click();
   await page.getByTestId("lens-model-reasoning").fill(
     "物体在 2F 以外，光线在另一侧真正会聚，所以成倒立缩小的实像，光屏放到交点才能接到。",
   );
+  await page.getByTestId("lens-model-next").click();
   await page.getByRole("button", { name: LENS_COPY.modelSubmit }).click();
   await expect(
     page.getByRole("heading", { name: LENS_STAGE_PROMPTS[LearningStage.TRANSFER] }),
   ).toBeVisible();
 }
 
-async function fillRequiredRayPair(page: Page, first: string, second: string) {
-  await page.getByRole("radio", { name: `${first}：这是哪一条光线？ 平行主光轴的光线` }).click();
-  await page.getByRole("radio", { name: `${first}：这段是实际光线还是反向延长？ 这是实际光线（实线）` }).click();
-  await page.getByRole("radio", { name: `${first}：到达透镜前怎么走？ 到达透镜前：平行主光轴` }).click();
-  await page.getByRole("radio", { name: `${first}：过透镜后怎么走？ 过透镜后：经过另一侧焦点` }).click();
-  await page.getByRole("radio", { name: `${second}：这是哪一条光线？ 过光心的光线` }).click();
-  await page.getByRole("radio", { name: `${second}：这段是实际光线还是反向延长？ 这是实际光线（实线）` }).click();
-  await page.getByRole("radio", { name: `${second}：到达透镜前怎么走？ 到达透镜前：朝向光心` }).click();
-  await page.getByRole("radio", { name: `${second}：过透镜后怎么走？ 过透镜后：方向不变` }).click();
+async function fillOneRay(
+  page: Page,
+  prefix: string,
+  labels: { kind: string; incident: string; before: string; after: string },
+) {
+  await page.getByRole("radio", { name: `${prefix}：这是哪一条光线？ ${labels.kind}` }).click();
+  await page
+    .getByRole("radio", { name: `${prefix}：这段是实际光线还是反向延长？ ${labels.incident}` })
+    .click();
+  await page.getByRole("radio", { name: `${prefix}：到达透镜前怎么走？ ${labels.before}` }).click();
+  await page.getByRole("radio", { name: `${prefix}：过透镜后怎么走？ ${labels.after}` }).click();
 }
 
 export async function completeLensProjectorTransfer(page: Page) {

@@ -79,7 +79,13 @@ export function lensModelDraft(session: LearningSession): LensModelDraft {
   if (!draft || typeof draft !== "object") {
     return emptyLensModelDraft();
   }
-  return { ...emptyLensModelDraft(), ...(draft as Partial<LensModelDraft>) };
+  const merged = { ...emptyLensModelDraft(), ...(draft as Partial<LensModelDraft>) };
+  const step = merged.constructionStep;
+  return {
+    ...merged,
+    constructionStep:
+      typeof step === "number" && step >= 1 && step <= 7 ? step : 1,
+  };
 }
 
 export function withLensModelDraft(

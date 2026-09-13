@@ -29,9 +29,6 @@ export function LensPredictTask({
 }: LensPredictTaskProps) {
   return (
     <div className="space-y-4" data-testid="lens-predict-task">
-      <p className="text-sm leading-relaxed text-[var(--ink-muted)]">
-        {LENS_COPY.predictInstruction}
-      </p>
       <Card className="space-y-5 p-4">
         <fieldset disabled={locked} className="space-y-3">
           <QuestionGroup

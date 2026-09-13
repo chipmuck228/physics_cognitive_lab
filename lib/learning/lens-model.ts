@@ -34,6 +34,7 @@ export interface LensModelDraft {
   size: string;
   screenReceivable: string;
   studentReasoning: string;
+  constructionStep: number;
 }
 
 export function emptyLensRayDraft(): LensRayDraft {
@@ -55,6 +56,7 @@ export function emptyLensModelDraft(): LensModelDraft {
     size: "",
     screenReceivable: "",
     studentReasoning: "",
+    constructionStep: 1,
   };
 }
 
@@ -250,6 +252,30 @@ export function lensModelStudentFeedback(
   return studentUiFeedback(lensModelMissingLabels(draft), summarizeLensModelAttempt(attempt));
 }
 
+export const LENS_MODEL_STEP_COUNT = 7;
+
+export function lensModelStepComplete(draft: LensModelDraft, step: number): boolean {
+  if (step <= 1) {
+    return Boolean(draft.objectStation);
+  }
+  if (step === 2) {
+    return Boolean(draft.rayA.kind && draft.rayA.beforeLens && draft.rayA.afterLens && draft.rayA.incidentPath);
+  }
+  if (step === 3) {
+    return Boolean(draft.rayB.kind && draft.rayB.beforeLens && draft.rayB.afterLens && draft.rayB.incidentPath);
+  }
+  if (step === 4) {
+    return Boolean(draft.meetingMode);
+  }
+  if (step === 5) {
+    return Boolean(draft.side && draft.nature && draft.orientation && draft.size && draft.screenReceivable);
+  }
+  if (step === 6) {
+    return draft.studentReasoning.trim().length > 0;
+  }
+  return true;
+}
+
 export function completeLensModelDraft(station: ObjectStation = "beyond-2f"): LensModelDraft {
   const [parallel, center] = twoStandardRays();
   const image = officialImageConsequence(station);
@@ -279,5 +305,6 @@ export function completeLensModelDraft(station: ObjectStation = "beyond-2f"): Le
     size: image.size,
     screenReceivable: image.screenReceivable ? "true" : "false",
     studentReasoning: reasoning,
+    constructionStep: 7,
   };
 }

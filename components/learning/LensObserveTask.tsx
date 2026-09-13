@@ -12,6 +12,7 @@ interface LensObserveTaskProps {
   screenAtImagePlane: boolean;
   needMore: boolean;
   saved: boolean;
+  reviewOnly?: boolean;
 }
 
 export function LensObserveTask({
@@ -23,15 +24,13 @@ export function LensObserveTask({
   screenAtImagePlane,
   needMore,
   saved,
+  reviewOnly = false,
 }: LensObserveTaskProps) {
   const selected = new Set(selectedOptionIds);
 
   return (
     <div data-testid="lens-observe-task">
       <Card className="space-y-4 p-4">
-        <p className="text-sm leading-relaxed text-[var(--ink-muted)]">
-          {LENS_COPY.observeCaption}
-        </p>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={onPlayDemo} data-testid="lens-play-demo">
             {LENS_COPY.playDemo}
@@ -66,9 +65,11 @@ export function LensObserveTask({
         {saved && !needMore ? (
           <ValidationMessage kind="info">已经记下你看见的。</ValidationMessage>
         ) : null}
-        <div className="flex justify-end">
-          <Button onClick={onSubmit}>{LENS_COPY.observeSubmit}</Button>
-        </div>
+        {reviewOnly ? null : (
+          <div className="flex justify-end">
+            <Button onClick={onSubmit}>{LENS_COPY.observeSubmit}</Button>
+          </div>
+        )}
       </Card>
     </div>
   );

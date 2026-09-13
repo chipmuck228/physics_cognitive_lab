@@ -15,6 +15,7 @@ interface LensDescribeTaskProps {
   onChange: (next: LensDescribeInput) => void;
   onSubmit: () => void;
   needStructure: boolean;
+  reviewOnly?: boolean;
 }
 
 export function LensDescribeTask({
@@ -22,12 +23,10 @@ export function LensDescribeTask({
   onChange,
   onSubmit,
   needStructure,
+  reviewOnly = false,
 }: LensDescribeTaskProps) {
   return (
     <div data-testid="lens-describe-task" className="space-y-4">
-      <p className="text-sm leading-relaxed text-[var(--ink-muted)]">
-        {LENS_COPY.describeInstruction}
-      </p>
       <Card className="space-y-5 p-4">
         <QuestionGroup
           id="lens-describe-object"
@@ -74,9 +73,11 @@ export function LensDescribeTask({
         {needStructure ? (
           <ValidationMessage kind="missing">{LENS_COPY.describeNeedStructure}</ValidationMessage>
         ) : null}
-        <div className="flex justify-end">
-          <Button onClick={onSubmit}>{LENS_COPY.describeSubmit}</Button>
-        </div>
+        {reviewOnly ? null : (
+          <div className="flex justify-end">
+            <Button onClick={onSubmit}>{LENS_COPY.describeSubmit}</Button>
+          </div>
+        )}
       </Card>
     </div>
   );

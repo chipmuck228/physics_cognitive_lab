@@ -14,9 +14,7 @@ interface LensExplainTaskProps {
   onChange: (next: LensExplainInput) => void;
   onSubmit: () => void;
   needMore: boolean;
-  hints: string[];
-  canRevealHint: boolean;
-  onRevealHint: () => void;
+  reviewOnly?: boolean;
 }
 
 export function LensExplainTask({
@@ -24,9 +22,7 @@ export function LensExplainTask({
   onChange,
   onSubmit,
   needMore,
-  hints,
-  canRevealHint,
-  onRevealHint,
+  reviewOnly = false,
 }: LensExplainTaskProps) {
   return (
     <div data-testid="lens-explain-task" className="space-y-4">
@@ -61,19 +57,11 @@ export function LensExplainTask({
             先选出一段会聚或接收关系，再用自己的话写。只背“2F 外倒立缩小实像”还不够。
           </ValidationMessage>
         ) : null}
-        {hints.map((hint) => (
-          <ValidationMessage key={hint} kind="info">
-            {hint}
-          </ValidationMessage>
-        ))}
-        {canRevealHint ? (
-          <Button variant="ghost" onClick={onRevealHint}>
-            再想一层
-          </Button>
-        ) : null}
-        <div className="flex justify-end">
-          <Button onClick={onSubmit}>{LENS_COPY.explainSubmit}</Button>
-        </div>
+        {reviewOnly ? null : (
+          <div className="flex justify-end">
+            <Button onClick={onSubmit}>{LENS_COPY.explainSubmit}</Button>
+          </div>
+        )}
       </Card>
     </div>
   );

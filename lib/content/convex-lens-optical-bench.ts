@@ -16,22 +16,22 @@ export const LENS_COPY = {
   landingCta: "开始看光具座",
   sceneTitle: "凸透镜光具座",
   startLesson: "开始观察",
-  observeCaption: "先看光屏上发生了什么，再看透过透镜能不能看见像。",
+  observeCaption: "先换一个物体位置，再移动光屏，看这两次分别发生了什么。",
   playDemo: "换一个物体位置看一看",
   moveScreen: "移动光屏",
   screenAtImage: "光屏放到像的位置",
   screenOffImage: "光屏离开像的位置",
-  observePrompt: "你看见了什么？把对的都勾上。",
+  observePrompt: "动过之后，你注意到了什么？只勾你确实看见的。",
   observeSubmit: "提交观察",
-  observeNeedMore: "这三项都要勾上，才能继续。",
-  describeInstruction: "把物体、透镜、焦点标志、像和光屏分开说。不要只写“变了”。",
-  describeObject: "你在看什么？",
-  describeQuantities: "哪些东西不是同一个？",
-  describeChange: "这次主要看见什么变化？",
-  describeQuestion: "再用一句话写下来。",
+  observeNeedMore: "再动一动物体或光屏，把你确实看见的变化记下来。",
+  describeInstruction: "对着光具座，把左边的物体、中间的透镜、F / 2F、像和光屏分开说。",
+  describeObject: "光具座上，你现在看的整套装置是什么？",
+  describeQuantities: "左边的物体、透镜上的 F / 2F、像，和右边的光屏，是同一件东西吗？",
+  describeChange: "你刚动的是物体还是光屏？看见的结果变了吗？",
+  describeQuestion: "再用一句话写下来。不要只写“变了”。",
   describeSubmit: "记下我的说法",
-  describeNeedStructure: "先把三个问题和一句话都写上。不要只写“变了”或“像不一样”。",
-  predictInstruction: "物体相对焦点的位置变了，你预计像或光屏会怎样？先写下理由，再去验证。",
+  describeNeedStructure: "先对着光具座回答三个问题，再用自己的话写一句。",
+  predictInstruction: "先写下你预计会看见什么，再去动手。",
   reasonLabel: "为什么这样想？",
   reasonPlaceholder: "先说物体往哪边移，你预计光屏上会怎样。",
   predictSubmit: "锁定预测",
@@ -99,22 +99,74 @@ export const LENS_PHASE_STAGES = [
 
 export const LENS_FOOTER: Record<LearningStage, string> = {
   [LearningStage.ENTRY]: "",
-  [LearningStage.OBSERVE]: "先看光屏，再勾出你看见的。",
-  [LearningStage.DESCRIBE]: "把物体、透镜、像和光屏分开说。",
-  [LearningStage.PREDICT]: "先猜物体位置变了以后会怎样。",
-  [LearningStage.EXPERIMENT]: "改动物体或光屏，对照你的猜测。",
-  [LearningStage.EXPLAIN]: "先说光线会不会真正相交。",
-  [LearningStage.MODEL]: "自己画出两条光线，并说明像为什么这样。",
-  [LearningStage.TRANSFER]: "换了投影仪或放大镜，还能不能用同一条结构。",
-  [LearningStage.EXAM]: "先判断题目在考什么，再选用关系，最后作答。",
+  [LearningStage.OBSERVE]: "回看不会丢掉已经记下的内容。",
+  [LearningStage.DESCRIBE]: "回看不会丢掉已经记下的内容。",
+  [LearningStage.PREDICT]: "回看不会丢掉已经记下的内容。",
+  [LearningStage.EXPERIMENT]: "回看不会丢掉已经记下的内容。",
+  [LearningStage.EXPLAIN]: "回看不会丢掉已经记下的内容。",
+  [LearningStage.MODEL]: "回看不会丢掉已经记下的内容。",
+  [LearningStage.TRANSFER]: "回看不会丢掉已经记下的内容。",
+  [LearningStage.EXAM]: "回看不会丢掉已经记下的内容。",
   [LearningStage.AI_OFF]: "这一页没有提示，也没有人帮你。",
   [LearningStage.COMPLETE]: "这些只是你刚才留下的思考痕迹，不是掌握程度。",
 };
 
+export const LENS_TASK_FRAMES: Partial<
+  Record<LearningStage, { context: string; focus: string; action: string }>
+> = {
+  [LearningStage.OBSERVE]: {
+    context: "光具座上，物体可以换位置，光屏也可以左右移。",
+    focus: "先看光屏上有没有变化，再看透过透镜能不能看见像。",
+    action: "先动手，再记下你看见的。",
+  },
+  [LearningStage.DESCRIBE]: {
+    context: "你刚在光具座上动过物体或光屏。",
+    focus: "对着图，把物体、透镜、F / 2F、像和光屏分开指认。",
+    action: "用自己的话写下你看见的装置，不要只写“变了”。",
+  },
+  [LearningStage.PREDICT]: {
+    context: "动手之前，先留下你的猜测。",
+    focus: "想的是物体相对 F / 2F 换了位置以后，像或光屏会怎样。",
+    action: "选出预计结果，并写理由，然后锁定。",
+  },
+  [LearningStage.EXPERIMENT]: {
+    context: "你已经有一个锁定的预测。",
+    focus: "看清楚这次改的是物体位置、光屏，还是透镜被遮住。",
+    action: "按 预测 → 动手 → 看见 → 对照 → 想法 走完这一轮。",
+  },
+  [LearningStage.EXPLAIN]: {
+    context: "你已经看见过几种不同的光屏结果。",
+    focus: "先问光线是真的相交，还是只有延长线相交。",
+    action: "用自己的话写一段说明，不要背完整张表。",
+  },
+  [LearningStage.MODEL]: {
+    context: "现在要把物距、光线和像收成一条自己建构的关系。",
+    focus: "一次只做一步：先放物体，再装两条光线。",
+    action: "自己组装，不要去点一张已经画好的标准图。",
+  },
+  [LearningStage.TRANSFER]: {
+    context: "器材换了，但还是一块凸透镜。",
+    focus: "先看这个新情境里，物体相对焦点在哪里。",
+    action: "用刚才的会聚结构说明，不要只说“都有凸透镜”。",
+  },
+  [LearningStage.EXAM]: {
+    context: "现在先不看光具座，只看题目。",
+    focus: "先判断这题在考什么，再选用关系。",
+    action: "最后才看选项，并写理由。",
+  },
+};
+
 export const LENS_OBSERVE_OPTIONS = [
-  { id: "screen-can-change", label: "光屏上有时清晰、有时模糊或什么也接不到" },
+  { id: "screen-can-change", label: "换物体位置后，光屏上有时清晰、有时模糊或什么也接不到" },
   { id: "size-can-change", label: "换物体位置后，看见的像可以更大或更小" },
+  { id: "screen-moves-image", label: "光屏一动，像就跟着光屏跑到新位置" },
   { id: "screen-not-always", label: "不是每次移动光屏都能接到一幅像" },
+] as const;
+
+export const LENS_OBSERVE_REQUIRED_IDS = [
+  "screen-can-change",
+  "size-can-change",
+  "screen-not-always",
 ] as const;
 
 export const LENS_COMPARE_OPTIONS = [
@@ -131,20 +183,20 @@ export const LENS_PREDICT_OUTCOMES = [
 ] as const;
 
 export const LENS_OBJECT_OPTIONS = [
-  { value: "optical-bench", label: "光具座上的物体、凸透镜和光屏" },
-  { value: "only-screen", label: "只有光屏上的画面" },
-  { value: "only-lens", label: "只有透镜本身" },
+  { value: "optical-bench", label: "左边的物体、中间的凸透镜，还有可以移动的光屏" },
+  { value: "only-screen", label: "我只在看光屏上的那一块画面" },
+  { value: "only-lens", label: "我只在看透镜玻璃本身" },
 ] as const;
 
 export const LENS_QUANTITY_OPTIONS = [
-  { value: "object-f-image-screen", label: "物体、F/2F、像和光屏不是同一个东西" },
-  { value: "image-is-screen", label: "像就是光屏" },
-  { value: "unsure", label: "我还分不清" },
+  { value: "object-f-image-screen", label: "物体、F / 2F、像和光屏要分开认，不是同一个" },
+  { value: "image-is-screen", label: "像就是那块光屏" },
+  { value: "unsure", label: "我还指不清楚" },
 ] as const;
 
 export const LENS_CHANGE_OPTIONS = [
-  { value: "object-or-screen-changes-view", label: "改物体位置或光屏位置，看见的结果会变" },
-  { value: "always-same", label: "怎么放都一样" },
+  { value: "object-or-screen-changes-view", label: "我改了物体位置或光屏位置，看见的结果跟着变" },
+  { value: "always-same", label: "怎么放，看见的都一样" },
   { value: "just-changed", label: "变了" },
 ] as const;
 
@@ -246,7 +298,9 @@ export const LENS_COMPLETE_COPY = {
 
 export const LENS_EXAM_COPY = {
   notice: "现在先不看光具座。先把题目想清楚，再选答案。",
-  representationQuestion: "这道题主要在考什么？",
+  worldTrail: "题干 → 考什么 → 表征 → 模型 → 作答",
+  stemLabel: "题干",
+  representationQuestion: "这道题主要在考什么？先判断题目在问哪一种成像情况。",
   modelQuestion: "你打算用哪一句关系来想？",
   answerQuestion: "最后选哪一句？",
   reasoningQuestion: "用自己的话写理由。不要只抄选项，也不要只背表。",
@@ -287,6 +341,19 @@ export function lensPredictQuestion(id: LensExperimentId): string {
     return "物体放到焦点以内。光屏还能不能接到像？透过透镜看会怎样？";
   }
   return "光屏已经接到清晰实像。遮住透镜上半部分，像会少掉一半吗？";
+}
+
+export function lensChangedVariable(id: LensExperimentId): string {
+  if (id === LENS_EXPERIMENT_A) {
+    return "这次改的是物体位置：从 2F 以外移到 F 与 2F 之间。";
+  }
+  if (id === LENS_EXPERIMENT_B) {
+    return "这次改的是物体位置：放到焦点上。";
+  }
+  if (id === LENS_EXPERIMENT_C) {
+    return "这次改的是物体位置：放到焦点以内。";
+  }
+  return "这次改的是透镜：遮住一部分，光屏先不要动。";
 }
 
 export function lensReflectionPrompt(id: LensExperimentId): string {
