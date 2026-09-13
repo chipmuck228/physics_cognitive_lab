@@ -417,4 +417,23 @@ describe("Scene 07 enabled-action contract", () => {
     expect(screen.queryByRole("button", { name: /我不知道现在要做什么/ })).not.toBeInTheDocument();
     expect(screen.queryByTestId("lens-help-panel")).not.toBeInTheDocument();
   });
+
+  it("EXAM diagram-format stem has a given-condition figure, not the image", async () => {
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-exam-diagram", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.EXAM,
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    expect(screen.getByTestId("lens-exam-stem")).toHaveTextContent("如图");
+    const figure = screen.getByTestId("lens-exam-diagram");
+    expect(figure).toHaveAttribute("data-object-station", "beyond-2f");
+    expect(figure).toHaveAttribute("data-shows-image", "false");
+    expect(figure).toHaveAttribute("data-shows-rays", "false");
+    expect(figure).toHaveTextContent("物体");
+    expect(figure).toHaveTextContent("凸透镜");
+    expect(figure).toHaveTextContent("2F");
+    expect(figure).toHaveTextContent("光屏");
+    expect(figure).not.toHaveTextContent("倒立");
+    expect(figure).not.toHaveTextContent("实像");
+  });
 });

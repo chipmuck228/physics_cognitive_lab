@@ -333,6 +333,17 @@ export async function completeLensExam(page: Page) {
       throw new Error(`Missing exam pattern ${patternId}`);
     }
     await expect(page.getByTestId("lens-exam-world")).toHaveAttribute("data-pattern", patternId);
+    if (pattern.format === "diagram") {
+      const figure = page.getByTestId("lens-exam-diagram");
+      await expect(figure).toBeVisible();
+      await expect(page.getByTestId("lens-exam-stem")).toContainText("如图");
+      await expect(figure).toHaveAttribute("data-shows-image", "false");
+      await expect(figure).toHaveAttribute("data-shows-rays", "false");
+      await expect(figure).toContainText("物体");
+      await expect(figure).toContainText("光屏");
+    } else {
+      await expect(page.getByTestId("lens-exam-diagram")).toHaveCount(0);
+    }
     await page.getByRole("radio", { name: intendedLensExamRepresentation(pattern) }).click();
     await page.getByTestId("lens-exam-continue-model").click();
     await page.getByRole("radio", { name: intendedLensExamModel(pattern) }).click();
@@ -377,11 +388,23 @@ export async function completeLensAiOff(page: Page) {
         await page.getByRole("checkbox", { name: option.label }).click();
       }
     }
-    await page.getByTestId("lens-ai-off-post-check").click();
+    await page.getByRole("button", { name: "记下这次对照" }).click();
+    if (challengeId === LENS_AI_OFF_CHALLENGE_IDS[0]) {
+      await expect(page.getByTestId("lens-ai-off-task")).toHaveAttribute(
+        "data-challenge",
+        LENS_AI_OFF_CHALLENGE_IDS[1],
+      );
+      await expect(page.getByTestId("lens-ai-off-task")).toHaveAttribute(
+        "data-step",
+        "response",
+      );
+      await expect(page.getByTestId("lens-ai-off-post-check")).toHaveCount(0);
+    }
   }
   await expect(
     page.getByRole("heading", { name: LENS_STAGE_PROMPTS[LearningStage.COMPLETE] }),
   ).toBeVisible();
+  await expectNoTutorChrome(page);
 }
 
 export async function expectNoTutorChrome(page: Page) {

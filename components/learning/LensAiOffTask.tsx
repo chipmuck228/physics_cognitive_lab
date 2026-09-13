@@ -33,6 +33,7 @@ interface LensAiOffTaskProps {
   onCommit: () => void;
   onSubmitPostCheck: () => void;
   onRetry: () => void;
+  repairMessage?: string | null;
 }
 
 export function LensAiOffTask({
@@ -46,6 +47,7 @@ export function LensAiOffTask({
   onCommit,
   onSubmitPostCheck,
   onRetry,
+  repairMessage = null,
 }: LensAiOffTaskProps) {
   const challenge = lensAiOffChallenge(draft.currentChallengeId);
   const judgments = lensAiOffJudgments(draft.currentChallengeId);
@@ -177,6 +179,11 @@ export function LensAiOffTask({
               <span>{option.label}</span>
             </label>
           ))}
+          {repairMessage ? (
+            <ValidationMessage kind="incorrect" testId="lens-ai-off-repair">
+              {repairMessage}
+            </ValidationMessage>
+          ) : null}
           <div className="flex justify-end gap-2">
             {showRetry ? (
               <Button variant="secondary" onClick={onRetry}>

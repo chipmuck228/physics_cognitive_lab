@@ -1,7 +1,9 @@
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
+import { LensExamDiagram } from "@/components/learning/LensExamDiagram";
 import { ValidationMessage } from "@/components/learning/ValidationMessage";
 import { LENS_EXAM_COPY } from "@/lib/content/convex-lens-optical-bench";
+import { lensExamDiagramSpec } from "@/lib/learning/lens-exam-diagram";
 import type { LensExamStep } from "@/lib/learning/lens-exam";
 import type { ExamPattern } from "@/types/physics-model";
 
@@ -58,6 +60,7 @@ export function LensExamTask({
 }: LensExamTaskProps) {
   const showModel = step === "model" || step === "answer";
   const showOptions = step === "answer";
+  const diagram = lensExamDiagramSpec(pattern);
 
   return (
     <div className="space-y-5" data-testid="lens-exam-world" data-pattern={pattern.id}>
@@ -69,6 +72,9 @@ export function LensExamTask({
         <h2 className="font-serif text-xl leading-relaxed" data-testid="lens-exam-stem">
           {pattern.stem}
         </h2>
+        {diagram ? (
+          <LensExamDiagram spec={diagram} caption={pattern.representation} />
+        ) : null}
       </article>
       <section className="space-y-5 border border-[var(--line)] bg-[var(--paper)] px-5 py-5">
         <ExamChoiceList

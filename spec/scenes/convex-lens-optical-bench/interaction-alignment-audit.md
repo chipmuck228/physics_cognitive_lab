@@ -13,7 +13,7 @@ Contract: [`../../interaction-alignment-audit.md`](../../interaction-alignment-a
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Repair re-audit 2026-09-13: IA-07-01 / 02 / 03 / 04 / 05 are PASS. IA-07-04 is the Scene07-local Step 6 semantic-parse pilot. IA-07-05 is the TRANSFER authored-explanation repair. Not a universal Transfer or semantic engine.
+Repair re-audit 2026-09-13: IA-07-01 / 02 / 03 / 04 / 05 / 07 / 08 are PASS. IA-07-07 is the EXAM diagram representation. IA-07-08 is AI_OFF post-check progression. Not a universal diagram DSL or AI_OFF engine.
 
 ---
 
@@ -38,7 +38,7 @@ Known prior defects checked against **current** code:
 
 ## Confirmed Alignment Defects
 
-None open after the 2026-09-13 OBSERVE / TRANSFER / MODEL Step 6 / TRANSFER authored-explanation repairs.
+None open after the 2026-09-13 Scene07-local repairs, including EXAM diagram and AI_OFF post-check progression.
 
 ### IA-07-01 — repaired PASS
 
@@ -114,6 +114,36 @@ None open after the 2026-09-13 OBSERVE / TRANSFER / MODEL Step 6 / TRANSFER auth
 | Implementation evidence | `LENS_COPY.transferOwnWords`; `lens-transfer-recap` mirrors draft labels; `lensTransferRepairFeedback` first-match priority; `LensTransferTask` `lens-transfer-repair` is the only fail surface; action chrome hidden on TRANSFER missing/rejected; `draftToLensTransferAttempt` no longer appends `都有凸透镜`. `evaluateConvexLensTransfer` acceptance unchanged. |
 | Learner consequence | After correct radios, a restatement is repaired as missing consequence/bind, not as “先选出物距站点”. One orange block. Recap shows the learner’s current choices, including wrong ones. |
 | Repair boundary used | Scene07 TRANSFER copy, recap, feedback ownership, and adapter provenance only. No LLM. No evaluator / L5 / pair-semantics change. |
+
+### IA-07-07 — repaired PASS
+
+| Field | Result |
+|---|---|
+| ID | IA-07-07 |
+| Severity | **P1** |
+| Stage | EXAM |
+| Audit Unit | Diagram representation integrity |
+| Invariant | **IA-1**, **IA-2** |
+| Current status | **PASS (repaired).** `format === "diagram"` and stem “如图” now render `LensExamDiagram`. Given condition only: axis, lens, F/2F, object beyond 2F, screen on the other side. No image, no rays, not the experiment bench. |
+| Expected behavior | The learner can see the figure the stem refers to, then still infer meeting → image. Text/experimental patterns stay text-only. |
+| Implementation evidence | `lensExamDiagramSpec` is Scene07-local and keyed by pattern id + format. `data-shows-image="false"` `data-shows-rays="false"`. Caption is `pattern.representation`, not the official image row. |
+| Learner consequence | “如图” is no longer an imaginary action. The figure does not give away 倒立缩小实像. |
+| Repair boundary used | Scene07 exam representation only. No universal diagram DSL. Physics Truth / L-levels unchanged. Exam still does not write L6. |
+
+### IA-07-08 — repaired PASS
+
+| Field | Result |
+|---|---|
+| ID | IA-07-08 |
+| Severity | **P1** |
+| Stage | AI_OFF |
+| Audit Unit | Post-check action has no visible authoritative progression |
+| Invariant | **IA-2**, **IA-4**, **IA-5**, **IA-6** |
+| Current status | **PASS (repaired).** `记下这次对照` writes the attempt, then local draft is taken from the returned session via `nextLensAiOffDraft` / `lensAiOffDraft`. Accepted challenge 1 → challenge 2 response. Accepted pair → COMPLETE. Rejected post-check stays and shows one `lens-ai-off-repair`. Hydrate key includes accepted + postCheckIds so refresh restores the authoritative challenge. |
+| Expected behavior | A valid enabled click produces a visible next state. React does not infer success. Evaluator still owns `accepted`. |
+| Implementation evidence | `applyLensAiOffPostCheckSave` returns missing/rejected when not accepted. Accepted pair calls `advanceIfReady` because `advanceLensLoop` now allows COMPLETE (chrome `LENS_PHASE_STAGES` still excludes COMPLETE). Lab `setAiOffDraft(lensAiOffDraft(getSessionSnapshot()))` after save. Visible step follows whether the current challenge is accepted. No Tutor/LLM on AI_OFF. |
+| Learner consequence | One click advances or names the repair. Post-check selections do not leak onto the next challenge. |
+| Repair boundary used | Scene07 AI_OFF draft sync + outcome kind only. `evaluateConvexLensAiOff` / L6 derivation unchanged. |
 
 ---
 
@@ -616,7 +646,7 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 | Stage / Subtask | EXAM / one pattern (3 chrome steps) |
 | Cognitive task | Exam World: what is asked, which relation, then answer + reason |
 | Required capability | submit-exam |
-| Visible control / surface | `LensExamTask`; bench hidden; options last |
+| Visible control / surface | `LensExamTask`; bench hidden; options last; `lens-exam-diagram` only when `format === "diagram"` |
 | Semantic learner action | `applyLensExamSubmit` → `buildLensExamAttempt` |
 | Authoritative owner | Pattern `correctAnswer`; attempt records `correct` |
 | Expected state consequence | Attempt stored; next pattern or leave EXAM when every pattern has **an** attempt |
@@ -660,12 +690,12 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 | Stage / Subtask | AI_OFF / post-check then COMPLETE |
 | Cognitive task | Confirm which structure was used; then stop |
 | Required capability | post-check commit |
-| Visible control / surface | post-check boxes; then `LensCompleteView` |
+| Visible control / surface | post-check boxes + `记下这次对照`; then next challenge or `LensCompleteView` |
 | Semantic learner action | `applyLensAiOffPostCheckSave` |
 | Authoritative owner | `evaluateLensAiOffAttempt` / `evaluateRequiredAiOffPair` |
-| Expected state consequence | `accepted` only if official ok ∧ post-check ∧ !llm |
-| Expected visible consequence | Next challenge or COMPLETE. COMPLETE copy: task done ≠ mastered |
-| Blocked condition + visible reason | Failed post-check stays AI_OFF |
+| Expected state consequence | `accepted` only if official ok ∧ post-check ∧ !llm; draft from `nextLensAiOffDraft` |
+| Expected visible consequence | Challenge 2 response, or COMPLETE. One repair if not accepted |
+| Blocked condition + visible reason | Failed post-check stays; `lens-ai-off-repair` |
 | Progression condition | `hasCompletedLensAiOff` |
 | Evidence input / provenance | L6 flags only from accepted pair + LLM off |
 | IA-1 | PASS |
@@ -706,7 +736,7 @@ Read: `tests/e2e/convex-lens-optical-bench-learner-flow.spec.ts`, `happy-path.sp
 | MODEL incoherent ray cannot Next | All `failureKind` → repair mappings in the browser |
 | MODEL wrong official size → reject → step 5 | That leftover is a learner-clarity problem (it is an IA-allowed cross-step) |
 | TRANSFER both targets via helpers; authored restatement gets one bind repair then accept | Learner discovers target 2 without oracle `officialImageConsequence` |
-| EXAM / AI_OFF happy path; AI_OFF has no Help | Wrong EXAM still leaving the stage; EXAM is not L6 |
+| EXAM diagram on “如图”; AI_OFF `记下这次对照` advances or repairs; AI_OFF has no Help | Wrong EXAM still leaving the stage; EXAM is not L6 |
 | Back/revisit does not mutate experiment progress | Pedagogical understanding |
 
 The dedicated OBSERVE E2E now submits checkboxes before any bench action and asserts the interaction reason. Happy-path helpers still manipulate first.
@@ -718,7 +748,7 @@ The dedicated OBSERVE E2E now submits checkboxes before any bench action and ass
 | # | Question | YES where |
 |---|---|---|
 | 1 | Asked to do something they cannot do? | No confirmed |
-| 2 | Act with no visible result? | No confirmed (cover now visible) |
+| 2 | Act with no visible result? | No confirmed (cover visible; AI_OFF post-check now advances or repairs) |
 | 3 | Locally invalid structure marked complete? | No for same-step rays. Cross-step size / authored-vs-mode can reach step 7 by design |
 | 4 | Blocked without why? | No silent no-op confirmed. OBSERVE missing reasons now match the gate |
 | 5 | Hidden progression work? | TRANSFER shows 第 N / 2 个新情境 |
@@ -734,7 +764,7 @@ The dedicated OBSERVE E2E now submits checkboxes before any bench action and ass
 
 | Metric | Count |
 |---|---|
-| Audit units | 25 |
+| Audit units | 27 |
 | IA-1 FAIL | 0 |
 | IA-2 FAIL | 0 |
 | IA-3 FAIL | 0 |
@@ -753,6 +783,6 @@ The dedicated OBSERVE E2E now submits checkboxes before any bench action and ass
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Re-audit of IA-07-01 / 02 / 03 / 04 / 05 after the Scene07-local repairs: all PASS. This is not a learner-validation claim.
+Re-audit of IA-07-01 / 02 / 03 / 04 / 05 / 07 / 08 after the Scene07-local repairs: all PASS. This is not a learner-validation claim.
 
 This is not learner validation.

@@ -370,6 +370,8 @@ export const LENS_AI_OFF_COPY = {
   needCommit: "先选出物距、会聚方式和像的后果，再用自己的话写理由，最后选判断。",
   postCheckTitle: "对照一下：你刚才判断时用到了哪些？",
   postCheckSubmit: "记下这次对照",
+  postCheckNeedFacts: "先勾出这次对照里你确认的事实。",
+  postCheckMismatch: "这几条对照还对不上。先看你刚才选的事实，不要勾“这也有凸透镜”那种话。",
   structureTitle: "先写下这次的光路结构",
 } as const;
 

@@ -1,3 +1,4 @@
+import { LENS_AI_OFF_COPY } from "@/lib/content/convex-lens-optical-bench";
 import { independentChallenges } from "@/content/physics-models/convex-lens-imaging/independent-challenges";
 import { convexLensImagingAssessmentOverlay } from "@/content/physics-models/convex-lens-imaging/assessment-overlay";
 import { PRODUCTION_AI_OFF_IDS } from "@/content/physics-models/convex-lens-imaging/implementation-contract";
@@ -252,6 +253,26 @@ export function buildLensAiOffAttempt(
     accepted: evaluation.accepted,
     llmUsed: false,
     completedWithoutAI: true,
+  };
+}
+
+export function lensAiOffPostCheckRepair(
+  challengeId: string,
+  postCheckIds: readonly string[],
+  accepted: boolean,
+): { kind: "missing" | "rejected"; message: string } | null {
+  if (accepted) {
+    return null;
+  }
+  if (postCheckIds.length === 0) {
+    return {
+      kind: "missing",
+      message: LENS_AI_OFF_COPY.postCheckNeedFacts,
+    };
+  }
+  return {
+    kind: "rejected",
+    message: LENS_AI_OFF_COPY.postCheckMismatch,
   };
 }
 

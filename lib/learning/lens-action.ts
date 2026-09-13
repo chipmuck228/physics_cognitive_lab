@@ -7,6 +7,7 @@ import {
   buildLensAiOffAssessment,
   buildLensAiOffAttempt,
   canCommitLensAiOffResponse,
+  lensAiOffPostCheckRepair,
   lensTutorUsedDuringIndependent,
   nextLensAiOffDraft,
   type LensAiOffDraft,
@@ -135,7 +136,11 @@ export interface LensActionEligibility {
 
 export function advanceLensLoop(session: LearningSession): LearningSession {
   const target = nextStage(session.stage);
-  if (!target || !(LENS_PHASE_STAGES as readonly LearningStage[]).includes(target)) {
+  if (!target) {
+    return session;
+  }
+  const inPhase = (LENS_PHASE_STAGES as readonly LearningStage[]).includes(target);
+  if (!inPhase && target !== LearningStage.COMPLETE) {
     return session;
   }
   return advanceIfReady(session);
@@ -820,18 +825,20 @@ export function applyLensAiOffPostCheckSave(
   const llmUsed = lensTutorUsedDuringIndependent(session);
   attempts[actualIndex] = applyLensAiOffPostCheck(
     original,
-    lensAiOffDraft(session),
+    { ...lensAiOffDraft(session), currentChallengeId: input.challengeId },
     input.postCheckIds,
     llmUsed,
   );
   const assessment = buildLensAiOffAssessment(attempts, llmUsed);
+  const nextDraft = nextLensAiOffDraft(
+    assessment,
+    lensAiOffDraft(session),
+    input.challengeId,
+  );
   const next = {
     ...session,
     independentAssessment: assessment,
-    sceneData: withLensAiOffDraft(
-      session.sceneData,
-      nextLensAiOffDraft(assessment, lensAiOffDraft(session), input.challengeId),
-    ),
+    sceneData: withLensAiOffDraft(session.sceneData, nextDraft),
     events: [
       ...session.events,
       createLearningEvent("student_response", session.stage, {
@@ -841,12 +848,31 @@ export function applyLensAiOffPostCheckSave(
       }),
     ],
   };
+  const accepted = attempts[actualIndex]?.accepted === true;
+  if (!accepted) {
+    const repair = lensAiOffPostCheckRepair(
+      input.challengeId,
+      input.postCheckIds,
+      false,
+    );
+    return {
+      session: next,
+      outcome: {
+        kind: repair?.kind === "missing" ? "missing" : "rejected",
+        message: repair?.message,
+      },
+    };
+  }
   const advanced = advanceLensLoop(next);
   return {
     session: advanced,
     outcome: {
       kind: "committed",
       advanced: advanced.stage !== session.stage,
+      message:
+        advanced.stage !== session.stage
+          ? "这次对照已经记下。"
+          : "刚才那题已经记下。现在看下一题。",
     },
   };
 }

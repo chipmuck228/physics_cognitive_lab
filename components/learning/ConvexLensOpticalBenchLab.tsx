@@ -44,6 +44,7 @@ import {
 import { STUDENT_CHROME } from "@/lib/content/student-language";
 import {
   currentLensAiOffChallengeId,
+  hasAcceptedLensAiOffChallenge,
   isLensAiOffSessionOpen,
   retryLensAiOffDraft,
 } from "@/lib/learning/lens-ai-off";
@@ -137,7 +138,8 @@ import {
   type LensExperimentId,
 } from "@/lib/physics/convex-lens-optical-bench";
 import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
-import { LearningStage, type ExamAttempt } from "@/types/learning";
+import { getSessionSnapshot } from "@/lib/learning/session-store";
+import { CONVEX_LENS_SCENE_ID, LearningStage, type ExamAttempt } from "@/types/learning";
 
 export function ConvexLensOpticalBenchLab() {
   const {
@@ -205,6 +207,7 @@ export function ConvexLensOpticalBenchLab() {
     session ? lensAiOffDraft(session) : undefined,
   );
   const [aiOffNeedResponse, setAiOffNeedResponse] = useState(false);
+  const [aiOffRepair, setAiOffRepair] = useState<string | null>(null);
   const [actionOutcome, setActionOutcome] = useState<LensDomainOutcome | null>(null);
 
   const hydrateKey = session
@@ -221,6 +224,12 @@ export function ConvexLensOpticalBenchLab() {
         session.transferAttempts.length,
         session.examAttempts.length,
         session.independentAssessment?.challengeAttempts?.length ?? 0,
+        (session.independentAssessment?.challengeAttempts ?? [])
+          .map(
+            (attempt) =>
+              `${attempt.challengeId}:${attempt.accepted ? 1 : 0}:${(attempt.postCheckIds ?? []).join(",")}`,
+          )
+          .join("|"),
         lensPerformedObserveInteraction(session) ? "watched" : "unwatched",
       ].join("|")
     : "";
@@ -435,9 +444,10 @@ export function ConvexLensOpticalBenchLab() {
       .reverse()
       .find((attempt) => attempt.challengeId === aiOffChallengeId) ?? null;
   const aiOffStep =
-    aiOffDraft.step === "post-check" && latestAiOffAttempt
+    latestAiOffAttempt &&
+    !hasAcceptedLensAiOffChallenge(session.independentAssessment, aiOffChallengeId)
       ? "post-check"
-      : aiOffDraft.step;
+      : "response";
 
   const physicsState = lensPreviewPhysics(session);
   const studentRays = isModel ? visibleLensStudentRays(modelDraft) : [];
@@ -849,6 +859,7 @@ export function ConvexLensOpticalBenchLab() {
       onChange={(next) => {
         setAiOffDraft(next);
         saveAiOffDraft(next);
+        setAiOffRepair(null);
       }}
       onCommit={() => {
         const outcome = saveAiOffIndependentResponse({
@@ -856,16 +867,23 @@ export function ConvexLensOpticalBenchLab() {
           currentChallengeId: aiOffChallengeId,
         });
         setAiOffNeedResponse(outcome.kind === "missing");
+        setAiOffDraft(lensAiOffDraft(getSessionSnapshot(CONVEX_LENS_SCENE_ID)));
         presentAction(outcome);
       }}
       onSubmitPostCheck={() => {
-        presentAction(
-          saveAiOffPostCheck({
-            challengeId: aiOffChallengeId,
-            postCheckIds: aiOffDraft.postCheckSelections,
-          }),
+        const outcome = saveAiOffPostCheck({
+          challengeId: aiOffChallengeId,
+          postCheckIds: aiOffDraft.postCheckSelections,
+        });
+        setAiOffDraft(lensAiOffDraft(getSessionSnapshot(CONVEX_LENS_SCENE_ID)));
+        setAiOffRepair(
+          outcome.kind === "missing" || outcome.kind === "rejected"
+            ? outcome.message ?? null
+            : null,
         );
+        presentAction(outcome);
       }}
+      repairMessage={aiOffRepair}
       onRetry={() => {
         const next = retryLensAiOffDraft(aiOffDraft, aiOffChallengeId);
         setAiOffDraft(next);
@@ -953,7 +971,7 @@ export function ConvexLensOpticalBenchLab() {
       ) : null}
       {actionView &&
       !(
-        isTransfer &&
+        (isTransfer || isAiOff) &&
         (actionView.className === "missing" || actionView.className === "rejected")
       ) ? (
         <div data-testid="lens-action-response" data-response-class={actionView.className}>
