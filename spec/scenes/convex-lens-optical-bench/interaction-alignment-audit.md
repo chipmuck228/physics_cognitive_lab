@@ -13,7 +13,7 @@ Contract: [`../../interaction-alignment-audit.md`](../../interaction-alignment-a
 INTERACTION_ALIGNMENT_PASS
 ```
 
-Follow-up re-audit 2026-09-13 of IA-07-10 (MODEL kind change clears stale afterLens) and IA-07-11 (AI_OFF response-edit navigation). Prior repaired IDs IA-07-01 / 04 / 05 / 06 / 07 / 08 / 09 were re-checked against current code and remain PASS. Not a learner-validation claim.
+Follow-up re-audit 2026-09-13 of the Scene07 TRANSFER learning-experience pilot (minimal structured condition + authored causal bind + Step 6 semantic adapter). Prior repaired IDs IA-07-01 / 04 / 06 / 07 / 08 / 09 / 10 / 11 remain PASS. IA-07-03 and IA-07-05 were re-checked against the new TRANSFER surface. Not a learner-validation claim.
 
 ---
 
@@ -109,11 +109,11 @@ None open after the 2026-09-13 AI_OFF response-edit / MODEL kind-invalidation fo
 | Stage | TRANSFER |
 | Audit Unit | Authored explanation after structured model construction |
 | Invariant | **IA-1**, **IA-3**, **IA-5**, **IA-6** |
-| Current status | **PASS (repaired).** Structured radios own station / meeting / image. Complete wrong structure names the first mismatched field. The textarea still asks only “光线怎样相遇，为什么会得到这样的像？”. One submit shows one primary repair. Incomplete fields are not called “wrong”. `studentExplanation` stays learner-authored. |
-| Expected behavior | Authored language measures the meeting→image bind. Complete-structure repair names one concrete field in station → meeting → side → nature → orientation → size → screen order. Surface checkbox does not rewrite the sentence. Completing TRANSFER still does not write L5 without valid MODEL + both targets. |
-| Implementation evidence | `firstLensTransferStructuredMismatch` vs `officialLensTransferStructure`. Projector station copy restates the scenario condition, not “正确答案是 F 和 2F 之间”. `evaluateConvexLensTransfer` still owns accept/reject. Authored failure kinds unchanged. |
-| Learner consequence | Only-station-wrong no longer says every field is wrong. One orange block. Recap still shows the learner’s current choices. |
-| Repair boundary used | Scene07 TRANSFER repair-feedback classifier only. No LLM. No evaluator / L5 / pair-semantics change. |
+| Current status | **PASS (TRANSFER pilot).** Learner owns object-station plus one authored causal bind. Meeting / side / nature / orientation / size / screen are SYSTEM_DERIVED after a normalized claim, not seven radios. Fast path or mocked LLM parse interprets wording; `evaluateConvexLensTransfer` still owns accept/reject. One submit shows one repair dimension. |
+| Expected behavior | TRANSFER demonstrates C14 recognition in a new surface. Distinctive condition + causal bind are enough. Derived fields are not presented as learner-authored. Completing TRANSFER still does not write L5 without valid MODEL + both targets. |
+| Implementation evidence | `LensTransferTask` has only `lens-transfer-station`. `deriveLensTransferInternalFields` documents SYSTEM_DERIVED image fields. `resolveLensTransferCheck` reuses `/api/lens-step6-parse`. Parse schema has no pass/fail/L-level. `evaluateRequiredTransferPair` unchanged. |
+| Learner consequence | The same 7-field MODEL form is gone from TRANSFER. A Grade-9 paraphrase can be interpreted by meaning. Wrong station or wrong mechanism still stays on the same target with one repair. |
+| Repair boundary used | Scene07 TRANSFER only. No UPLP / L5 / Physics Truth / other-stage change. |
 
 ### IA-07-06 — repaired PASS
 
@@ -660,16 +660,16 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 | Field | Result |
 |---|---|
 | Stage / Subtask | TRANSFER / submit one target |
-| Cognitive task | Apply meeting→image structure to a new apparatus; authored text owns only the bind |
+| Cognitive task | Recognize the new surface’s distinctive object-station, then bind condition → meeting → image |
 | Required capability | submit-transfer / author-transfer-reason |
-| Visible control / surface | `LensTransferTask`; bench hidden; `lens-transfer-progress` `第 N / 2 个新情境`; read-only `lens-transfer-recap` |
-| Semantic learner action | `applyLensTransferSubmit` |
+| Visible control / surface | `LensTransferTask`; bench hidden; `lens-transfer-progress`; one station group; model-link reminder; authored bind; claim recap |
+| Semantic learner action | `resolveLensTransferCheck` then `applyLensTransferSubmit` |
 | Authoritative owner | `evaluateConvexLensTransfer` / `evaluateRequiredTransferPair` |
 | Expected state consequence | Attempt `accepted` or rejected; stay until both required IDs pass |
 | Expected visible consequence | 1/2 then 2/2 + “刚才那个新情境已经记下”; EXAM when pair complete |
-| Blocked condition + visible reason | One `lens-transfer-repair` from `lensTransferRepairFeedback`; form stays editable |
+| Blocked condition + visible reason | One `lens-transfer-repair`: missing station, vague, claim≠target, slogan, or parser unclear |
 | Progression condition | Both required targets accepted |
-| Evidence input / provenance | L5 only after valid MODEL + both targets. `studentExplanation` is learner text only; `surfaceCueSelected` is separate |
+| Evidence input / provenance | L5 only after valid MODEL + both targets. Station = PRE_COMMIT_STRUCTURED. Authored text = PRE_COMMIT_AUTHORED. Parse and derived image fields = SYSTEM_DERIVED |
 | IA-1 | PASS |
 | IA-2 | PASS |
 | IA-3 | PASS |
@@ -681,17 +681,17 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 
 | Field | Result |
 |---|---|
-| Stage / Subtask | TRANSFER / authored bind after radios |
-| Cognitive task | Meeting relation → why it leads to → image consequence |
+| Stage / Subtask | TRANSFER / authored causal bind after distinctive condition |
+| Cognitive task | Why this new situation uses the constructed model: condition → rays → image |
 | Required capability | author-transfer-reason |
-| Visible control / surface | Textarea + `我的判断` recap |
-| Semantic learner action | Type a causal sentence; `检查迁移` |
+| Visible control / surface | Textarea + `你正在检查的判断` (station + sentence only) |
+| Semantic learner action | Type a causal sentence; `检查迁移` may call the Step 6 parser |
 | Authoritative owner | `evaluateConvexLensTransfer` (accept) + `lensTransferRepairFeedback` (one repair message) |
 | Expected state consequence | Fail keeps the draft; accept advances the required target |
-| Expected visible consequence | Prompt does not re-ask station. One repair. Recap is draft, not official truth |
-| Blocked condition + visible reason | Incomplete / inconsistent / authored missing-kind / slogan / table-row; first match only |
+| Expected visible consequence | Prompt asks why the model applies. Recap does not list derived image fields. Parser unclear is recoverable |
+| Blocked condition + visible reason | Missing station / missing sentence / vague / slogan / claim≠target / parser unclear |
 | Progression condition | Unchanged pair gate |
-| Evidence input / provenance | Authored evidence is the typed sentence. Checkbox does not append slogan text |
+| Evidence input / provenance | Authored evidence is the typed sentence. LLM parse cannot accept transfer. Checkbox does not append slogan text |
 | IA-1 | PASS |
 | IA-2 | N/A |
 | IA-3 | PASS |
@@ -776,7 +776,7 @@ DESCRIBE frame “你刚在光具座上动过物体或光屏” is now guarantee
 | PREDICT → EXPERIMENT | Aligned. Trial 1 lock prepares official start state; learner still performs the intervention. |
 | EXPERIMENT → EXPLAIN | Aligned by progression (4 closed trials). EXPLAIN evaluator does not re-read trial rows; it uses a new L3 fragment. Official rays stay hidden. |
 | EXPLAIN → MODEL | Designed step-up (partial relation → full construction). Copy prepares it. |
-| MODEL → TRANSFER | Designed: bench hidden; L5 is structure transfer, not ray replay. |
+| MODEL → TRANSFER | Designed: bench hidden. TRANSFER no longer re-asks the MODEL 7-field form. L5 is still the required target pair. |
 | TRANSFER → EXAM | Aligned Exam World (no bench). |
 | EXAM → AI_OFF | Stage may open after any attempt per pattern (including all wrong). AI_OFF is strict. Exam World ≠ L6. Not counted as IA-6 FAIL. |
 
@@ -795,7 +795,7 @@ Read: `tests/e2e/convex-lens-optical-bench-learner-flow.spec.ts`, `happy-path.sp
 | Cover testid / attrs after click | That leftover is a learner-clarity problem (it is an IA-allowed cross-step) |
 | MODEL incoherent ray cannot Next | All `failureKind` → repair mappings in the browser |
 | MODEL wrong official size → reject → step 5 | That leftover is a learner-clarity problem (it is an IA-allowed cross-step) |
-| TRANSFER both targets via helpers; authored restatement gets one bind repair then accept | Learner discovers target 2 without oracle `officialImageConsequence` |
+| TRANSFER: one station + natural paraphrase (mocked parser) accepts projector then magnifier; slogan stays on target 1 with one repair | Unprompted first-time wording without the mock |
 | EXAM diagram on “如图”; AI_OFF `记下这次对照` advances or repairs; AI_OFF has no Help | Wrong EXAM still leaving the stage; EXAM is not L6 |
 | Back/revisit does not mutate experiment progress | Pedagogical understanding |
 
@@ -834,6 +834,22 @@ The dedicated OBSERVE E2E now submits checkboxes before any bench action and ass
 | P0 | 0 |
 | P1 | 0 |
 | P2 | 0 |
+
+---
+
+## TRANSFER-only LX / SR re-audit
+
+This pilot does **not** mark the whole Scene fixed. AI_OFF still restates the 7-field form.
+
+| ID | Scope | Status after TRANSFER pilot |
+|---|---|---|
+| LX-07-01 | Cross-stage redundant model-field restatement | **IMPROVED for TRANSFER.** TRANSFER no longer re-asks side / nature / orientation / size / screen / meeting radios. MODEL and AI_OFF still use the imaging tuple. |
+| LX-07-02 | Internal Physics Model schema exposed as learner form | **IMPROVED for TRANSFER.** Learner sees situation → distinctive station → model link → one causal sentence. Derived fields are not radios. |
+| SR-07-01 | Correct natural-language physics rejected by lexical gate | **IMPROVED for TRANSFER.** Fast path or Step 6 parser normalizes paraphrases; the deterministic evaluator still decides. |
+| SR-07-03 | Equivalent claim interpreted inconsistently between MODEL Step 6 and TRANSFER | **IMPROVED for TRANSFER.** Same `classifyLensStep6FastPath` / `LensReasoningSemanticParse` / `/api/lens-step6-parse` path. Meaning consistency ≠ correctness consistency. |
+| SR-07-02 | EXPLAIN / EXAM authorship floors | Unchanged. Outside this pilot. |
+
+Remaining outside TRANSFER: AI_OFF still exposes the 7-field tuple; EXPLAIN / EXAM lexical floors are unchanged.
 
 ---
 

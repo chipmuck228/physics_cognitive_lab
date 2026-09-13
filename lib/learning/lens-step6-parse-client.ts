@@ -1,9 +1,15 @@
 import { LENS_STEP6_UNCLEAR_MESSAGE } from "@/content/physics-models/convex-lens-imaging/construction";
+import { LENS_COPY } from "@/lib/content/convex-lens-optical-bench";
 import {
   applyLensStep6Parse,
   parseLensReasoningSemantic,
   resolveLensStep6WithoutLlm,
 } from "@/lib/learning/lens-step6-semantic";
+import {
+  applyLensTransferParse,
+  resolveLensTransferWithoutLlm,
+} from "@/lib/learning/lens-transfer-semantic";
+import type { LensTransferDraft } from "@/lib/learning/lens-transfer";
 import type { LensModelDraft, LensModelStepCheck } from "@/lib/learning/lens-model";
 import { normalizeLensStep6Text } from "@/content/physics-models/convex-lens-imaging/construction";
 import type { LensReasoningSemanticParse } from "@/content/physics-models/convex-lens-imaging/construction";
@@ -72,4 +78,22 @@ export async function resolveLensStep6Check(
     };
   }
   return applyLensStep6Parse(draft, remote.parse, "llm-semantic-parse");
+}
+
+export async function resolveLensTransferCheck(
+  draft: LensTransferDraft,
+  requestParse: typeof requestLensStep6Parse = requestLensStep6Parse,
+): Promise<{ draft: LensTransferDraft; check: LensModelStepCheck }> {
+  const local = resolveLensTransferWithoutLlm(draft);
+  if (local.handled) {
+    return { draft: local.draft, check: local.check };
+  }
+  const remote = await requestParse(draft.studentExplanation);
+  if (!remote.ok) {
+    return {
+      draft,
+      check: { status: "missing", message: LENS_COPY.transferUnclear },
+    };
+  }
+  return applyLensTransferParse(draft, remote.parse, "llm-semantic-parse");
 }

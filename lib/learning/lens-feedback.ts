@@ -1,4 +1,7 @@
-import { analyzeConvexLensAuthored } from "@/content/physics-models/convex-lens-imaging/construction";
+import {
+  analyzeConvexLensAuthored,
+  looksLikeSurfaceConvexLensSlogan,
+} from "@/content/physics-models/convex-lens-imaging/construction";
 import { LENS_COPY } from "@/lib/content/convex-lens-optical-bench";
 import {
   draftToLensTransferAttempt,
@@ -118,35 +121,38 @@ function lensTransferMismatchCopy(
     if (targetId === "far-magnifying-glass-virtual") {
       return LENS_COPY.transferMismatchStationMagnifier;
     }
-    return LENS_COPY.transferStructureInconsistent;
+    return LENS_COPY.transferStructureIncomplete;
   }
-  if (mismatch === "meeting-mode") {
-    return LENS_COPY.transferMismatchMeeting;
+  if (mismatch === "authored-claim") {
+    return LENS_COPY.transferClaimMismatch;
   }
-  if (mismatch === "image-side") {
-    return LENS_COPY.transferMismatchSide;
-  }
-  if (mismatch === "image-nature") {
-    return LENS_COPY.transferMismatchNature;
-  }
-  if (mismatch === "orientation") {
-    return LENS_COPY.transferMismatchOrientation;
-  }
-  if (mismatch === "size") {
-    return LENS_COPY.transferMismatchSize;
-  }
-  if (mismatch === "screen-receivable") {
-    return LENS_COPY.transferMismatchScreen;
-  }
-  return LENS_COPY.transferStructureInconsistent;
+  return LENS_COPY.transferClaimMismatch;
 }
 
 export function lensTransferRepairFeedback(draft: LensTransferDraft): LensFeedback | null {
+  if (!draft.objectStation) {
+    return {
+      kind: "missing",
+      message: LENS_COPY.transferStructureIncomplete,
+    };
+  }
+  if (!draft.studentExplanation.trim()) {
+    return {
+      kind: "missing",
+      message: LENS_COPY.transferNeedAuthored,
+    };
+  }
+  if (looksLikeSurfaceConvexLensSlogan(draft.studentExplanation)) {
+    return {
+      kind: "think_again",
+      message: LENS_COPY.transferSloganOnly,
+    };
+  }
   const structured = draftToLensTransferAttempt(draft);
   if (!structured) {
     return {
       kind: "missing",
-      message: LENS_COPY.transferStructureIncomplete,
+      message: LENS_COPY.transferVague,
     };
   }
   const evaluation = evaluateConvexLensTransfer(structured);
@@ -162,7 +168,7 @@ export function lensTransferRepairFeedback(draft: LensTransferDraft): LensFeedba
   if (evaluation.failureKind === "unknown-or-unrequired-target") {
     return {
       kind: "inconsistent",
-      message: LENS_COPY.transferStructureInconsistent,
+      message: LENS_COPY.transferClaimMismatch,
     };
   }
   if (evaluation.failureKind === "surface-convex-lens-slogan") {
@@ -178,6 +184,12 @@ export function lensTransferRepairFeedback(draft: LensTransferDraft): LensFeedba
     };
   }
   const authored = analyzeConvexLensAuthored(structured.explanation);
+  if (authored.generic) {
+    return {
+      kind: "think_again",
+      message: LENS_COPY.transferVague,
+    };
+  }
   if (
     authored.hasMeetingLanguage &&
     authored.meetingKind &&
@@ -197,7 +209,6 @@ export function lensTransferRepairFeedback(draft: LensTransferDraft): LensFeedba
   }
   if (
     authored.missingKind === "meeting" ||
-    authored.generic ||
     !authored.hasMeetingLanguage
   ) {
     return {
@@ -245,7 +256,7 @@ export function lensTransferFeedback(failureKind: string | undefined): LensFeedb
   if (failureKind === "wrong-target-structure" || failureKind === "unknown-or-unrequired-target") {
     return {
       kind: "inconsistent",
-      message: LENS_COPY.transferStructureInconsistent,
+      message: LENS_COPY.transferClaimMismatch,
     };
   }
   if (failureKind === "table-row-only") {

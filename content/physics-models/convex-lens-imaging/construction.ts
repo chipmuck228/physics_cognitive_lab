@@ -580,7 +580,7 @@ function meetingClaimFromKind(
   return "unclear";
 }
 
-function meetingModeFromClaim(claim: LensReasoningMeetingClaim): MeetingMode | null {
+export function meetingModeFromClaim(claim: LensReasoningMeetingClaim): MeetingMode | null {
   if (claim === "actual-convergence" || claim === "backward-extension") {
     return claim;
   }
@@ -893,6 +893,8 @@ export interface ConvexLensTransferAttempt {
   meetingMode: MeetingMode;
   image: ImageConsequence;
   explanation: string;
+  /** SYSTEM_DERIVED interpretation of explanation. Not student-authored evidence. */
+  authoredInterpretation?: LensReasoningSemanticParse | null;
 }
 
 export type TransferFailure =
@@ -917,7 +919,7 @@ function isRequiredTransferTarget(id: string): id is RequiredTransferTargetId {
   return (REQUIRED_TRANSFER_TARGET_IDS as readonly string[]).includes(id);
 }
 
-function looksLikeSurfaceConvexLensSlogan(text: string): boolean {
+export function looksLikeSurfaceConvexLensSlogan(text: string): boolean {
   return /都有凸透镜|也有凸透镜|放大镜也是凸透镜|投影仪能放大/.test(compact(text)) &&
     !hasMeetingLanguage(compact(text));
 }
@@ -942,6 +944,21 @@ export function evaluateConvexLensTransfer(
   const authored = analyzeConvexLensAuthored(attempt.explanation);
   if (authored.tableRowOnly) {
     return { ok: false, failureKind: "table-row-only" };
+  }
+  const resolved = resolveLensStep6Parse(
+    attempt.explanation,
+    attempt.authoredInterpretation,
+  );
+  if (resolved.parse) {
+    const claim = evaluateLensAuthoredSemanticClaim(
+      resolved.parse,
+      attempt.meetingMode,
+      attempt.image,
+    );
+    if (claim.status === "ready") {
+      return { ok: true, failureKind: "ok" };
+    }
+    return { ok: false, failureKind: "properties-without-relation" };
   }
   if (
     !authored.hasMeetingLanguage ||

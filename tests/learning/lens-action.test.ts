@@ -303,10 +303,7 @@ describe("Scene 07 authoritative stage actions", () => {
     const accepted = completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]);
     const draft = {
       ...accepted,
-      meetingMode:
-        accepted.meetingMode === "actual-convergence"
-          ? "backward-extension"
-          : "actual-convergence",
+      objectStation: "beyond-2f",
     };
     const result = applyLensTransferSubmit(stageSession(LearningStage.TRANSFER), draft);
     expect(result.session.transferAttempts[0]?.accepted).toBe(false);

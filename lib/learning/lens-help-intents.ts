@@ -162,9 +162,9 @@ export function resolveLensHelpContext(
 }
 
 const TRANSFER_HOW_SAY = [
-  "先看你刚才选的光线关系，再想它为什么会得到这样的像。",
+  "先看这个新情境里物体相对焦点在哪里，再写光线怎样走、最后得到怎样的像。",
   "写的时候先说光线怎样相遇，再用“所以”接到像会怎样。",
-  "不要只把前面选过的位置再抄一遍。",
+  "不要只说都有凸透镜。",
 ] as const;
 
 export function lensHelpLadder(

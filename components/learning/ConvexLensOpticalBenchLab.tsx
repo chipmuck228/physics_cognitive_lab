@@ -90,7 +90,7 @@ import {
   lensModelRepairStep,
   visibleLensStudentRays,
 } from "@/lib/learning/lens-model";
-import { resolveLensStep6Check } from "@/lib/learning/lens-step6-parse-client";
+import { resolveLensStep6Check, resolveLensTransferCheck } from "@/lib/learning/lens-step6-parse-client";
 import {
   isLensRevisiting,
   lensDisplayStage,
@@ -128,8 +128,11 @@ import {
   activeLensTransferTargetId,
   emptyLensTransferDraft,
   hasCompletedLensTransfer,
+  LENS_TRANSFER_REQUIRED_IDS,
+  lensTransferModelLink,
   lensTransferProgress,
   lensTransferTarget,
+  withLensTransferExplanation,
 } from "@/lib/learning/lens-transfer";
 import {
   LENS_EXPERIMENT_A,
@@ -201,6 +204,7 @@ export function ConvexLensOpticalBenchLab() {
   const [step6CheckMessage, setStep6CheckMessage] = useState<string | null>(null);
   const [transferDraft, setTransferDraft] = useState(emptyLensTransferDraft());
   const [transferRepair, setTransferRepair] = useState<LensFeedback | null>(null);
+  const [transferChecking, setTransferChecking] = useState(false);
   const [examDraft, setExamDraft] = useState(emptyLensExamDraft());
   const [examNeedSteps, setExamNeedSteps] = useState(false);
   const [aiOffDraft, setAiOffDraft] = useState(
@@ -757,18 +761,57 @@ export function ConvexLensOpticalBenchLab() {
     />
   ) : isTransfer && transferTarget && (!transferComplete || revisiting) ? (
     <LensTransferTask
+      key={transferDraft.targetId}
       target={transferTarget}
       draft={transferDraft}
       onChange={(next) => {
-        setTransferDraft(next);
-        saveTransferDraft(next);
+        const revised =
+          next.studentExplanation !== transferDraft.studentExplanation
+            ? withLensTransferExplanation(next, next.studentExplanation)
+            : next;
+        setTransferDraft(revised);
+        saveTransferDraft(revised);
         setTransferRepair(null);
       }}
       onSubmit={() => {
-        const repair = lensTransferRepairFeedback(transferDraft);
-        const outcome = saveTransferAttempt(transferDraft);
-        setTransferRepair(outcome.kind === "committed" ? null : repair);
-        presentAction(outcome);
+        void (async () => {
+          if (transferChecking) {
+            return;
+          }
+          setTransferChecking(true);
+          const resolved = await resolveLensTransferCheck(transferDraft);
+          setTransferChecking(false);
+          if (
+            resolved.check.status !== "ready" &&
+            resolved.check.message === LENS_COPY.transferUnclear
+          ) {
+            setTransferDraft(resolved.draft);
+            saveTransferDraft(resolved.draft);
+            setTransferRepair({
+              kind: "missing",
+              message: resolved.check.message,
+            });
+            presentAction({
+              kind: "missing",
+              message: resolved.check.message,
+            });
+            return;
+          }
+          const repair = lensTransferRepairFeedback(resolved.draft);
+          const outcome = saveTransferAttempt(resolved.draft);
+          if (outcome.kind === "committed") {
+            const nextId = outcome.advanced
+              ? LENS_TRANSFER_REQUIRED_IDS[0]
+              : (LENS_TRANSFER_REQUIRED_IDS.find((id) => id !== resolved.draft.targetId) ??
+                resolved.draft.targetId);
+            setTransferDraft(emptyLensTransferDraft(nextId));
+            setTransferRepair(null);
+          } else {
+            setTransferDraft(resolved.draft);
+            setTransferRepair(repair);
+          }
+          presentAction(outcome);
+        })();
       }}
       repairMessage={transferRepair?.message ?? null}
       repairKind={transferRepair?.kind === "missing" ? "missing" : "incorrect"}
@@ -776,6 +819,8 @@ export function ConvexLensOpticalBenchLab() {
       currentIndex={transferProgress.current}
       totalCount={transferProgress.total}
       firstComplete={transferProgress.firstComplete}
+      modelLink={lensTransferModelLink(modelDraft)}
+      checking={transferChecking}
     />
   ) : isExam && examPattern && (examOpen || revisiting) ? (
     <LensExamTask

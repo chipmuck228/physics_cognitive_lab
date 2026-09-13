@@ -248,20 +248,41 @@ export async function fillOneRay(
     .click();
 }
 
+export async function fillTransferCondition(
+  page: Page,
+  station: "beyond-2f" | "between-f-and-2f" | "inside-f",
+) {
+  const stationLabel =
+    station === "beyond-2f"
+      ? /物体在 2F 以外/
+      : station === "between-f-and-2f"
+        ? /物体在 F 和 2F 之间/
+        : /物体在焦点以内/;
+  await chooseGroupOption(page, "lens-transfer-station", stationLabel);
+}
+
 export async function completeLensProjectorTransfer(page: Page) {
   await expect(page.getByTestId("lens-transfer-task")).toBeVisible();
   await expect(page.getByTestId("lens-transfer-progress")).toHaveText("第 1 / 2 个新情境");
-  await fillImagingStructure(page, "between-f-and-2f", "lens-transfer");
+  await fillTransferCondition(page, "between-f-and-2f");
   await page.getByTestId("lens-transfer-explanation").fill(
     "幻灯片在 F 和 2F 之间，光线真正会聚，所以成倒立放大的实像，幕布放到像的位置才能接到。",
   );
   await page.getByRole("button", { name: LENS_COPY.transferSubmit }).click();
+  await expect(page.getByTestId("lens-transfer-task")).toHaveAttribute(
+    "data-target",
+    "far-magnifying-glass-virtual",
+  );
 }
 
 export async function completeLensMagnifierTransfer(page: Page) {
   await expect(page.getByTestId("lens-transfer-task")).toBeVisible();
   await expect(page.getByTestId("lens-transfer-progress")).toHaveText("第 2 / 2 个新情境");
-  await fillImagingStructure(page, "inside-f", "lens-transfer");
+  await expect(page.getByTestId("lens-transfer-task")).toHaveAttribute(
+    "data-target",
+    "far-magnifying-glass-virtual",
+  );
+  await fillTransferCondition(page, "inside-f");
   await page.getByTestId("lens-transfer-explanation").fill(
     "邮票在焦点以内，光线发散，反向延长线相交，所以是正立放大的虚像，屏接不到。",
   );

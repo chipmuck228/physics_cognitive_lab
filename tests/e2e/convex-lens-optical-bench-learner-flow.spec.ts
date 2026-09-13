@@ -31,6 +31,7 @@ import {
   expectNoTutorChrome,
   fillImagingStructure,
   fillOneRay,
+  fillTransferCondition,
   lensStageHeading,
   openLensLab,
   performVisibleTrialIntervention,
@@ -325,52 +326,83 @@ test.describe("Scene 07 learner-visible flow", () => {
     await expect(page.getByTestId("lens-model-review")).toHaveCount(0);
   });
 
-  test("TRANSFER authored explanation asks for the bind, not a restatement", async ({
+  test("TRANSFER uses one condition, a natural paraphrase, and stays repairable when rejected", async ({
     page,
   }) => {
     test.setTimeout(300_000);
+    await page.route("**/api/lens-step6-parse", async (route) => {
+      const posted = route.request().postDataJSON() as { text?: string };
+      const text = posted?.text ?? "";
+      const virtual = /虚像|反向|散开|往回/.test(text);
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          ok: true,
+          parse: virtual
+            ? {
+                meetingClaim: "backward-extension",
+                imageNatureClaim: "virtual",
+                screenClaim: "not-receivable",
+                hasMeetingClaim: true,
+                hasConsequenceClaim: true,
+                hasCausalBind: true,
+                ambiguity: "none",
+              }
+            : {
+                meetingClaim: "actual-convergence",
+                imageNatureClaim: "real",
+                screenClaim: "receivable",
+                hasMeetingClaim: true,
+                hasConsequenceClaim: true,
+                hasCausalBind: true,
+                ambiguity: "none",
+              },
+        }),
+      });
+    });
     await reachLensModel(page);
     await completeLensModel(page);
     await expect(page.getByTestId("lens-transfer-task")).toBeVisible();
     await expect(page.getByTestId("lens-transfer-progress")).toHaveText("第 1 / 2 个新情境");
     await expect(page.getByText(LENS_COPY.transferOwnWords)).toBeVisible();
-    await expect(page.getByText(LENS_COPY.transferOwnWords)).not.toContainText(
-      "物体相对焦点在哪里",
-    );
+    await expect(page.getByText(LENS_COPY.transferConditionQuestion)).toBeVisible();
+    await expect(page.getByTestId("lens-transfer-model-link")).toBeVisible();
+    await expect(page.getByTestId("lens-transfer-meeting")).toHaveCount(0);
+    await expect(page.getByTestId("lens-transfer-nature")).toHaveCount(0);
 
-    await fillImagingStructure(page, "between-f-and-2f", "lens-transfer");
+    await fillTransferCondition(page, "between-f-and-2f");
     const recap = page.getByTestId("lens-transfer-recap");
     await expect(recap).toContainText(LENS_COPY.transferJudgmentTitle);
     await expect(recap).toContainText("物体在 F 和 2F 之间");
-    await expect(recap).toContainText("出射光线真正会聚");
-    await expect(recap).toContainText("比物体大");
 
     const explanation = page.getByTestId("lens-transfer-explanation");
-    const restatement = "光线在另一侧真正汇聚。";
-    await explanation.fill(restatement);
+    await explanation.fill("都有凸透镜，所以一样。");
     await page.getByTestId("lens-transfer-surface-cue").check();
-    await expect(explanation).toHaveValue(restatement);
-
+    await expect(explanation).toHaveValue("都有凸透镜，所以一样。");
     await page.getByRole("button", { name: LENS_COPY.transferSubmit }).click();
-    const orange = page.locator(
-      '[data-validation-kind="missing"], [data-validation-kind="incorrect"]',
-    );
-    await expect(page.getByTestId("lens-transfer-repair")).toHaveText(
-      LENS_COPY.transferConsequenceMissing,
-    );
-    await expect(orange).toHaveCount(1);
+    await expect(page.getByTestId("lens-transfer-repair")).toHaveText(LENS_COPY.transferSloganOnly);
+    await expect(page.getByTestId("lens-transfer-progress")).toHaveText("第 1 / 2 个新情境");
     await expect(page.getByTestId("lens-action-response")).toHaveCount(0);
 
-    await explanation.fill("幻灯片放在这里。");
+    await explanation.fill("光穿过透镜以后在另一边碰到了一起，所以成了实像。");
     await expect(page.getByTestId("lens-transfer-repair")).toHaveCount(0);
-
-    await explanation.fill(
-      "光线真正会聚，所以成倒立放大的实像，幕布放到像的位置才能接到。",
-    );
     await page.getByRole("button", { name: LENS_COPY.transferSubmit }).click();
     await expect(page.getByTestId("lens-transfer-repair")).toHaveCount(0);
     await expect(page.getByTestId("lens-transfer-progress")).toHaveText("第 2 / 2 个新情境");
     await expect(page.getByText(LENS_COPY.transferFirstSaved)).toBeVisible();
+    await expect(page.getByTestId("lens-transfer-task")).toHaveAttribute(
+      "data-target",
+      "far-magnifying-glass-virtual",
+    );
+
+    await fillTransferCondition(page, "inside-f");
+    await page.getByTestId("lens-transfer-explanation").fill(
+      "这里物体在焦点里面，出来的光是散开的，往回延长才碰到，所以看到的是虚像。",
+    );
+    await page.getByRole("button", { name: LENS_COPY.transferSubmit }).click();
+    await expect(
+      page.getByRole("heading", { name: lensStageHeading(LearningStage.EXAM) }),
+    ).toBeVisible();
   });
 
   test("AI_OFF precommit repair returns to the restored judgment", async ({ page }) => {

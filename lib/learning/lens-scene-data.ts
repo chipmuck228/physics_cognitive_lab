@@ -251,6 +251,7 @@ export function lensTransferDraft(session: LearningSession): LensTransferDraft {
     screenReceivable: record.screenReceivable ?? "",
     studentExplanation: record.studentExplanation ?? "",
     surfaceCueSelected: record.surfaceCueSelected === true,
+    authoredInterpretation: record.authoredInterpretation ?? null,
   };
 }
 

@@ -82,22 +82,35 @@ export const LENS_COPY = {
   modelAccepted: "模型已经记下，可以看新情境。",
   modelFrozenCaption: "这是你正在建构的光路，不是一张已经画好的标准图。",
   transferSubmit: "检查迁移",
+  transferChecking: "正在看你这句话在说什么。",
+  transferNeedCheck: "点检查迁移，我先看你这句话在说什么。",
+  transferNeedAuthored: "还要用自己的话写一句：这里的条件让光线怎样走，最后得到怎样的像。",
   transferFirstSaved: "刚才那个新情境已经记下。现在看下一个。",
-  transferOwnWords: "用一句话说说：光线怎样相遇，为什么会得到这样的像？",
-  transferNeedMore: "还有几项没有选完，先把这个情境搭完整。",
-  transferStructureIncomplete: "还有几项没有选完，先把这个情境搭完整。",
+  transferSituationTitle: "先看这个新情境",
+  transferConditionQuestion: "这里的物体相对焦点在哪里？",
+  transferModelLinkTitle: "和刚才模型的联系",
+  transferModelLinkBody: "刚才你建立的模型关注的是：物体条件 → 光线怎样相遇 → 像的结果",
+  transferOwnWords:
+    "这个新情境为什么能用刚才的模型？用自己的话说说：这里的条件让光线怎样走，最后得到怎样的像。",
+  transferNeedMore: "先判断这个新情境里，物体相对焦点在哪里。",
+  transferStructureIncomplete: "先判断这个新情境里，物体相对焦点在哪里。",
   transferStructureInconsistent:
-    "你选的物体位置、光线关系和像的结果还对不上。先回到前面的选择看看。",
+    "这句话里的光线关系和像的结果，和这个新情境还对不上。再看看这里的条件会让光线怎样走。",
   transferMismatchStationProjector:
     "先看看物体位置。题目里说幻灯片在焦点以外、二倍焦距以内，你现在选的位置和这个条件还没对上。",
   transferMismatchStationMagnifier:
     "先看看物体位置。题目里说邮票在焦点以内，你现在选的位置和这个条件还没对上。",
+  transferClaimMismatch:
+    "这句话里的光线关系和像的结果，和这个新情境还对不上。再看看这里的条件会让光线怎样走。",
+  transferVague: "这句话还太笼统。再说具体一点：光线怎样相遇？最后形成什么像？",
+  transferUnclear:
+    "这句话我还没判断清楚。可以再说具体一点：光线怎样相遇？最后形成什么像？",
   transferMismatchMeeting:
-    "物体位置已经对上了。再看看这个位置下，出射光线是真的会聚、只有反向延长线相交，还是在有限距离内不相交。",
+    "这句话里光线怎样相遇，和这个新情境还对不上。再看看出射光线是真的会聚、只有反向延长线相交，还是在有限距离内不相交。",
   transferMismatchSide:
     "物体位置和光线关系已经对上了。再看看像在哪一侧。",
   transferMismatchNature:
-    "前面的物体位置和光线关系已经对上了。再看看像是实像还是虚像。",
+    "这句话里像的结果，和这个新情境还对不上。再看看会成实像还是虚像。",
   transferMismatchOrientation:
     "前面的物体位置和成像关系已经对上了。再看看像是正立还是倒立。",
   transferMismatchSize:
@@ -109,11 +122,11 @@ export const LENS_COPY = {
   transferBindMissing:
     "光线怎样相遇、会形成什么像你都写到了。再用一句话把这两件事连起来。",
   transferAuthoredContradicts:
-    "你写的光线关系和前面选的判断对不上。先看一眼你刚才选的光线关系。",
+    "这句话里光线怎样相遇和像的结果还对不上。再看看这里的条件会让光线怎样走。",
   transferSloganOnly:
     "“都有凸透镜”不够。要说这个新情境里光线怎样相遇，为什么会得到这样的像。",
   transferTableRowOnly: "这句话还只是在背表。先说光线怎样相遇，再接到会形成什么样的像。",
-  transferJudgmentTitle: "我的判断",
+  transferJudgmentTitle: "你正在检查的判断",
   transferSurfaceCue: "都有凸透镜，所以和刚才完全一样",
   examSubmit: "提交答案",
   aiOffCommit: "提交判断",

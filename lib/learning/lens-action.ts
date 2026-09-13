@@ -691,9 +691,13 @@ export function applyLensTransferSubmit(
   };
   const repair = lensTransferRepairFeedback(draft);
   if (!structured) {
+    const missing = repair?.kind === "missing";
     return {
       session: next,
-      outcome: { kind: "missing", message: repair?.message ?? LENS_COPY.transferStructureIncomplete },
+      outcome: {
+        kind: missing ? "missing" : "rejected",
+        message: repair?.message ?? LENS_COPY.transferStructureIncomplete,
+      },
     };
   }
   if (!attempt.accepted) {

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -382,10 +382,7 @@ describe("Scene 07 enabled-action contract", () => {
     const accepted = completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]);
     const draft = {
       ...accepted,
-      meetingMode:
-        accepted.meetingMode === "actual-convergence"
-          ? "backward-extension"
-          : "actual-convergence",
+      objectStation: "beyond-2f",
     };
     replaceSession({
       ...createSession(() => "t0", () => "lens-transfer-action", CONVEX_LENS_SCENE_ID),
@@ -394,18 +391,21 @@ describe("Scene 07 enabled-action contract", () => {
     });
     render(<ConvexLensOpticalBenchLab />);
     await user.click(screen.getByRole("button", { name: LENS_COPY.transferSubmit }));
-    expect(screen.getByTestId("lens-transfer-repair")).toHaveTextContent(
-      LENS_COPY.transferMismatchMeeting,
-    );
+    await waitFor(() => {
+      expect(screen.getByTestId("lens-transfer-repair")).toHaveTextContent(
+        LENS_COPY.transferMismatchStationProjector,
+      );
+    });
     expect(screen.queryByTestId("lens-action-response")).not.toBeInTheDocument();
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).transferAttempts[0]?.accepted).toBe(false);
   });
 
-  it("TRANSFER recap mirrors the draft and keeps one repair message", async () => {
+  it("TRANSFER recap mirrors the learner-owned claim and keeps one repair message", async () => {
     const user = userEvent.setup();
     const draft = {
       ...completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]),
       studentExplanation: "光线在另一侧真正汇聚。",
+      authoredInterpretation: null,
     };
     replaceSession({
       ...createSession(() => "t0", () => "lens-transfer-repair-ui", CONVEX_LENS_SCENE_ID),
@@ -414,16 +414,19 @@ describe("Scene 07 enabled-action contract", () => {
     });
     render(<ConvexLensOpticalBenchLab />);
     expect(screen.getByTestId("lens-transfer-recap")).toHaveTextContent("物体在 F 和 2F 之间");
-    expect(screen.getByTestId("lens-transfer-recap")).toHaveTextContent("出射光线真正会聚");
+    expect(screen.getByTestId("lens-transfer-recap")).toHaveTextContent("光线在另一侧真正汇聚");
+    expect(screen.getByTestId("lens-transfer-recap")).not.toHaveTextContent("出射光线真正会聚");
     expect(screen.getByText(LENS_COPY.transferOwnWords)).toBeInTheDocument();
     await user.click(screen.getByTestId("lens-transfer-surface-cue"));
     expect(screen.getByTestId("lens-transfer-explanation")).toHaveValue(
       "光线在另一侧真正汇聚。",
     );
     await user.click(screen.getByRole("button", { name: LENS_COPY.transferSubmit }));
-    expect(screen.getByTestId("lens-transfer-repair")).toHaveTextContent(
-      LENS_COPY.transferConsequenceMissing,
-    );
+    await waitFor(() => {
+      expect(screen.getByTestId("lens-transfer-repair")).toHaveTextContent(
+        LENS_COPY.transferConsequenceMissing,
+      );
+    });
     expect(screen.queryByTestId("lens-action-response")).not.toBeInTheDocument();
     expect(screen.getAllByTestId("lens-transfer-repair")).toHaveLength(1);
     await user.type(screen.getByTestId("lens-transfer-explanation"), "还没连上。");

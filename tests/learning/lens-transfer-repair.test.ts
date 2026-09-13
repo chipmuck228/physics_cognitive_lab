@@ -23,8 +23,8 @@ function transferSession() {
   };
 }
 
-describe("Scene 07 TRANSFER authored explanation repair", () => {
-  it("A. incomplete structure is missing, not wrong", () => {
+describe("Scene 07 TRANSFER pilot repair", () => {
+  it("A. missing distinctive condition is missing, not wrong", () => {
     const draft = emptyLensTransferDraft();
     const repair = lensTransferRepairFeedback(draft);
     expect(repair?.kind).toBe("missing");
@@ -40,25 +40,29 @@ describe("Scene 07 TRANSFER authored explanation repair", () => {
     );
   });
 
-  it("B. complete but wrong structure names the first concrete field", () => {
-    const accepted = completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]);
+  it("A2. station without authored text is missing", () => {
     const draft = {
-      ...accepted,
-      meetingMode:
-        accepted.meetingMode === "actual-convergence"
-          ? "backward-extension"
-          : "actual-convergence",
+      ...emptyLensTransferDraft(),
+      objectStation: "between-f-and-2f",
+    };
+    const repair = lensTransferRepairFeedback(draft);
+    expect(repair?.kind).toBe("missing");
+    expect(repair?.message).toBe(LENS_COPY.transferNeedAuthored);
+  });
+
+  it("B. wrong distinctive condition names the station, not seven fields", () => {
+    const draft = {
+      ...completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]),
+      objectStation: "beyond-2f",
     };
     const repair = lensTransferRepairFeedback(draft);
     expect(repair?.kind).toBe("inconsistent");
-    expect(repair?.message).toBe(LENS_COPY.transferMismatchMeeting);
-    expect(repair?.message).not.toMatch(/连起来/);
-    expect(repair?.message).not.toMatch(/怎样相遇的/);
+    expect(repair?.message).toBe(LENS_COPY.transferMismatchStationProjector);
     expect(repair?.message).not.toMatch(/物体位置、光线关系和像的结果还对不上/);
     const result = applyLensTransferSubmit(transferSession(), draft);
     expect(result.outcome.kind).toBe("rejected");
     expect(result.outcome.kind === "rejected" && result.outcome.message).toBe(
-      LENS_COPY.transferMismatchMeeting,
+      LENS_COPY.transferMismatchStationProjector,
     );
   });
 
@@ -66,6 +70,7 @@ describe("Scene 07 TRANSFER authored explanation repair", () => {
     const draft = {
       ...completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]),
       studentExplanation: "这是实像，光屏可以接到。",
+      authoredInterpretation: null,
     };
     const repair = lensTransferRepairFeedback(draft);
     expect(repair?.message).toBe(LENS_COPY.transferMeetingMissing);
@@ -75,6 +80,7 @@ describe("Scene 07 TRANSFER authored explanation repair", () => {
     const draft = {
       ...completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]),
       studentExplanation: "光线在另一侧真正汇聚。",
+      authoredInterpretation: null,
     };
     const repair = lensTransferRepairFeedback(draft);
     expect(repair?.message).toBe(LENS_COPY.transferConsequenceMissing);
@@ -84,24 +90,27 @@ describe("Scene 07 TRANSFER authored explanation repair", () => {
     const draft = {
       ...completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]),
       studentExplanation: "成实像。另外我看见光线真正会聚。",
+      authoredInterpretation: null,
     };
     const repair = lensTransferRepairFeedback(draft);
     expect(repair?.message).toBe(LENS_COPY.transferBindMissing);
   });
 
-  it("F. authored meeting contradicts the selected meeting", () => {
+  it("F. authored meeting contradicts this target", () => {
     const draft = {
       ...completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]),
       studentExplanation: "光线反向延长后相交，所以是正立放大的虚像，屏接不到。",
+      authoredInterpretation: null,
     };
     const repair = lensTransferRepairFeedback(draft);
-    expect(repair?.message).toBe(LENS_COPY.transferAuthoredContradicts);
+    expect(repair?.message).toBe(LENS_COPY.transferClaimMismatch);
   });
 
   it("G. slogan-only is one anti-surface message", () => {
     const draft = {
       ...completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]),
       studentExplanation: "投影仪也有凸透镜。",
+      authoredInterpretation: null,
     };
     const repair = lensTransferRepairFeedback(draft);
     expect(repair?.message).toBe(LENS_COPY.transferSloganOnly);
@@ -113,6 +122,7 @@ describe("Scene 07 TRANSFER authored explanation repair", () => {
     const draft = {
       ...completeLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]),
       studentExplanation: "u>2f，所以倒立缩小实像",
+      authoredInterpretation: null,
     };
     const repair = lensTransferRepairFeedback(draft);
     expect(repair?.message).toBe(LENS_COPY.transferTableRowOnly);
@@ -141,17 +151,15 @@ describe("Scene 07 TRANSFER authored explanation repair", () => {
     expect(attempt.response).not.toMatch(/都有凸透镜/);
   });
 
-  it("recap mirrors the learner draft, not the official row", () => {
+  it("recap mirrors the learner-owned claim, not derived image fields", () => {
     const draft = {
       ...emptyLensTransferDraft(LENS_TRANSFER_REQUIRED_IDS[0]),
       objectStation: "inside-f",
-      meetingMode: "actual-convergence",
+      studentExplanation: "先写着。",
     };
     const recap = lensTransferJudgmentRecap(draft);
     expect(recap.station).toMatch(/焦点以内/);
-    expect(recap.meeting).toMatch(/真正会聚/);
-    expect(recap.image).toBe("还没选");
-    expect(recap.screen).toBe("还没选");
+    expect(recap.explanation).toBe("先写着。");
   });
 
   it("TRANSFER help talks about the bind, not moving the screen", () => {
@@ -160,7 +168,7 @@ describe("Scene 07 TRANSFER authored explanation repair", () => {
       capabilities: [],
       references: [],
     });
-    expect(lines.join("\n")).toMatch(/光线关系/);
+    expect(lines.join("\n")).toMatch(/光线/);
     expect(lines.join("\n")).not.toMatch(/改的是物体位置还是光屏/);
   });
 
@@ -175,46 +183,18 @@ describe("Scene 07 TRANSFER authored explanation repair", () => {
     expect(repair?.message).not.toMatch(/F 和 2F 之间/);
   });
 
-  it("station correct and meeting wrong uses the meeting repair", () => {
+  it("station correct and virtual mechanism on the projector uses the claim repair", () => {
     const draft = {
       ...completeLensTransferDraft("near-projector-real-enlarged"),
-      meetingMode: "backward-extension",
+      studentExplanation: "光线反向延长后相交，所以是正立放大的虚像，屏接不到。",
+      authoredInterpretation: null,
     };
-    expect(lensTransferRepairFeedback(draft)?.message).toBe(LENS_COPY.transferMismatchMeeting);
+    expect(lensTransferRepairFeedback(draft)?.message).toBe(LENS_COPY.transferClaimMismatch);
   });
 
-  it("station and meeting correct, size wrong uses the size repair", () => {
-    const draft = {
-      ...completeLensTransferDraft("near-projector-real-enlarged"),
-      size: "reduced",
-    };
-    expect(lensTransferRepairFeedback(draft)?.message).toBe(LENS_COPY.transferMismatchSize);
-  });
-
-  it("only screen wrong uses the screen repair", () => {
-    const draft = {
-      ...completeLensTransferDraft("near-projector-real-enlarged"),
-      screenReceivable: "false",
-    };
-    expect(lensTransferRepairFeedback(draft)?.message).toBe(LENS_COPY.transferMismatchScreen);
-  });
-
-  it("multiple wrong fields return exactly the first mismatch", () => {
-    const draft = {
-      ...completeLensTransferDraft("near-projector-real-enlarged"),
-      objectStation: "beyond-2f",
-      meetingMode: "backward-extension",
-      size: "reduced",
-      screenReceivable: "false",
-    };
-    const repair = lensTransferRepairFeedback(draft);
-    expect(repair?.message).toBe(LENS_COPY.transferMismatchStationProjector);
-    expect(repair?.message).not.toMatch(/大小/);
-    expect(repair?.message).not.toMatch(/光屏接到/);
-  });
-
-  it("prompt no longer asks to restate object station", () => {
-    expect(LENS_COPY.transferOwnWords).toMatch(/光线怎样相遇，为什么会得到这样的像/);
+  it("prompt asks for the causal bind, not a 7-field restatement", () => {
+    expect(LENS_COPY.transferOwnWords).toMatch(/为什么能用刚才的模型/);
     expect(LENS_COPY.transferOwnWords).not.toMatch(/物体相对焦点在哪里/);
+    expect(LENS_COPY.transferConditionQuestion).toMatch(/相对焦点/);
   });
 });
