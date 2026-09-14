@@ -20,9 +20,10 @@ export function EngineDemo() {
         </p>
         <Link
           href="/"
+          aria-label={STUDENT_CHROME.homeAria}
           className="text-sm text-[var(--ink-muted)] underline-offset-4 hover:text-[var(--ink)] hover:underline"
         >
-          {ENGINE_DEMO_COPY.backHome}
+          {STUDENT_CHROME.home}
         </Link>
       </header>
 

@@ -40,6 +40,8 @@ export const STUDENT_STAGE_PROMPTS: Partial<
 export const STUDENT_CHROME = {
   productName: "物理思考实验室",
   preparing: "正在准备实验室…",
+  home: "回首页",
+  homeAria: "回到实验室入口",
   back: "返回",
   backAria: "返回上一步",
   startOver: "重新开始",

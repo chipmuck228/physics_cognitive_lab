@@ -21,7 +21,7 @@ const newsreader = Newsreader({
 
 export const metadata: Metadata = {
   title: "物理思考实验室",
-  description: "探究面包放进微波炉后为什么会变热。",
+  description: "从现象到物理模型，再到自己解题。实验室呈现变化，思考交给你。",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

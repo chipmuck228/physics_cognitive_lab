@@ -785,3 +785,15 @@ Default Scene-scoped review request: `spec/prompts/review-physics-representation
 
 ---
 
+## D066 — Lab homepage is the scene index, not a stacked Scene landing
+
+**Date:** 2026-09-14
+
+**Decision:** Replace the stacked Scene-01–07 landing copy on `/` with one student-facing lab homepage. The page states the product stance in Grade 9 language (student thinks; lab presents deterministic phenomena; tutor does not answer for the student), names the shared thinking path, and lists all seven production Scenes as equal phenomenon entries. Each Scene’s `LearningShell` exposes **回首页**, distinct from stage **返回**. Going home is ordinary navigation and must not reset Progress, Evidence, or Physics.
+
+**Why:** The previous `/` repeated seven Scene landings and hid the product hypothesis. Students needed a way out of a Scene that was not “go back one stage” or “start over”.
+
+**Consequence:** Homepage copy lives in `lib/content/home.ts`. No new interaction shell. No mastery claims. Scene 01–07 routes unchanged.
+
+---
+

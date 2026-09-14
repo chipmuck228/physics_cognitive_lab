@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 import { Button } from "@/components/common/Button";
 import { StageHeader } from "@/components/learning/StageHeader";
@@ -46,9 +49,18 @@ export function LearningShell({
     <div className="flex min-h-screen flex-col bg-[var(--background)] text-[var(--ink)]">
       <header className="flex items-center justify-between gap-4 border-b border-[var(--line)] px-4 py-3 sm:px-6">
         <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
-          <p className="shrink-0 text-sm font-medium tracking-wide text-[var(--ink-muted)]">
-            {STUDENT_CHROME.productName}
-          </p>
+          <div className="flex shrink-0 items-baseline gap-3">
+            <p className="text-sm font-medium tracking-wide text-[var(--ink-muted)]">
+              {STUDENT_CHROME.productName}
+            </p>
+            <Link
+              href="/"
+              aria-label={STUDENT_CHROME.homeAria}
+              className="text-sm text-[var(--ink-muted)] underline-offset-4 hover:text-[var(--ink)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--heat)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+            >
+              {STUDENT_CHROME.home}
+            </Link>
+          </div>
           {!isEntry ? (
             <StageProgress
               stage={stage}

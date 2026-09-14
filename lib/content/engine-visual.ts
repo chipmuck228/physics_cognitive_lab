@@ -60,5 +60,4 @@ export const ENGINE_DEMO_COPY = {
   crankMoving: "曲轴在动",
   crankStill: "曲轴静止",
   debugTitle: "开发状态",
-  backHome: "返回首页",
 } as const;
