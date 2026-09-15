@@ -12,9 +12,10 @@ import { LearningStage, type LearningStage as LearningStageType } from "@/types/
 interface LearningShellProps {
   stage: LearningStageType;
   scene?: ReactNode;
-  task: ReactNode;
+  task?: ReactNode;
   tutor?: ReactNode;
   actions: ReactNode;
+  workspace?: ReactNode;
   onStartOver: () => void;
   onGoBack?: () => void;
   canGoBack?: boolean;
@@ -37,6 +38,7 @@ export function LearningShell({
   stagePrompts,
   progressStages,
   examNotice,
+  workspace,
 }: LearningShellProps) {
   const isEntry = stage === LearningStage.ENTRY;
   const isExamWorld = stage === LearningStage.EXAM;
@@ -92,6 +94,9 @@ export function LearningShell({
         </div>
       ) : null}
 
+      {workspace ? (
+        <main className="mx-auto w-full max-w-6xl flex-1 p-4 sm:p-6">{workspace}</main>
+      ) : (
       <main
         className={`mx-auto grid w-full flex-1 ${
           isEntry || isAssessment
@@ -115,6 +120,7 @@ export function LearningShell({
           </div>
         </aside>
       </main>
+      )}
 
       <footer className="border-t border-[var(--line)] px-4 py-4 sm:px-6">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-end gap-3">

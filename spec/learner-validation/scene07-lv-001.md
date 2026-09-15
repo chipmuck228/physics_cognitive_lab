@@ -88,6 +88,38 @@ amounts of text to determine:
 
 The required learner action was not visually obvious enough.
 
+### LV-S07-007 — Instruction duplication
+
+The same current task is explained multiple times using slightly different
+wording on the same screen.
+
+Risk: the learner cannot distinguish the actual task from supporting copy.
+
+### LV-S07-008 — Page information hierarchy
+
+Current action, explanation, physical context, vocabulary, prompt, and
+response controls compete at similar visual priority.
+
+Risk: the learner must read the whole page before acting.
+
+### LV-S07-009 — Developer language
+
+Some learner-facing copy is written from the system / evaluator / designer
+point of view rather than in natural Grade-9 Chinese. The pattern includes
+telling the learner what token not to type, or using compressed designer
+phrasing whose meaning itself must be decoded.
+
+Risk: the learner spends effort interpreting the interface instead of
+answering a physical question.
+
+### LV-S07-010 — Physics vocabulary context
+
+Physics vocabulary and concept explanations currently compete with task
+instructions. Terms such as F, 焦点, 光屏, and 像 should preferably be
+grounded in the Physical World, near the visible referent.
+
+Risk: vocabulary becomes a theory card the learner must read before acting.
+
 ---
 
 ## Provisional Scene 07 repair rule (not a universal contract)
@@ -103,6 +135,9 @@ without reading a long paragraph.
 
 This remains a Scene 07 learner-validation repair rule. It is **not** a new
 universal canonical contract.
+
+Continuation of that repair: `spec/architecture/learner-workspace-layout.md`
+(PILOT / NOT YET UNIVERSALIZED). Decision D068. Still not LEARNER_VALIDATED.
 
 ---
 

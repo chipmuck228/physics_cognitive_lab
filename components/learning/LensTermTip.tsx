@@ -9,13 +9,10 @@ interface LensTermTipProps {
 export function LensTermTip({ termId }: LensTermTipProps) {
   const item = LENS_VOCAB[termId];
   return (
-    <div
-      className="rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2"
-      data-testid={`lens-vocab-${termId}`}
-    >
-      <p className="text-sm font-medium text-[var(--ink)]">{item.term}</p>
-      <p className="mt-1 text-sm leading-relaxed text-[var(--ink-muted)]">{item.body}</p>
-    </div>
+    <p className="text-sm leading-relaxed text-[var(--ink)]" data-testid={`lens-vocab-${termId}`}>
+      <span className="font-medium">{item.term}</span>
+      <span className="text-[var(--ink-muted)]">{` · ${item.body}`}</span>
+    </p>
   );
 }
 
@@ -25,7 +22,7 @@ interface LensVocabRowProps {
 
 export function LensVocabRow({ terms }: LensVocabRowProps) {
   return (
-    <div className="grid gap-2 sm:grid-cols-3" data-testid="lens-vocab-row">
+    <div className="space-y-1.5" data-testid="lens-vocab-row">
       {terms.map((termId) => (
         <LensTermTip key={termId} termId={termId} />
       ))}

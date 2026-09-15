@@ -10,7 +10,6 @@ import {
   LENS_COPY,
   LENS_OBSERVE_OPTIONS,
   LENS_STAGE_LABELS,
-  LENS_TASK_FRAMES,
 } from "@/lib/content/convex-lens-optical-bench";
 import { STUDENT_CHROME } from "@/lib/content/student-language";
 import { emptyLensAiOffDraft } from "@/lib/learning/lens-ai-off";
@@ -110,26 +109,16 @@ describe("Scene 07 learner UX chrome", () => {
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 
-  it("shows a primary task frame on OBSERVE", () => {
+  it("shows a workspace current action on OBSERVE", () => {
     replaceSession({
       ...createSession(() => "t0", () => "lens-observe-ux", CONVEX_LENS_SCENE_ID),
       stage: LearningStage.OBSERVE,
     });
     render(<ConvexLensOpticalBenchLab />);
-    expect(screen.getByTestId("lens-task-context")).toHaveTextContent(
-      LENS_TASK_FRAMES[LearningStage.OBSERVE]!.context,
-    );
-    expect(screen.getByTestId("lens-task-goal")).toHaveTextContent(
-      LENS_TASK_FRAMES[LearningStage.OBSERVE]!.goal,
-    );
-    expect(screen.getByTestId("lens-task-focus")).toHaveTextContent(
-      LENS_TASK_FRAMES[LearningStage.OBSERVE]!.focus,
-    );
-    expect(screen.getByTestId("lens-task-action")).toHaveTextContent(
-      LENS_TASK_FRAMES[LearningStage.OBSERVE]!.action,
-    );
+    expect(screen.getByTestId("learner-workspace")).toBeInTheDocument();
     expect(screen.getByTestId("lens-now-do")).toHaveTextContent("点物体位置，或移动一次光屏");
     expect(screen.getByTestId("lens-help-panel")).toBeInTheDocument();
+    expect(screen.queryByTestId("lens-task-context")).not.toBeInTheDocument();
   });
 
   it("MODEL back to EXPLAIN and return does not destroy progress", async () => {

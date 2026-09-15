@@ -79,7 +79,7 @@ const LADDERS: Record<LensHelpIntentId, readonly string[]> = {
     "先指给自己看：物体在哪，光屏在哪，再写。",
   ],
   "how-distinguish": [
-    "先对着光具座指：左边是物体，中间是透镜。",
+    "看着左边的实验：左边是物体，中间是透镜。",
     "把 F / 2F 和像、光屏并排放：它们是不是同一件东西？",
     "先问：你指的是装置上的哪一块？",
     "写的时候分别说出物体、透镜、像和光屏。",
@@ -118,7 +118,7 @@ const LADDERS: Record<LensHelpIntentId, readonly string[]> = {
     "先写半句：你改的是物体位置还是光屏位置。",
     COMPARE,
     QUESTION,
-    "再用“所以”接上你看见的结果。不要只写“变了”。",
+    "再用自己的话说你看见的变化。",
   ],
 };
 

@@ -22,6 +22,7 @@ import { LensExamTask } from "@/components/learning/LensExamTask";
 import { LensExperimentTask } from "@/components/learning/LensExperimentTask";
 import { LensExplainTask } from "@/components/learning/LensExplainTask";
 import { LensHelpPanel } from "@/components/learning/LensHelpPanel";
+import { LearnerWorkspace } from "@/components/learning/LearnerWorkspace";
 import { LensObserveTask } from "@/components/learning/LensObserveTask";
 import { LensPredictTask } from "@/components/learning/LensPredictTask";
 import { LensRayConstruction } from "@/components/learning/LensRayConstruction";
@@ -235,6 +236,7 @@ export function ConvexLensOpticalBenchLab() {
   const [aiOffRepair, setAiOffRepair] = useState<string | null>(null);
   const [aiOffChecking, setAiOffChecking] = useState(false);
   const [actionOutcome, setActionOutcome] = useState<LensDomainOutcome | null>(null);
+  const [screenInspected, setScreenInspected] = useState(false);
 
   const hydrateKey = session
     ? [
@@ -399,6 +401,7 @@ export function ConvexLensOpticalBenchLab() {
 
   useEffect(() => {
     setActionOutcome(null);
+    setScreenInspected(false);
   }, [experimentKey]);
 
   if (!hydrated || !session || !aiOffDraft) {
@@ -474,6 +477,8 @@ export function ConvexLensOpticalBenchLab() {
         comparisonSaved,
         reflectionSaved,
         awaitingNext: awaitingNextTrial,
+        needsInspect: trial?.capability === "move-object",
+        screenInspected,
       })
     : null;
   const currentAction = isEntry
@@ -483,13 +488,13 @@ export function ConvexLensOpticalBenchLab() {
       : isDescribe
         ? { nowDo: lensDescribeNowDo() }
         : isPredict
-          ? { nowDo: lensPredictNowDo(), nextHint: "记下猜想以后，再到光具座上动手。" }
+          ? { nowDo: lensPredictNowDo() }
           : isExperiment && displayExperiment && experimentMoment
             ? lensExperimentCurrentAction(displayExperiment, experimentMoment)
             : null;
   const vocabTerms = isEntry
     ? (["screen"] as const)
-    : isObserve || isDescribe
+    : isObserve || isDescribe || isPredict || isExperiment
       ? (["F", "screen", "image"] as const)
       : [];
   const latestModel = session.modelAttempts.at(-1);
@@ -713,10 +718,13 @@ export function ConvexLensOpticalBenchLab() {
         reflection={reflection}
         reflectionPrompt={lensReflectionPrompt(displayExperiment)}
         onCover={() => presentAction(coverLens())}
-        onLookScreen={() =>
-          presentAction(setScreenAtImagePlane(!physicsState.screenAtImagePlane))
-        }
+        onLookScreen={() => {
+          setScreenInspected(true);
+          presentAction(setScreenAtImagePlane(!physicsState.screenAtImagePlane));
+        }}
         screenAtImagePlane={physicsState.screenAtImagePlane}
+        screenInspected={screenInspected}
+        hidePhysicalControls
         onStartNext={() => presentAction(acknowledgeNextTrial())}
         onObservedChange={(next) => {
           setObserved(next);
@@ -1127,25 +1135,12 @@ export function ConvexLensOpticalBenchLab() {
           }}
         />
       ) : null}
-      {currentAction ? (
-        <LensCurrentAction
-          kicker={"kicker" in currentAction ? currentAction.kicker : undefined}
-          nowDo={currentAction.nowDo}
-          nextHint={"nextHint" in currentAction ? currentAction.nextHint : undefined}
-        />
-      ) : null}
-      {vocabTerms.length > 0 ? <LensVocabRow terms={vocabTerms} /> : null}
       {frame && !isEntry && !isAiOff && !isComplete ? (
         <LensTaskFrame
-          context={
-            isExperiment && !awaitingNextTrial && !predictionLocked
-              ? LENS_COPY.trialPredictFirst
-              : frame.context
-          }
+          context={frame.context}
           goal={frame.goal}
           focus={frame.focus}
           action={frame.action}
-          compact={isObserve || isDescribe || isPredict || isExperiment}
         />
       ) : null}
       {actionView &&
@@ -1185,6 +1180,232 @@ export function ConvexLensOpticalBenchLab() {
     </div>
   );
 
+  const useWorkspace = isEntry || isObserve || isDescribe || isPredict || isExperiment;
+  const showPredictLead =
+    (isPredict || (isExperiment && !predictionLocked && !awaitingNextTrial)) && Boolean(activeExperiment);
+  const workspaceLead = showPredictLead ? (
+    <div>
+      {isExperiment && currentAction && "kicker" in currentAction && currentAction.kicker ? (
+        <p
+          className="text-xs font-medium tracking-wide text-[var(--ink-muted)]"
+          data-testid="lens-trial-progress"
+        >
+          {currentAction.kicker}
+        </p>
+      ) : null}
+      <p className="text-xs font-medium tracking-wide text-[var(--heat)]">先预测</p>
+      <h1
+        className="mt-1 font-serif text-2xl leading-snug text-[var(--ink)] sm:text-3xl"
+        data-testid="lens-now-do"
+      >
+        {lensPredictQuestion(activeExperiment!)}
+      </h1>
+      <p className="mt-2 text-sm text-[var(--ink-muted)]" data-testid="lens-predict-not-exam">
+        {LENS_COPY.predictNotExam}
+      </p>
+    </div>
+  ) : isEntry ? (
+    <div>
+      <h1
+        className="font-serif text-3xl leading-tight text-[var(--ink)] sm:text-4xl"
+        data-testid="lens-now-do"
+      >
+        {LENS_COPY.landingTitle}
+      </h1>
+      <p className="mt-3 text-lg text-[var(--ink-muted)]">{LENS_COPY.landingBody}</p>
+    </div>
+  ) : currentAction ? (
+    <LensCurrentAction
+      kicker={"kicker" in currentAction ? currentAction.kicker : undefined}
+      nowDo={currentAction.nowDo}
+    />
+  ) : null;
+
+  const workspaceWorld = (
+    <div className="space-y-4">
+      {scene}
+      {vocabTerms.length > 0 ? <LensVocabRow terms={vocabTerms} /> : null}
+      {isObserve ? (
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => presentAction(markDemoWatched())} data-testid="lens-play-demo">
+            {LENS_COPY.playDemo}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => presentAction(setScreenAtImagePlane(!physicsState.screenAtImagePlane))}
+            data-testid="lens-move-screen"
+          >
+            {physicsState.screenAtImagePlane ? LENS_COPY.screenOffImage : LENS_COPY.screenAtImage}
+          </Button>
+        </div>
+      ) : null}
+      {isExperiment && !revisiting && experimentMoment === "intervene" && trial?.capability === "cover-lens" ? (
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => presentAction(coverLens())} data-testid="lens-cover-lens">
+            {LENS_COPY.coverLens}
+          </Button>
+        </div>
+      ) : null}
+      {isExperiment &&
+      !revisiting &&
+      trial?.capability === "move-object" &&
+      (experimentMoment === "inspect" || experimentMoment === "record") ? (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setScreenInspected(true);
+              presentAction(setScreenAtImagePlane(!physicsState.screenAtImagePlane));
+            }}
+            data-testid="lens-experiment-look-screen"
+          >
+            {physicsState.screenAtImagePlane ? LENS_COPY.screenOffImage : LENS_COPY.screenAtImage}
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  );
+
+  const workspaceTask = isEntry ? (
+    <Button size="lg" onClick={startLesson} aria-label={LENS_COPY.startLesson}>
+      {LENS_COPY.startLesson}
+    </Button>
+  ) : isObserve ? (
+    <LensObserveTask
+      selectedOptionIds={selectedOptionIds}
+      onToggle={(optionId) => {
+        const next = selectedOptionIds.includes(optionId)
+          ? selectedOptionIds.filter((item) => item !== optionId)
+          : [...selectedOptionIds, optionId];
+        setSelectedOptionIds(next);
+        saveObserveDraft(next);
+      }}
+      onPlayDemo={() => presentAction(markDemoWatched())}
+      onMoveScreen={() => presentAction(setScreenAtImagePlane(!physicsState.screenAtImagePlane))}
+      screenAtImagePlane={physicsState.screenAtImagePlane}
+      onSubmit={() => {
+        const outcome = saveObservation(selectedOptionIds);
+        setObserveNeedMore(outcome.kind === "missing");
+        setObserveNeedMoreMessage(outcome.kind === "missing" ? outcome.message ?? "" : "");
+        presentAction(outcome);
+      }}
+      needMore={observeNeedMore}
+      needMoreMessage={observeNeedMoreMessage}
+      saved={observeComplete}
+      reviewOnly={revisiting}
+      canRecord={observeInteracted}
+      showWorldControls={false}
+    />
+  ) : isDescribe ? (
+    task
+  ) : showPredictLead ? (
+    <LensPredictTask
+      question={lensPredictQuestion(activeExperiment!)}
+      outcome={predictOutcome}
+      reasonStance={predictReasonStance}
+      reason={predictReason}
+      committedLabel={
+        committedPrediction ? lensPredictLabel(committedPrediction.prediction) : null
+      }
+      locked={predictionLocked && (isExperiment || isPredict)}
+      needMore={predictNeedMore}
+      needMoreMessage={predictNeedMoreMessage}
+      hideLead
+      onOutcomeChange={(value) => {
+        setPredictOutcome(value);
+        if (activeExperiment) {
+          savePredictDraft(
+            activeExperiment,
+            value,
+            lensPredictReasonForCommit(predictReasonStance, predictReason),
+          );
+        }
+      }}
+      onReasonStanceChange={(value) => {
+        setPredictReasonStance(value);
+        if (value !== "has-idea") {
+          setPredictReason("");
+        }
+        if (activeExperiment) {
+          savePredictDraft(
+            activeExperiment,
+            predictOutcome,
+            lensPredictReasonForCommit(value, predictReason),
+          );
+        }
+      }}
+      onReasonChange={(value) => {
+        setPredictReason(value);
+        if (activeExperiment) {
+          savePredictDraft(
+            activeExperiment,
+            predictOutcome,
+            lensPredictReasonForCommit(predictReasonStance, value),
+          );
+        }
+      }}
+      onCommit={() => {
+        if (!predictOutcome) {
+          setPredictNeedMore(true);
+          setPredictNeedMoreMessage(LENS_COPY.predictNeedBoth);
+          return;
+        }
+        if (!predictReasonStance) {
+          setPredictNeedMore(true);
+          setPredictNeedMoreMessage(LENS_COPY.predictNeedStance);
+          return;
+        }
+        const reason = lensPredictReasonForCommit(predictReasonStance, predictReason);
+        const outcome = commitPrediction(activeExperiment!, predictOutcome, reason);
+        presentAction(outcome);
+        setPredictNeedMore(outcome.kind === "missing");
+        setPredictNeedMoreMessage(
+          outcome.kind === "missing" ? outcome.message ?? LENS_COPY.predictNeedBoth : "",
+        );
+      }}
+    />
+  ) : (
+    task
+  );
+
+  const workspaceSupport = (
+    <div className="space-y-4">
+      {actionView &&
+      !(
+        (isTransfer || isAiOff) &&
+        (actionView.className === "missing" || actionView.className === "rejected")
+      ) ? (
+        <div data-testid="lens-action-response" data-response-class={actionView.className}>
+          <ValidationMessage kind={actionView.tone} testId="lens-action-response-message">
+            {actionView.message}
+          </ValidationMessage>
+        </div>
+      ) : null}
+      {showHelp ? (
+        <LensHelpPanel
+          intents={helpIntents}
+          intentId={activeHelpIntent}
+          interaction={interaction}
+          prompts={
+            activeHelpIntent
+              ? lensHelpPrompts(activeHelpIntent, help.revealed, interaction)
+              : []
+          }
+          onSelectIntent={selectHelpIntent}
+          onRevealNext={revealHelpNext}
+        />
+      ) : null}
+      {!isEntry ? (
+        <LensCognitiveTrace
+          items={lensCognitiveTraceItems(session)}
+          processItems={lensInteractionTraces(session)}
+          progressStage={session.stage}
+          displayStage={displayStage}
+        />
+      ) : null}
+    </div>
+  );
+
   // Scene 07 pilot: LLM TutorPanel is intentionally not rendered until it can
   // be bound to stage + substep + help intent + visible affordances.
   // LensHelpPanel is the only learner-facing help entry. useTutor remains
@@ -1202,8 +1423,42 @@ export function ConvexLensOpticalBenchLab() {
             : LENS_STAGE_PROMPTS
       }
       progressStages={[...LENS_PHASE_STAGES]}
-      scene={scene}
-      task={framedTask}
+      scene={useWorkspace ? undefined : scene}
+      task={useWorkspace ? undefined : framedTask}
+      workspace={
+        useWorkspace ? (
+          <div
+            data-testid="lens-interaction-context"
+            data-substep={interaction.substep ?? ""}
+            data-capabilities={interaction.capabilities
+              .filter((item) => item.available)
+              .map((item) => item.id)
+              .join(",")}
+            data-references={formatLensReferenceAttr(interaction)}
+            data-student-ray-count={String(studentRays.length)}
+          >
+            {revisiting && viewingStage ? (
+              <div className="mb-4">
+                <LensReviewBanner
+                  viewingStage={viewingStage}
+                  authoritativeStage={session.stage}
+                  onReturn={() => {
+                    returnToProgress();
+                    presentAction({ kind: "preview-discarded" });
+                  }}
+                />
+              </div>
+            ) : null}
+            <LearnerWorkspace
+              emphasis={isObserve || isExperiment ? "world" : "task"}
+              lead={workspaceLead}
+              world={workspaceWorld}
+              task={workspaceTask}
+              support={workspaceSupport}
+            />
+          </div>
+        ) : undefined
+      }
       tutor={null}
       examNotice={
         displayStage === LearningStage.EXAM && !revisiting
@@ -1211,11 +1466,7 @@ export function ConvexLensOpticalBenchLab() {
           : undefined
       }
       actions={
-        isEntry ? (
-          <Button size="lg" onClick={startLesson} aria-label={LENS_COPY.startLesson}>
-            {LENS_COPY.startLesson}
-          </Button>
-        ) : (
+        isEntry ? null : (
           <p className="text-sm text-[var(--ink-muted)]">{LENS_FOOTER[session.stage]}</p>
         )
       }

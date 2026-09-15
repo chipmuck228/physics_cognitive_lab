@@ -21,7 +21,9 @@
 14. `architecture/learner-interaction-state-contract.md` — Progress ≠ Draft ≠ View ≠ Review ≠ Evidence ≠ Physics. Evidence and Physics stay with their existing owners.
 15. `architecture/learner-interaction-design-template.md` — pre-React Interaction Plan worksheet when implementing or rebuilding a Scene. Per stage / substep it now also names student question, expected response shape, surface justification, protected future structure, and primary CTA meaning. Not Evidence Claim Design and not a Physics Model. Not a second architecture owner.
 
-Learner-observation documents are not architecture owners. `learner-validation/learner-validation-prep.md` (D050) owns WHY/WHAT for one informal Grade-9 observation of Scene 03. `learner-validation/first-learner-observation-guide.md` (D051) owns HOW to execute that first observation. They must not redefine UPLP stages, L1–L6, Schema lifecycle, Quality Review gates, or Evidence Design rules. They do not mark any model `validated`.
+Learner-observation documents are not architecture owners. `learner-validation/learner-validation-prep.md` (D050) owns WHY/WHAT for one informal Grade-9 observation of Scene 03. `learner-validation/first-learner-observation-guide.md` (D051) owns HOW to execute that first observation. They must not redefine UPLP stages, L1–L6, Schema lifecycle, Quality Review gates, or Evidence Design rules. They do not mark any model `validated`. `learner-validation/scene07-lv-001.md` is a formative Scene 07 observation record only.
+
+`architecture/learner-workspace-layout.md` is a **PILOT / NOT YET UNIVERSALIZED** layout-responsibility candidate (D068). First consumer: Scene 07 ENTRY–EXPERIMENT. It does not own physics, evidence, progression, MODEL grammar, or Scene DSL. It is not an architecture source of truth above this list. Do not claim UNIVERSAL_LAYOUT_VALIDATED. Interaction Shell freeze still applies.
 
 ## Scene 01 documents
 
@@ -141,6 +143,7 @@ The canonical model definition lives in `content/physics-models/convex-lens-imag
 - `architecture/scene-01-06-abstraction-audit.md` — discovery-only classification of Scenes 01–06 (D058). Not a source of truth for UPLP, L-levels, or lifecycle. Does not authorize a renderer or Scene 07.
 - `architecture/scene-04-hybrid-dsl-pilot.md` — Scene 04 chrome/options extraction (D059). Not a universal renderer. Recommendation: `KEEP_SCENE04_ONLY`.
 - `architecture/interaction-shell-contract.md` — reusable interaction-shell boundary after Scene 03/04/05 Observe+Predict reuse. Freeze: do not extract more shells merely because duplication exists. Not a Scene DSL. Not Scene 07.
+- `architecture/learner-workspace-layout.md` — PILOT layout slots for World / Task / Support (D068). Scene 07 ENTRY–EXPERIMENT first consumer. Not universal. Not an architecture owner. Does not authorize Scene 01–06 migration.
 - `EXPERIMENT_LOG.md` — evidence log; non-authoritative for architecture.
 - `OPEN_QUESTIONS.md` — research backlog; non-authoritative for settled design decisions.
 - `microwave-bread-development-notes.md` — dated implementation snapshot; must be re-verified against code.
@@ -171,6 +174,7 @@ The canonical model definition lives in `content/physics-models/convex-lens-imag
 - `EXPERIMENT_LOG.md`
 - `OPEN_QUESTIONS.md`
 - `architecture/interaction-shell-contract.md`
+- `architecture/learner-workspace-layout.md` (PILOT; not an owner)
 - `architecture/learner-interaction-runtime-audit.md`
 - `architecture/learner-interaction-runtime-contract.md`
 - `architecture/learner-interaction-state-contract.md`

@@ -4,6 +4,7 @@ import type { LensExperimentId } from "@/lib/physics/convex-lens-optical-bench";
 export type LensExperimentMoment =
   | "predict"
   | "intervene"
+  | "inspect"
   | "record"
   | "compare"
   | "reflect"
@@ -20,11 +21,11 @@ export function lensObserveNowDo(interacted: boolean): string {
 }
 
 export function lensDescribeNowDo(): string {
-  return "对着光具座，把物体、透镜、像和光屏分开说";
+  return "看着左边的实验，说说你实际看到了什么";
 }
 
 export function lensPredictNowDo(): string {
-  return "先猜你会看见什么。现在不用答对";
+  return "先猜你会看见什么";
 }
 
 export function lensExperimentMoment(input: {
@@ -34,6 +35,8 @@ export function lensExperimentMoment(input: {
   comparisonSaved: boolean;
   reflectionSaved: boolean;
   awaitingNext: boolean;
+  needsInspect?: boolean;
+  screenInspected?: boolean;
 }): LensExperimentMoment {
   if (input.awaitingNext) {
     return "next";
@@ -43,6 +46,9 @@ export function lensExperimentMoment(input: {
   }
   if (!input.interventionDone) {
     return "intervene";
+  }
+  if (input.needsInspect && !input.screenInspected && !input.observedSaved) {
+    return "inspect";
   }
   if (!input.observedSaved) {
     return "record";
@@ -62,31 +68,31 @@ export function lensExperimentCurrentAction(
   if (moment === "predict") {
     return {
       kicker,
-      nowDo: "先猜这一次会看见什么。现在不用答对",
-      nextHint: "记下猜想以后，再到光具座上动手。",
+      nowDo: "先猜这一次会看见什么",
     };
   }
   if (moment === "intervene") {
     return {
       kicker,
       nowDo: trial.nowDo,
-      nextHint: trial.nextAfterIntervene,
+    };
+  }
+  if (moment === "inspect") {
+    return {
+      kicker,
+      nowDo: trial.nextAfterIntervene,
     };
   }
   if (moment === "record") {
     return {
       kicker,
-      nowDo: "记下你看见的：光屏怎样了，像怎样了",
-      nextHint:
-        trial.capability === "cover-lens"
-          ? "看清楚像还在不在，然后记下。"
-          : "可以再移动光屏看一看，然后记下。",
+      nowDo: "你观察到了什么？",
     };
   }
   if (moment === "compare") {
     return {
       kicker,
-      nowDo: "对照一下：和刚才猜的一样吗？",
+      nowDo: "和刚才猜的一样吗？",
     };
   }
   if (moment === "next") {
@@ -97,10 +103,10 @@ export function lensExperimentCurrentAction(
   }
   return {
     kicker,
-    nowDo: "用自己的话写一句你现在怎么想",
+    nowDo: "你现在怎么想？",
   };
 }
 
 export function lensEntryNowDo(): string {
-  return "点下面的「开始观察」";
+  return "开始观察";
 }

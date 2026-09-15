@@ -809,4 +809,16 @@ Default Scene-scoped review request: `spec/prompts/review-physics-representation
 
 ---
 
+## D068 — Scene 07 LearnerWorkspace layout pilot (not universal)
+
+**Date:** 2026-09-15
+
+**Decision:** After LV-S07-007–010, introduce a composition-based layout primitive `LearnerWorkspace` that owns World / current-task / support placement, visual hierarchy, and responsive order. Pilot only on Scene 07 ENTRY → EXPERIMENT. Unify information responsibilities; do not unify domain UI. Do not claim UNIVERSAL_LAYOUT_VALIDATED. Interaction Shell freeze still forbids extracting a second-consumer domain shell. This is a slot primitive, first consumer Scene 07.
+
+**Why:** A current-action prompt is not enough if it competes with duplicate instructions. The learner should answer “现在要我做什么？” in about three seconds without reading a lesson article.
+
+**Consequence:** Spec: `spec/architecture/learner-workspace-layout.md`. Physics Truth, evaluators, UPLP, EXPLAIN–COMPLETE architecture, AI_OFF, and Scene 01–06 unchanged.
+
+---
+
 

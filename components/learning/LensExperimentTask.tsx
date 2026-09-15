@@ -53,20 +53,8 @@ interface LensExperimentTaskProps {
   comparisonDisabledReason?: string;
   reflectionDisabledReason?: string;
   reviewOnly?: boolean;
-}
-
-function Status({ done, label }: { done: boolean; label: string }) {
-  return (
-    <span
-      className={`rounded-full px-2 py-1 text-xs ${
-        done
-          ? "bg-[var(--paper)] text-[var(--ink)]"
-          : "bg-transparent text-[var(--ink-muted)]"
-      }`}
-    >
-      {`${label}${done ? "：已完成" : "：还没做"}`}
-    </span>
-  );
+  screenInspected?: boolean;
+  hidePhysicalControls?: boolean;
 }
 
 export function LensExperimentTask({
@@ -108,7 +96,12 @@ export function LensExperimentTask({
   comparisonDisabledReason,
   reflectionDisabledReason,
   reviewOnly = false,
+  screenInspected,
+  hidePhysicalControls = false,
 }: LensExperimentTaskProps) {
+  void title;
+  void whatChanges;
+  void whatStays;
   if (awaitingNext && nextTrialIndex) {
     return (
       <div className="space-y-4" data-testid="lens-trial-complete">
@@ -129,15 +122,25 @@ export function LensExperimentTask({
     );
   }
 
+  const waitingForInspect =
+    capability === "move-object" && screenInspected === false;
   const phase = !predictionLocked
     ? "predict"
     : !interventionDone
       ? "intervene"
-      : !observedSaved
-        ? "record"
-        : !comparisonSaved
-          ? "compare"
-          : "reflect";
+      : waitingForInspect
+        ? "inspect"
+        : !observedSaved
+          ? "record"
+          : !comparisonSaved
+            ? "compare"
+            : "reflect";
+
+  const physicalControlsHidden = hidePhysicalControls || reviewOnly;
+  const showInterveneControls =
+    phase === "intervene" && !physicalControlsHidden && capability === "cover-lens";
+  const showInspectControls =
+    phase === "inspect" && !physicalControlsHidden && Boolean(onLookScreen);
 
   return (
     <div
@@ -147,57 +150,42 @@ export function LensExperimentTask({
       data-trial-index={trialIndex}
       data-phase={phase}
     >
-      <Card className="space-y-5 p-4">
-        <p className="font-serif text-lg text-[var(--ink-muted)]">{title}</p>
-        <div
-          className="flex flex-wrap gap-2"
-          data-testid="lens-experiment-status"
-        >
-          <Status done={predictionLocked} label="猜想" />
-          <Status done={interventionDone} label="动手" />
-          <Status done={observedSaved} label="看见" />
-          <Status done={comparisonSaved} label="对照" />
-          <Status done={reflectionSaved} label="想法" />
-        </div>
-
-        {committedPrediction ? (
-          <p className="text-sm text-[var(--ink-muted)]" data-testid="lens-experiment-prediction">
-            {`你刚才猜的：${committedPrediction}`}
-          </p>
-        ) : (
-          <ValidationMessage kind="missing">{LENS_COPY.runNeedPrediction}</ValidationMessage>
-        )}
-
-        {phase === "intervene" ? (
-          <section className="space-y-2">
-            <p className="text-sm" data-testid="lens-intervention-prompt">
+      {phase === "intervene" || phase === "inspect" ? (
+        <>
+          {phase === "intervene" ? (
+            <p className="sr-only" data-testid="lens-intervention-prompt">
               {instruction}
             </p>
-            <p className="text-sm text-[var(--ink-muted)]" data-testid="lens-experiment-changed">
-              {`会变的：${whatChanges}。不变的：${whatStays}。`}
-            </p>
-            {!reviewOnly && capability === "cover-lens" ? (
-              <div className="flex justify-end">
-                <Button onClick={onCover} data-testid="lens-cover-lens">
-                  {LENS_COPY.coverLens}
-                </Button>
-              </div>
-            ) : null}
-          </section>
-        ) : null}
-
+          ) : null}
+          {showInterveneControls ? (
+            <div className="flex justify-end">
+              <Button onClick={onCover} data-testid="lens-cover-lens">
+                {LENS_COPY.coverLens}
+              </Button>
+            </div>
+          ) : null}
+          {showInspectControls ? (
+            <div className="flex justify-end">
+              <Button
+                variant="secondary"
+                onClick={() => onLookScreen?.()}
+                data-testid="lens-experiment-look-screen"
+              >
+                {screenAtImagePlane ? LENS_COPY.screenOffImage : LENS_COPY.screenAtImage}
+              </Button>
+            </div>
+          ) : null}
+        </>
+      ) : (
+      <Card className="space-y-5 p-4">
         {phase === "record" || phase === "compare" || phase === "reflect" ? (
           <fieldset disabled={reviewOnly} className="space-y-4 border-0 p-0">
-            {interventionDone ? (
-              <div data-testid="lens-experiment-completion">
-                <ValidationMessage kind="info">已经在光具座上完成这次改变。</ValidationMessage>
-              </div>
-            ) : null}
-
             {phase === "record" ? (
               <section className="space-y-3">
-                <p className="text-sm text-[var(--ink-muted)]">{LENS_COPY.observeAfterIntervention}</p>
-                {onLookScreen && capability === "move-object" && !reviewOnly ? (
+                {!hidePhysicalControls &&
+                onLookScreen &&
+                capability === "move-object" &&
+                !reviewOnly ? (
                   <div className="flex justify-end">
                     <Button
                       variant="secondary"
@@ -252,23 +240,19 @@ export function LensExperimentTask({
 
             {phase === "compare" ? (
               <section className="space-y-3" data-testid="lens-compare-surface">
-                <div className="grid gap-3 rounded-2xl border border-[var(--line)] p-3 sm:grid-cols-2">
-                  <div>
-                    <p className="text-xs text-[var(--ink-muted)]">{LENS_COPY.compareMine}</p>
-                    <p className="text-sm" data-testid="lens-compare-prediction">
-                      {committedPrediction ?? "还没有记下猜想。"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-[var(--ink-muted)]">{LENS_COPY.compareActual}</p>
-                    <p className="text-sm" data-testid="lens-compare-observation">
-                      {`${lensObservedLabel("screen", observed.screen)}；${lensObservedLabel("sizeOrCover", observed.sizeOrCover)}`}
-                    </p>
-                  </div>
-                </div>
+                <p className="text-sm text-[var(--ink-muted)]" data-testid="lens-experiment-prediction">
+                  {`你刚才猜的：${committedPrediction ?? "还没有记下猜想。"}`}
+                </p>
+                <p className="sr-only" data-testid="lens-compare-prediction">
+                  {committedPrediction ?? "还没有记下猜想。"}
+                </p>
+                <p className="sr-only" data-testid="lens-compare-observation">
+                  {`${lensObservedLabel("screen", observed.screen)}；${lensObservedLabel("sizeOrCover", observed.sizeOrCover)}`}
+                </p>
                 <QuestionGroup
                   id={`lens-compare-${experimentId}`}
                   question={LENS_COPY.compareQuestion}
+                  hideQuestion
                   value={comparison}
                   onChange={onComparisonChange}
                   options={[...LENS_COMPARE_OPTIONS]}
@@ -328,6 +312,7 @@ export function LensExperimentTask({
           </fieldset>
         ) : null}
       </Card>
+      )}
     </div>
   );
 }

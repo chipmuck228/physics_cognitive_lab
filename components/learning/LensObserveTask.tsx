@@ -15,6 +15,7 @@ interface LensObserveTaskProps {
   saved: boolean;
   reviewOnly?: boolean;
   canRecord?: boolean;
+  showWorldControls?: boolean;
 }
 
 export function LensObserveTask({
@@ -29,25 +30,30 @@ export function LensObserveTask({
   saved,
   reviewOnly = false,
   canRecord = true,
+  showWorldControls = true,
 }: LensObserveTaskProps) {
   const selected = new Set(selectedOptionIds);
+
+  if (!canRecord && !showWorldControls) {
+    return <div data-testid="lens-observe-task" />;
+  }
 
   return (
     <div data-testid="lens-observe-task">
       <Card className="space-y-4 p-4">
-        <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={onPlayDemo} data-testid="lens-play-demo">
-            {LENS_COPY.playDemo}
-          </Button>
-          <Button variant="secondary" onClick={onMoveScreen} data-testid="lens-move-screen">
-            {screenAtImagePlane ? LENS_COPY.screenOffImage : LENS_COPY.screenAtImage}
-          </Button>
-        </div>
+        {showWorldControls ? (
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={onPlayDemo} data-testid="lens-play-demo">
+              {LENS_COPY.playDemo}
+            </Button>
+            <Button variant="secondary" onClick={onMoveScreen} data-testid="lens-move-screen">
+              {screenAtImagePlane ? LENS_COPY.screenOffImage : LENS_COPY.screenAtImage}
+            </Button>
+          </div>
+        ) : null}
         {canRecord ? (
           <fieldset className="space-y-3">
-            <legend className="text-sm font-medium text-[var(--ink)]">
-              {LENS_COPY.observePrompt}
-            </legend>
+            <legend className="sr-only">{LENS_COPY.observePrompt}</legend>
             {LENS_OBSERVE_OPTIONS.map((option) => (
               <label
                 key={option.id}
@@ -67,11 +73,11 @@ export function LensObserveTask({
               </label>
             ))}
           </fieldset>
-        ) : (
+        ) : showWorldControls ? (
           <p className="text-sm text-[var(--ink-muted)]" data-testid="lens-observe-wait-record">
             先动手看一看。动过以后，再勾你确实看见的。
           </p>
-        )}
+        ) : null}
         {needMore ? (
           <ValidationMessage kind="missing" testId="lens-observe-need-more">
             {needMoreMessage ?? LENS_COPY.observeNeedRecord}

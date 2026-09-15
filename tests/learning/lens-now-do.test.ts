@@ -31,10 +31,12 @@ describe("Scene 07 experiment current action", () => {
       const intervene = lensExperimentCurrentAction(id, "intervene");
       expect(intervene.kicker).toContain(`第 ${index + 1} / 4 次`);
       expect(intervene.nowDo).toBe(expectedNowDo[id]);
-      expect(intervene.nextHint).toBeTruthy();
 
       const record = lensExperimentCurrentAction(id, "record");
-      expect(record.nowDo).toContain("记下你看见的");
+      expect(record.nowDo).toContain("你观察到了什么");
+      if (id !== LENS_EXPERIMENT_D) {
+        expect(lensExperimentCurrentAction(id, "inspect").nowDo).toContain("移动光屏");
+      }
       expect(lensExperimentCurrentAction(id, "next").nowDo).toBe("开始下一次");
     });
   });
@@ -58,6 +60,20 @@ describe("Scene 07 experiment current action", () => {
         comparisonSaved: false,
         reflectionSaved: false,
         awaitingNext: false,
+        needsInspect: true,
+        screenInspected: false,
+      }),
+    ).toBe("inspect");
+    expect(
+      lensExperimentMoment({
+        predictionLocked: true,
+        interventionDone: true,
+        observedSaved: false,
+        comparisonSaved: false,
+        reflectionSaved: false,
+        awaitingNext: false,
+        needsInspect: true,
+        screenInspected: true,
       }),
     ).toBe("record");
   });

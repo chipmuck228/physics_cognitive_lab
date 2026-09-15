@@ -72,7 +72,15 @@ afterEach(() => {
   localStorage.clear();
 });
 
+async function inspectScreenIfNeeded(user: ReturnType<typeof userEvent.setup>) {
+  const look = screen.queryByTestId("lens-experiment-look-screen");
+  if (look) {
+    await user.click(look);
+  }
+}
+
 async function recordObservedAndCompare(user: ReturnType<typeof userEvent.setup>) {
+  await inspectScreenIfNeeded(user);
   await user.click(screen.getByRole("radio", { name: /光屏接到清晰像/ }));
   await user.click(screen.getByRole("radio", { name: /看见的像更大/ }));
   await user.click(screen.getByTestId("lens-save-observed"));
@@ -137,7 +145,7 @@ describe("Scene 07 enabled-action contract", () => {
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).experimentEvidence[0]?.sufficient).toBe(true);
     expect(screen.getByTestId("lens-trial-complete")).toHaveTextContent("第 1 次验证完成");
     await user.click(screen.getByTestId("lens-start-next-trial"));
-    expect(screen.getByText(/物体正好放在焦点上/)).toBeInTheDocument();
+    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("物体正好放在焦点上");
   });
 
   it("help does not change the reflection draft used by submit", async () => {
@@ -170,6 +178,7 @@ describe("Scene 07 enabled-action contract", () => {
     expect(screen.getByTestId("lens-review-banner")).toBeInTheDocument();
     expect(screen.queryByTestId("lens-save-observed")).not.toBeInTheDocument();
     await user.click(screen.getByTestId("lens-return-progress"));
+    await inspectScreenIfNeeded(user);
     expect(screen.getByTestId("lens-save-observed")).toBeEnabled();
     await user.click(screen.getByTestId("lens-save-observed"));
     expect(screen.getByTestId("lens-action-response")).toHaveAttribute(
@@ -191,6 +200,7 @@ describe("Scene 07 enabled-action contract", () => {
       }),
     });
     render(<ConvexLensOpticalBenchLab />);
+    await inspectScreenIfNeeded(user);
     await user.click(screen.getByTestId("lens-save-observed"));
     await user.click(screen.getByTestId("lens-save-comparison"));
     expect(screen.getByTestId(`lens-reflection-${LENS_EXPERIMENT_A}`)).toHaveValue(
@@ -204,6 +214,7 @@ describe("Scene 07 enabled-action contract", () => {
     const user = userEvent.setup();
     replaceSession(openTrialSession());
     render(<ConvexLensOpticalBenchLab />);
+    await inspectScreenIfNeeded(user);
     await user.click(screen.getByRole("radio", { name: /光屏接到清晰像/ }));
     await user.click(screen.getByRole("radio", { name: /看见的像更大/ }));
     await user.click(screen.getByTestId("lens-save-observed"));
@@ -220,7 +231,7 @@ describe("Scene 07 enabled-action contract", () => {
       stage: LearningStage.OBSERVE,
     });
     render(<ConvexLensOpticalBenchLab />);
-    expect(screen.getByTestId("lens-observe-wait-record")).toBeInTheDocument();
+    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("点物体位置，或移动一次光屏");
     expect(screen.queryByRole("button", { name: LENS_COPY.observeSubmit })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(LENS_OBSERVE_OPTIONS[0].label)).not.toBeInTheDocument();
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.OBSERVE);
@@ -234,7 +245,7 @@ describe("Scene 07 enabled-action contract", () => {
     });
     render(<ConvexLensOpticalBenchLab />);
     await user.click(screen.getByTestId("lens-play-demo"));
-    expect(screen.getByTestId("lens-observe-wait-record")).toBeInTheDocument();
+    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("点物体位置，或移动一次光屏");
     expect(screen.queryByRole("button", { name: LENS_COPY.observeSubmit })).not.toBeInTheDocument();
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.OBSERVE);
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).sceneData.watchedObserveDemo).toBe(true);
@@ -265,8 +276,8 @@ describe("Scene 07 enabled-action contract", () => {
     first.unmount();
     render(<ConvexLensOpticalBenchLab />);
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.DESCRIBE);
-    expect(screen.getByTestId("lens-task-context")).toHaveTextContent(
-      "你刚在光具座上动过物体或光屏",
+    expect(screen.getByTestId("lens-now-do")).toHaveTextContent(
+      "看着左边的实验，说说你实际看到了什么",
     );
   });
 

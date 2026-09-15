@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -21,9 +21,10 @@ describe("Scene 07 learner-validation repair 1", () => {
       stage: LearningStage.OBSERVE,
     });
     render(<ConvexLensOpticalBenchLab />);
-    expect(screen.getByTestId("lens-vocab-F")).toHaveTextContent(LENS_VOCAB.F.body);
-    expect(screen.getByTestId("lens-vocab-screen")).toHaveTextContent(LENS_VOCAB.screen.body);
-    expect(screen.getByTestId("lens-vocab-image")).toHaveTextContent(LENS_VOCAB.image.body);
+    const world = screen.getByTestId("learner-workspace-world");
+    expect(within(world).getByTestId("lens-vocab-F")).toHaveTextContent(LENS_VOCAB.F.body);
+    expect(within(world).getByTestId("lens-vocab-screen")).toHaveTextContent(LENS_VOCAB.screen.body);
+    expect(within(world).getByTestId("lens-vocab-image")).toHaveTextContent(LENS_VOCAB.image.body);
     expect(screen.getByTestId("lens-now-do")).toHaveTextContent("点物体位置，或移动一次光屏");
     expect(screen.getByTestId("lens-vocab-F")).not.toHaveTextContent("实像");
   });
@@ -39,7 +40,7 @@ describe("Scene 07 learner-validation repair 1", () => {
     );
     expect(screen.getByRole("button", { name: LENS_COPY.predictSubmit })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /提交答案|正确答案|答题/ })).not.toBeInTheDocument();
-    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("现在不用答对");
+    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("你觉得会看到什么");
   });
 
   it("lets 我还不知道为什么 commit a wrong prediction into EXPERIMENT", async () => {
@@ -55,7 +56,7 @@ describe("Scene 07 learner-validation repair 1", () => {
     await user.click(screen.getByRole("button", { name: LENS_COPY.predictSubmit }));
     expect(screen.getByTestId("lens-now-do")).toHaveTextContent("把物体移到 F 和 2F 之间");
     expect(screen.getByTestId("lens-trial-progress")).toHaveTextContent("第 1 / 4 次");
-    expect(screen.getByTestId("lens-next-action")).toBeInTheDocument();
+    expect(screen.getByTestId("lens-experiment-task")).toHaveAttribute("data-phase", "intervene");
   });
 
   it("changes the current action after the required object move and shows a consequence", async () => {
@@ -86,8 +87,9 @@ describe("Scene 07 learner-validation repair 1", () => {
       "data-object-station",
       before,
     );
-    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("记下你看见的");
-    expect(screen.getByTestId("lens-experiment-completion")).toBeInTheDocument();
+    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("移动光屏，看看哪里最清楚");
     expect(screen.getByTestId("lens-experiment-look-screen")).toBeInTheDocument();
+    await user.click(screen.getByTestId("lens-experiment-look-screen"));
+    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("你观察到了什么");
   });
 });
