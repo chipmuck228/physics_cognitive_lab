@@ -14,6 +14,7 @@ interface LensObserveTaskProps {
   needMoreMessage?: string;
   saved: boolean;
   reviewOnly?: boolean;
+  canRecord?: boolean;
 }
 
 export function LensObserveTask({
@@ -27,6 +28,7 @@ export function LensObserveTask({
   needMoreMessage,
   saved,
   reviewOnly = false,
+  canRecord = true,
 }: LensObserveTaskProps) {
   const selected = new Set(selectedOptionIds);
 
@@ -41,29 +43,35 @@ export function LensObserveTask({
             {screenAtImagePlane ? LENS_COPY.screenOffImage : LENS_COPY.screenAtImage}
           </Button>
         </div>
-        <fieldset className="space-y-3">
-          <legend className="text-sm font-medium text-[var(--ink)]">
-            {LENS_COPY.observePrompt}
-          </legend>
-          {LENS_OBSERVE_OPTIONS.map((option) => (
-            <label
-              key={option.id}
-              className={`flex items-start gap-3 text-sm leading-relaxed text-[var(--ink)] ${
-                reviewOnly ? "cursor-default opacity-70" : "cursor-pointer"
-              }`}
-            >
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={selected.has(option.id)}
-                onChange={() => onToggle(option.id)}
-                value={option.id}
-                disabled={reviewOnly}
-              />
-              <span>{option.label}</span>
-            </label>
-          ))}
-        </fieldset>
+        {canRecord ? (
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-medium text-[var(--ink)]">
+              {LENS_COPY.observePrompt}
+            </legend>
+            {LENS_OBSERVE_OPTIONS.map((option) => (
+              <label
+                key={option.id}
+                className={`flex items-start gap-3 text-sm leading-relaxed text-[var(--ink)] ${
+                  reviewOnly ? "cursor-default opacity-70" : "cursor-pointer"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={selected.has(option.id)}
+                  onChange={() => onToggle(option.id)}
+                  value={option.id}
+                  disabled={reviewOnly}
+                />
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </fieldset>
+        ) : (
+          <p className="text-sm text-[var(--ink-muted)]" data-testid="lens-observe-wait-record">
+            先动手看一看。动过以后，再勾你确实看见的。
+          </p>
+        )}
         {needMore ? (
           <ValidationMessage kind="missing" testId="lens-observe-need-more">
             {needMoreMessage ?? LENS_COPY.observeNeedRecord}
@@ -72,7 +80,7 @@ export function LensObserveTask({
         {saved && !needMore ? (
           <ValidationMessage kind="info">已经记下你看见的。</ValidationMessage>
         ) : null}
-        {reviewOnly ? null : (
+        {reviewOnly || !canRecord ? null : (
           <div className="flex justify-end">
             <Button onClick={onSubmit}>{LENS_COPY.observeSubmit}</Button>
           </div>

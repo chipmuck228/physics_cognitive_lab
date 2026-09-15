@@ -31,6 +31,8 @@ export interface LensTrialSpec {
   >;
   required: LensTrialLearnerAction;
   instruction: string;
+  nowDo: string;
+  nextAfterIntervene: string;
   whatChanges: string;
   whatStays: string;
   wrongActionReason: string;
@@ -47,10 +49,11 @@ export const LENS_TRIAL_SPECS: Record<LensExperimentId, LensTrialSpec> = {
       lensPartiallyCovered: false,
     },
     required: { kind: "move-object", station: "between-f-and-2f" },
-    instruction:
-      "你的预测已经锁定。现在把物体从 2F 外移到 F 和 2F 之间，看看实际发生什么。",
+    instruction: "把物体从 2F 外移到 F 和 2F 之间。",
+    nowDo: "把物体移到 F 和 2F 之间",
+    nextAfterIntervene: "移动光屏，看看能不能找到清楚的图样。",
     whatChanges: "物体位置：从 2F 外到 F 和 2F 之间",
-    whatStays: "同一块透镜，光屏先不要动",
+    whatStays: "同一块透镜",
     wrongActionReason: "这次要把物体从 2F 外移到 F 和 2F 之间，不是做别的改变。",
   },
   [LENS_EXPERIMENT_B]: {
@@ -63,8 +66,9 @@ export const LENS_TRIAL_SPECS: Record<LensExperimentId, LensTrialSpec> = {
       lensPartiallyCovered: false,
     },
     required: { kind: "move-object", station: "at-f" },
-    instruction:
-      "你的预测已经锁定。现在把物体放到焦点上，看看光屏怎么移动能不能接到清晰像。",
+    instruction: "把物体放到焦点上。",
+    nowDo: "把物体放到焦点上",
+    nextAfterIntervene: "移动光屏，看看能不能找到清楚的图样。",
     whatChanges: "物体位置：放到焦点上",
     whatStays: "同一块透镜，不要改成别的站点",
     wrongActionReason: "这次要把物体放到焦点上。",
@@ -79,7 +83,9 @@ export const LENS_TRIAL_SPECS: Record<LensExperimentId, LensTrialSpec> = {
       lensPartiallyCovered: false,
     },
     required: { kind: "move-object", station: "inside-f" },
-    instruction: "你的预测已经锁定。现在把物体放到焦点以内，看看光屏还能不能接到像。",
+    instruction: "把物体放到焦点以内。",
+    nowDo: "把物体放到焦点以内",
+    nextAfterIntervene: "移动光屏，看看能不能找到清楚的图样。",
     whatChanges: "物体位置：放到焦点以内",
     whatStays: "同一块透镜",
     wrongActionReason: "这次要把物体放到焦点以内。",
@@ -94,8 +100,9 @@ export const LENS_TRIAL_SPECS: Record<LensExperimentId, LensTrialSpec> = {
       lensPartiallyCovered: false,
     },
     required: { kind: "cover-lens" },
-    instruction:
-      "你的预测已经锁定。光具座已经先放到能接到实像的位置。现在请遮住透镜一部分，看像会不会少掉一半。",
+    instruction: "遮住透镜一部分。物体和光屏先不要动。",
+    nowDo: "遮住透镜一部分",
+    nextAfterIntervene: "看清楚像还在不在，然后记下。",
     whatChanges: "透镜被遮住一部分",
     whatStays: "物体和光屏先不要动",
     wrongActionReason: "这次不要换物体位置，只要遮住透镜一部分。",

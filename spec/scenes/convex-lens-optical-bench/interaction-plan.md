@@ -278,10 +278,10 @@ Protected future structure
   Official outcome, experiment comparison chrome, rays.
 
 Student action  
-  选出预计结果，写理由，锁定。
+  选出一个可能发生的情况。理由可以是“我还不知道为什么”或“我只是先猜的”；有想法时才写一句。现在不用答对。
 
 Primary CTA meaning  
-  Scene action evaluates sufficiency, writes the locked prediction, and may advance from PREDICT.
+  Scene action evaluates sufficiency, writes the committed prediction, and may advance from PREDICT.
 
 Response type  
   committed / missing / advanced
@@ -290,22 +290,26 @@ Draft ownership
   persisted-key `predictDraft`
 
 Evaluator  
-  `evaluateLensPrediction`
+  `evaluateLensPrediction`  
+  Honest no-reason labels (`我还不知道为什么` / `我只是先猜的`) are sufficient with an outcome. They are not causal evidence and do not weaken later EXPLAIN / MODEL.
 
 Feedback mapping  
-  empty outcome or reason → missing
+  empty outcome → missing  
+  has-idea without authored sentence → missing  
+  honest unknown / guess-only → may commit
 
 Help intents  
   what-now, what-compare, how-reason
 
 Revisit behavior  
-  Show locked prediction. No re-commit.
+  Show committed prediction. No re-commit.
 
 Cognitive trace output  
   我的预测
 
 Progression rule  
-  first committed prediction for experiment A → existing advance
+  first committed prediction for experiment A → existing advance  
+  A wrong prediction remains a valid learning state.
 
 Protected answer / leak boundary  
   Do not reveal the official outcome.

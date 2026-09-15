@@ -128,6 +128,7 @@ describe("Scene 07 learner UX chrome", () => {
     expect(screen.getByTestId("lens-task-action")).toHaveTextContent(
       LENS_TASK_FRAMES[LearningStage.OBSERVE]!.action,
     );
+    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("点物体位置，或移动一次光屏");
     expect(screen.getByTestId("lens-help-panel")).toBeInTheDocument();
   });
 
@@ -235,6 +236,7 @@ describe("Scene 07 learner UX chrome", () => {
       stage: LearningStage.OBSERVE,
     });
     render(<ConvexLensOpticalBenchLab />);
+    await user.click(screen.getByTestId("lens-move-screen"));
     const option = screen.getByLabelText(LENS_OBSERVE_OPTIONS[0]!.label);
     await user.click(option);
     expect(option).toBeChecked();

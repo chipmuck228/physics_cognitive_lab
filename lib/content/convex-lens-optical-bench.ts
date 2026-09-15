@@ -16,13 +16,15 @@ export const LENS_COPY = {
   landingCta: "开始看光具座",
   sceneTitle: "凸透镜光具座",
   startLesson: "开始观察",
+  nowDoLabel: "现在要做",
+  nextDoLabel: "接下来",
   observeCaption: "先点物体相对 F / 2F 的位置，再移动光屏，看这两次分别发生了什么。",
   playDemo: "换一个物体位置看一看",
   moveScreen: "移动光屏",
-  screenAtImage: "光屏放到像的位置",
-  screenOffImage: "光屏离开像的位置",
+  screenAtImage: "把光屏移近像的位置",
+  screenOffImage: "把光屏移开一点",
   observePrompt: "动过之后，你注意到了什么？只勾你确实看见的。",
-  observeSubmit: "提交观察",
+  observeSubmit: "记下我看见的",
   observeNeedInteraction: "先换一个物体位置，或移动一次光屏，看光屏上有什么变化。",
   observeNeedRecord: "你已经动过光具座。把你确实看见的变化勾下来。",
   observeNeedMore: "你已经动过光具座。把你确实看见的变化勾下来。",
@@ -33,15 +35,23 @@ export const LENS_COPY = {
   describeQuestion: "再用一句话写下来。不要只写“变了”。",
   describeSubmit: "记下我的说法",
   describeNeedStructure: "先对着光具座回答三个问题，再用自己的话写一句。",
-  predictInstruction: "先写下你预计会看见什么，再去动手。",
-  reasonLabel: "为什么这样想？",
-  reasonPlaceholder: "先说物体往哪边移，你预计光屏上会怎样。",
-  predictSubmit: "锁定预测",
-  predictNeedBoth: "先选你预计会看见什么，再写理由。",
-  trialPredictFirst: "先锁定这一次的预测，再去光具座上动手。",
-  predictLocked: "你已经锁定预测",
+  predictInstruction: "先猜你会看见什么，再去动手。",
+  predictNotExam:
+    "这里不是要你现在答对。先选一个你觉得可能发生的情况，下一步我们会真的试试看。",
+  reasonAvailability: "你现在有一个理由吗？",
+  reasonHasIdea: "我有一个想法",
+  reasonGuessOnly: "我只是先猜的",
+  reasonUnknown: "我还不知道为什么",
+  reasonLabel: "如果你有想法，用一句话说。",
+  reasonPlaceholder: "可以说你为什么这样猜。没有也没关系。",
+  predictSubmit: "记下我的猜想",
+  predictNeedBoth: "先选一个你觉得可能发生的情况。",
+  predictNeedStance: "先说你现在有没有一个理由。",
+  predictNeedIdeaText: "你选了有一个想法。先写一句，或改成“我还不知道为什么”。",
+  trialPredictFirst: "先记下这一次的猜想，再去光具座上动手。",
+  predictLocked: "你已经记下猜想",
   runExperiment: "开始验证",
-  runNeedPrediction: "先锁定预测，才能开始动手验证。",
+  runNeedPrediction: "先记下猜想，才能开始动手。",
   observeAfterIntervention: "刚才发生了什么？把你实际看到的记下来。",
   observeNeedIntervention: "还没有在光具座上完成这次要求的改变。",
   compareNeedObserved: "还没有记录实际结果。",
@@ -65,8 +75,8 @@ export const LENS_COPY = {
   observedSaved: "已经记下你看见的结果。",
   comparisonNeedSelect: "先选出和预测哪里相同或不同。",
   comparisonSaved: "已经记下这次对照。",
-  predictNeedOwnWords: "先选你预计会看见什么，再用自己的话写理由（至少两个中文字）。",
-  predictSaved: "已经锁定这次预测。",
+  predictNeedOwnWords: "先选一个你觉得可能发生的情况。没有理由也可以先猜。",
+  predictSaved: "已经记下这次猜想。",
   reviewCannotEdit: "回看时不能再改已经记下的内容。",
   explainMeeting: "你已经看见过：有的位置光屏能接到清楚的像，有的位置接不到。该怎么说明光线怎样相遇？",
   explainScreen: "光屏接到像，和透过透镜看见像，是同一回事吗？",
@@ -195,7 +205,7 @@ export const LENS_TASK_FRAMES: Partial<
     context: "光具座上，物体可以换位置，光屏也可以左右移。",
     goal: "先看见变化，不解释五种成像。",
     focus: "先看光屏上有没有变化，再看透过透镜能不能看见像。",
-    action: "先换物体位置或移动光屏，看光屏上有什么变化，再勾你看见的。",
+    action: "先动手，再勾你确实看见的。",
   },
   [LearningStage.DESCRIBE]: {
     context: "你刚在光具座上动过物体或光屏。",
@@ -204,16 +214,16 @@ export const LENS_TASK_FRAMES: Partial<
     action: "用自己的话写一句，不要只写“变了”。",
   },
   [LearningStage.PREDICT]: {
-    context: "动手之前，先留下你的猜测。",
+    context: "动手之前，先留下你的猜测。现在不用答对。",
     goal: "先猜物体换位置以后会看见什么。",
     focus: "想的是物体相对 F / 2F 换了位置以后，像或光屏会怎样。",
-    action: "选出预计结果，写理由，然后锁定。",
+    action: "选出你觉得可能发生的情况。没有理由也可以先猜。",
   },
   [LearningStage.EXPERIMENT]: {
-    context: "你已经有一个锁定的预测。",
+    context: "你已经有一个猜想。现在去光具座上看看实际怎样。",
     goal: "用一次真实改变，对照你刚才的猜测。",
     focus: "看清楚这次改的是物体位置、光屏，还是透镜被遮住。",
-    action: "按 预测 → 动手 → 看见 → 对照 → 想法 走完这一轮。",
+    action: "先完成眼前这一步，不要一次看完全页。",
   },
   [LearningStage.EXPLAIN]: {
     context: "你已经看见过几种不同的光屏结果：有的位置屏接得到，有的接不到。",
@@ -258,6 +268,27 @@ export const LENS_COMPARE_OPTIONS = [
   { value: "same", label: "基本一样" },
   { value: "different", label: "不一样" },
   { value: "partial", label: "部分一样" },
+] as const;
+
+export const LENS_VOCAB = {
+  F: {
+    term: "F",
+    body: "F 表示这个凸透镜的焦点。现在先不用背定义，只要先认得这个位置。",
+  },
+  screen: {
+    term: "光屏",
+    body: "这块白色板叫光屏。实验里可以移动它，看看哪里能出现清楚的图样。",
+  },
+  image: {
+    term: "像",
+    body: "这里说的“像”，就是通过透镜后看到的物体图样。",
+  },
+} as const;
+
+export const LENS_PREDICT_REASON_STANCES = [
+  { value: "has-idea", label: "我有一个想法" },
+  { value: "guess-only", label: "我只是先猜的" },
+  { value: "unknown", label: "我还不知道为什么" },
 ] as const;
 
 export const LENS_PREDICT_OUTCOMES = [
@@ -430,28 +461,28 @@ export const LENS_AI_OFF_COPY = {
 
 export function lensExperimentTitle(id: LensExperimentId): string {
   if (id === LENS_EXPERIMENT_A) {
-    return "比较 2F 两侧的实像";
+    return "物体换到 F 和 2F 之间";
   }
   if (id === LENS_EXPERIMENT_B) {
-    return "物体正好在焦点上";
+    return "物体放到焦点上";
   }
   if (id === LENS_EXPERIMENT_C) {
-    return "物体在焦点以内";
+    return "物体放到焦点以内";
   }
   return "遮住透镜一部分";
 }
 
 export function lensPredictQuestion(id: LensExperimentId): string {
   if (id === LENS_EXPERIMENT_A) {
-    return "同一块透镜，物体从 2F 以外移到 F 与 2F 之间。你预计像和光屏会怎样？";
+    return "同一块透镜，物体从 2F 以外移到 F 与 2F 之间。你觉得像和光屏会怎样？";
   }
   if (id === LENS_EXPERIMENT_B) {
-    return "物体正好放在焦点上。折射后的光线还会在有限位置会聚吗？光屏怎么移动，你预计能不能接到清晰像？";
+    return "物体正好放在焦点上。你觉得光屏还能不能接到清楚的图样？";
   }
   if (id === LENS_EXPERIMENT_C) {
-    return "物体放到焦点以内。光屏还能不能接到像？透过透镜看会怎样？";
+    return "物体放到焦点以内。你觉得光屏还能不能接到像？";
   }
-  return "光屏已经接到清晰实像。遮住透镜上半部分，像会少掉一半吗？";
+  return "光屏已经接到清楚的图样。遮住透镜一部分，你觉得会看见什么？";
 }
 
 export function lensChangedVariable(id: LensExperimentId): string {

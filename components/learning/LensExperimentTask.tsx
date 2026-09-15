@@ -35,6 +35,8 @@ interface LensExperimentTaskProps {
   reflection: string;
   reflectionPrompt: string;
   onCover: () => void;
+  onLookScreen?: () => void;
+  screenAtImagePlane?: boolean;
   onStartNext?: () => void;
   onObservedChange: (next: LensObservedResult) => void;
   onSaveObserved: () => void;
@@ -88,6 +90,8 @@ export function LensExperimentTask({
   reflection,
   reflectionPrompt,
   onCover,
+  onLookScreen,
+  screenAtImagePlane = true,
   onStartNext,
   onObservedChange,
   onSaveObserved,
@@ -125,114 +129,134 @@ export function LensExperimentTask({
     );
   }
 
+  const phase = !predictionLocked
+    ? "predict"
+    : !interventionDone
+      ? "intervene"
+      : !observedSaved
+        ? "record"
+        : !comparisonSaved
+          ? "compare"
+          : "reflect";
+
   return (
     <div
       className="space-y-4"
       data-testid="lens-experiment-task"
       data-experiment={experimentId}
       data-trial-index={trialIndex}
+      data-phase={phase}
     >
       <Card className="space-y-5 p-4">
-        <p className="text-sm text-[var(--ink-muted)]" data-testid="lens-trial-progress">
-          {`第 ${trialIndex} / 4 次验证`}
-        </p>
-        <h3 className="font-serif text-xl">{title}</h3>
+        <p className="font-serif text-lg text-[var(--ink-muted)]">{title}</p>
         <div
           className="flex flex-wrap gap-2"
           data-testid="lens-experiment-status"
         >
-          <Status done={predictionLocked} label="预测" />
+          <Status done={predictionLocked} label="猜想" />
           <Status done={interventionDone} label="动手" />
           <Status done={observedSaved} label="看见" />
           <Status done={comparisonSaved} label="对照" />
           <Status done={reflectionSaved} label="想法" />
         </div>
 
-        <section className="space-y-2">
-          <p className="text-sm font-medium">① 我的预测</p>
+        {committedPrediction ? (
           <p className="text-sm text-[var(--ink-muted)]" data-testid="lens-experiment-prediction">
-            {committedPrediction ?? "还没有锁定预测。"}
+            {`你刚才猜的：${committedPrediction}`}
           </p>
-        </section>
+        ) : (
+          <ValidationMessage kind="missing">{LENS_COPY.runNeedPrediction}</ValidationMessage>
+        )}
 
-        {predictionLocked ? (
+        {phase === "intervene" ? (
           <section className="space-y-2">
-            <p className="text-sm font-medium">② 现在要你改什么</p>
             <p className="text-sm" data-testid="lens-intervention-prompt">
               {instruction}
             </p>
             <p className="text-sm text-[var(--ink-muted)]" data-testid="lens-experiment-changed">
               {`会变的：${whatChanges}。不变的：${whatStays}。`}
             </p>
-            {!interventionDone && !reviewOnly && capability === "cover-lens" ? (
+            {!reviewOnly && capability === "cover-lens" ? (
               <div className="flex justify-end">
                 <Button onClick={onCover} data-testid="lens-cover-lens">
                   {LENS_COPY.coverLens}
                 </Button>
               </div>
             ) : null}
-            {interventionDone ? (
-              <ValidationMessage kind="info">已经在光具座上完成这次改变。</ValidationMessage>
-            ) : null}
           </section>
-        ) : (
-          <ValidationMessage kind="missing">{LENS_COPY.runNeedPrediction}</ValidationMessage>
-        )}
+        ) : null}
 
-        {interventionDone ? (
+        {phase === "record" || phase === "compare" || phase === "reflect" ? (
           <fieldset disabled={reviewOnly} className="space-y-4 border-0 p-0">
-            <section className="space-y-3">
-              <p className="text-sm font-medium">③ 实际看到什么</p>
-              <p className="text-sm text-[var(--ink-muted)]">{LENS_COPY.observeAfterIntervention}</p>
-              <QuestionGroup
-                id={`lens-observed-screen-${experimentId}`}
-                question="光屏上怎样了？"
-                value={observed.screen}
-                onChange={(screen) =>
-                  onObservedChange({ ...observed, screen: screen as LensObservedResult["screen"] })
-                }
-                options={[...LENS_OBSERVED_FIELDS.screen]}
-              />
-              <QuestionGroup
-                id={`lens-observed-size-${experimentId}`}
-                question="像本身怎样了？"
-                value={observed.sizeOrCover}
-                onChange={(sizeOrCover) =>
-                  onObservedChange({
-                    ...observed,
-                    sizeOrCover: sizeOrCover as LensObservedResult["sizeOrCover"],
-                  })
-                }
-                options={[...LENS_OBSERVED_FIELDS.sizeOrCover]}
-              />
-              {observedNeedMore ? (
-                <ValidationMessage kind="missing">先记下光屏和像分别怎样了。</ValidationMessage>
-              ) : null}
-              {reviewOnly ? null : (
-                <div className="flex flex-col items-end gap-2">
-                  {!canSaveObserved && observedDisabledReason ? (
-                    <ValidationMessage kind="info">{observedDisabledReason}</ValidationMessage>
-                  ) : null}
-                  <Button
-                    variant="secondary"
-                    onClick={onSaveObserved}
-                    disabled={!canSaveObserved}
-                    data-testid="lens-save-observed"
-                  >
-                    {LENS_COPY.observeSubmitExperiment}
-                  </Button>
-                </div>
-              )}
-            </section>
+            {interventionDone ? (
+              <div data-testid="lens-experiment-completion">
+                <ValidationMessage kind="info">已经在光具座上完成这次改变。</ValidationMessage>
+              </div>
+            ) : null}
 
-            {observedSaved ? (
+            {phase === "record" ? (
+              <section className="space-y-3">
+                <p className="text-sm text-[var(--ink-muted)]">{LENS_COPY.observeAfterIntervention}</p>
+                {onLookScreen && capability === "move-object" && !reviewOnly ? (
+                  <div className="flex justify-end">
+                    <Button
+                      variant="secondary"
+                      onClick={onLookScreen}
+                      data-testid="lens-experiment-look-screen"
+                    >
+                      {screenAtImagePlane ? LENS_COPY.screenOffImage : LENS_COPY.screenAtImage}
+                    </Button>
+                  </div>
+                ) : null}
+                <QuestionGroup
+                  id={`lens-observed-screen-${experimentId}`}
+                  question="光屏上怎样了？"
+                  value={observed.screen}
+                  onChange={(screen) =>
+                    onObservedChange({ ...observed, screen: screen as LensObservedResult["screen"] })
+                  }
+                  options={[...LENS_OBSERVED_FIELDS.screen]}
+                />
+                <QuestionGroup
+                  id={`lens-observed-size-${experimentId}`}
+                  question="像本身怎样了？"
+                  value={observed.sizeOrCover}
+                  onChange={(sizeOrCover) =>
+                    onObservedChange({
+                      ...observed,
+                      sizeOrCover: sizeOrCover as LensObservedResult["sizeOrCover"],
+                    })
+                  }
+                  options={[...LENS_OBSERVED_FIELDS.sizeOrCover]}
+                />
+                {observedNeedMore ? (
+                  <ValidationMessage kind="missing">先记下光屏和像分别怎样了。</ValidationMessage>
+                ) : null}
+                {reviewOnly ? null : (
+                  <div className="flex flex-col items-end gap-2">
+                    {!canSaveObserved && observedDisabledReason ? (
+                      <ValidationMessage kind="info">{observedDisabledReason}</ValidationMessage>
+                    ) : null}
+                    <Button
+                      variant="secondary"
+                      onClick={onSaveObserved}
+                      disabled={!canSaveObserved}
+                      data-testid="lens-save-observed"
+                    >
+                      {LENS_COPY.observeSubmitExperiment}
+                    </Button>
+                  </div>
+                )}
+              </section>
+            ) : null}
+
+            {phase === "compare" ? (
               <section className="space-y-3" data-testid="lens-compare-surface">
-                <p className="text-sm font-medium">④ 对照：我的预测 vs 实际看到</p>
                 <div className="grid gap-3 rounded-2xl border border-[var(--line)] p-3 sm:grid-cols-2">
                   <div>
                     <p className="text-xs text-[var(--ink-muted)]">{LENS_COPY.compareMine}</p>
                     <p className="text-sm" data-testid="lens-compare-prediction">
-                      {committedPrediction ?? "还没有锁定预测。"}
+                      {committedPrediction ?? "还没有记下猜想。"}
                     </p>
                   </div>
                   <div>
@@ -265,13 +289,10 @@ export function LensExperimentTask({
                   </div>
                 )}
               </section>
-            ) : (
-              <ValidationMessage kind="info">{LENS_COPY.compareNeedObserved}</ValidationMessage>
-            )}
+            ) : null}
 
-            {observedSaved && comparisonSaved ? (
+            {phase === "reflect" ? (
               <section className="space-y-3">
-                <p className="text-sm font-medium">⑤ 我现在怎么想</p>
                 <label className="block space-y-2">
                   <span className="text-sm font-medium">{reflectionPrompt}</span>
                   <textarea
@@ -303,12 +324,8 @@ export function LensExperimentTask({
                   </div>
                 )}
               </section>
-            ) : observedSaved ? (
-              <ValidationMessage kind="info">{LENS_COPY.reflectionNeedCompare}</ValidationMessage>
             ) : null}
           </fieldset>
-        ) : predictionLocked ? (
-          <ValidationMessage kind="info">{LENS_COPY.observeNeedIntervention}</ValidationMessage>
         ) : null}
       </Card>
     </div>

@@ -27,6 +27,7 @@ import {
   completeLensModel,
   completeLensObserve,
   completeLensPredictA,
+  completeLensPredictNoviceWrongUnknown,
   completeLensProjectorTransfer,
   expectNoTutorChrome,
   fillAiOffCondition,
@@ -44,7 +45,14 @@ test.describe("Scene 07 learner-visible flow", () => {
     await openLensLab(page);
     await startLensLesson(page);
     await expect(page.getByTestId("lens-observe-task")).toBeVisible();
+    await expect(page.getByTestId("lens-now-do")).toContainText("点物体位置，或移动一次光屏");
+    await expect(page.getByTestId("lens-observe-wait-record")).toBeVisible();
     await expect(page.getByTestId("station-hit-between-f-and-2f")).toBeVisible();
+    await expect(page.getByRole("button", { name: LENS_COPY.observeSubmit })).toHaveCount(0);
+    await page.getByTestId("lens-play-demo").click();
+    await expect(page.getByTestId("lens-observe-wait-record")).toBeVisible();
+    await page.getByTestId("lens-move-screen").click();
+    await expect(page.getByTestId("lens-now-do")).toContainText("勾出你确实看见的变化");
     const required = new Set<string>(LENS_OBSERVE_REQUIRED_IDS);
     for (const option of LENS_OBSERVE_OPTIONS) {
       if (required.has(option.id)) {
@@ -53,26 +61,91 @@ test.describe("Scene 07 learner-visible flow", () => {
     }
     await page.getByRole("button", { name: LENS_COPY.observeSubmit }).click();
     await expect(
-      page.getByRole("heading", { name: lensStageHeading(LearningStage.OBSERVE) }),
-    ).toBeVisible();
-    await expect(page.getByTestId("lens-observe-need-more")).toContainText(
-      LENS_COPY.observeNeedInteraction,
-    );
-    await expect(page.getByTestId("lens-observe-need-more")).not.toContainText("勾下来");
-    await page.getByTestId("lens-play-demo").click();
-    await page.getByRole("button", { name: LENS_COPY.observeSubmit }).click();
-    await expect(
-      page.getByRole("heading", { name: lensStageHeading(LearningStage.OBSERVE) }),
-    ).toBeVisible();
-    await expect(page.getByTestId("lens-observe-need-more")).toContainText(
-      LENS_COPY.observeNeedInteraction,
-    );
-    await page.getByTestId("lens-move-screen").click();
-    await page.getByRole("button", { name: LENS_COPY.observeSubmit }).click();
-    await expect(
       page.getByRole("heading", { name: lensStageHeading(LearningStage.DESCRIBE) }),
     ).toBeVisible();
     await expect(page.getByText("你刚在光具座上动过物体或光屏")).toBeVisible();
+  });
+
+  test("a novice can ground vocabulary, guess wrongly, and finish four experiment rounds", async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+
+    await openLensLab(page);
+    await expect(page.getByTestId("lens-vocab-screen")).toBeVisible();
+    await expect(page.getByTestId("lens-vocab-screen")).toContainText("白色板");
+    await expect(page.getByTestId("lens-now-do")).toContainText("开始观察");
+    await startLensLesson(page);
+
+    await expect(page.getByTestId("lens-vocab-F")).toBeVisible();
+    await expect(page.getByTestId("lens-vocab-F")).toContainText("认得这个位置");
+    await expect(page.getByTestId("lens-vocab-screen")).toBeVisible();
+    await expect(page.getByTestId("lens-vocab-image")).toBeVisible();
+    await expect(page.getByTestId("lens-vocab-F")).not.toContainText("实像");
+    await expect(page.getByTestId("lens-vocab-image")).not.toContainText("虚像");
+    await completeLensObserve(page);
+
+    await expect(page.getByTestId("lens-now-do")).toContainText("分开说");
+    await page.getByRole("radio", { name: /左边的物体、中间的凸透镜，还有可以移动的光屏/ }).click();
+    await page.getByRole("radio", { name: /物体、F \/ 2F、像和光屏要分开认/ }).click();
+    await page.getByRole("radio", { name: /我改了物体位置或光屏位置，看见的结果跟着变/ }).click();
+    await page.getByLabel(LENS_COPY.describeQuestion).fill("物体和屏不是一个");
+    await page.getByRole("button", { name: LENS_COPY.describeSubmit }).click();
+
+    await completeLensPredictNoviceWrongUnknown(page);
+    await expect(page.getByTestId("lens-now-do")).toContainText("把物体移到 F 和 2F 之间");
+    await expect(page.getByTestId("lens-next-action")).toBeVisible();
+    await performVisibleTrialIntervention(page);
+    await expect(page.getByTestId("lens-now-do")).toContainText("记下你看见的");
+    await expect(page.getByTestId("lens-experiment-completion")).toBeVisible();
+    await page.getByTestId("lens-experiment-look-screen").click();
+    await expect(page.getByTestId("lens-action-response-message")).toContainText("光屏");
+    await page.getByRole("radio", { name: /光屏接到清晰像/ }).click();
+    await page.getByRole("radio", { name: /看见的像更大/ }).click();
+    await page.getByRole("button", { name: LENS_COPY.observeSubmitExperiment }).click();
+    await expect(page.getByTestId("lens-now-do")).toContainText("对照一下");
+    await page.getByRole("radio", { name: /不一样/ }).click();
+    await page.getByRole("button", { name: LENS_COPY.compareSubmit }).click();
+    await expect(page.getByTestId("lens-now-do")).toContainText("自己的话");
+    await page.locator("textarea").last().fill("我刚才猜错了，光屏上还是出现了清楚的图样。");
+    await page.getByRole("button", { name: LENS_COPY.reflectionSubmit }).click();
+    await expect(page.getByTestId("lens-now-do")).toContainText("开始下一次");
+    await page.getByTestId("lens-start-next-trial").click();
+
+    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 2 / 4 次");
+    await expect(page.getByTestId("lens-now-do")).toContainText("现在不用答对");
+    await completeLensExperimentCycle(page, {
+      predictOutcome: "光屏接不到清晰像",
+      reason: "我还不确定，先试试看。",
+      screen: "怎么移光屏都接不到",
+      sizeOrCover: "有限远处没有完整清晰的像",
+      comparison: "基本一样",
+      reflection: "有限远处不相交，不要把它说成又一种普通成像。",
+    });
+    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 3 / 4 次");
+    await completeLensExperimentCycle(page, {
+      predictOutcome: "光屏接不到清晰像",
+      reason: "物体在焦点以内，我预计光屏接不到。",
+      screen: "怎么移光屏都接不到",
+      sizeOrCover: "看见的像更大",
+      comparison: "基本一样",
+      reflection: "焦点以内只有反向延长线相交，光屏接不到虚像。",
+    });
+    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 4 / 4 次");
+    await completeLensExperimentCycle(page, {
+      predictOutcome: "还能接到实像，像会更大、更远",
+      reason: "我预计整幅像还在，只是可能更暗。",
+      screen: "光屏接到清晰像",
+      sizeOrCover: "整幅像还在，通常更暗",
+      comparison: "基本一样",
+      reflection: "透镜不是把像按上下拼起来的，整幅像还在。",
+    });
+
+    await expect(
+      page.getByRole("heading", { name: lensStageHeading(LearningStage.EXPLAIN) }),
+    ).toBeVisible();
+    await completeLensExplain(page);
+    await expect(page.getByTestId("lens-ray-construction")).toBeVisible();
   });
 
   test("a first-time learner can finish PREDICT through COMPLETE from visible UI only", async ({
@@ -94,8 +167,8 @@ test.describe("Scene 07 learner-visible flow", () => {
     await expect(
       page.getByRole("heading", { name: lensStageHeading(LearningStage.EXPERIMENT) }),
     ).toBeVisible();
-    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 1 / 4 次验证");
-    await expect(page.getByTestId("lens-intervention-prompt")).toContainText("预测已经锁定");
+    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 1 / 4 次");
+    await expect(page.getByTestId("lens-now-do")).toContainText("把物体移到 F 和 2F 之间");
     await expect(page.getByTestId("lens-intervention-prompt")).toContainText("F 和 2F 之间");
     await expect(page.getByRole("button", { name: LENS_COPY.runExperiment })).toHaveCount(0);
 
@@ -125,7 +198,7 @@ test.describe("Scene 07 learner-visible flow", () => {
     await expect(page.getByTestId("lens-trial-complete")).toContainText("第 1 次验证完成");
     await expect(page.getByTestId("lens-start-next-trial")).toBeVisible();
     await page.getByTestId("lens-start-next-trial").click();
-    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 2 / 4 次验证");
+    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 2 / 4 次");
     await expect(page.getByTestId("lens-predict-task")).toBeVisible();
     await expect(page.getByTestId("lens-task-context")).toContainText(LENS_COPY.trialPredictFirst);
     await expect(page.getByTestId("station-hit-at-f")).toHaveCount(0);
@@ -193,7 +266,7 @@ test.describe("Scene 07 learner-visible flow", () => {
     await page.getByTestId("lens-return-progress").click();
     await expect(page.getByTestId("lens-experiment-task")).toBeVisible();
     await expect(page.getByTestId("lens-compare-surface")).toBeVisible();
-    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 1 / 4 次验证");
+    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 1 / 4 次");
   });
 
   test("MODEL blocks an inconsistent ray and offers a repair path after final reject", async ({

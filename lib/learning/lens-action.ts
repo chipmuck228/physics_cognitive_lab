@@ -317,7 +317,7 @@ export function applyLensPredictionCommit(
   const allowed =
     session.stage === LearningStage.PREDICT || session.stage === LearningStage.EXPERIMENT;
   if (!allowed) {
-    return blocked(session, "现在不能锁定预测。");
+    return blocked(session, "现在不能记下这次猜想。");
   }
   const order = LENS_EXPERIMENT_ORDER as readonly string[];
   const index = order.indexOf(experimentId);
@@ -327,11 +327,11 @@ export function applyLensPredictionCommit(
       session.stage !== LearningStage.EXPERIMENT ||
       !hasClosedLensExperiment(session, previous)
     ) {
-      return blocked(session, "先走完上一轮验证，再锁定这一次预测。");
+      return blocked(session, "先走完上一轮验证，再记下这一次猜想。");
     }
   }
   if (experimentId !== LENS_EXPERIMENT_A && session.stage !== LearningStage.EXPERIMENT) {
-    return blocked(session, "现在不能锁定这次预测。");
+    return blocked(session, "现在不能记下这次猜想。");
   }
   if (firstCommittedLensPrediction(session.predictions, experimentId)) {
     return blocked(session, LENS_COPY.predictSaved);
@@ -340,7 +340,12 @@ export function applyLensPredictionCommit(
   if (!evaluation.sufficient) {
     return {
       session,
-      outcome: { kind: "missing", message: LENS_COPY.predictNeedOwnWords },
+      outcome: {
+        kind: "missing",
+        message: evaluation.hasOutcome
+          ? LENS_COPY.predictNeedIdeaText
+          : LENS_COPY.predictNeedBoth,
+      },
     };
   }
   const prediction: PredictionEvidence = {
@@ -1091,6 +1096,32 @@ export function applyLensScreenChange(
         },
       ),
       outcome: { kind: "physics-applied", review: true },
+    };
+  }
+  if (session.stage === LearningStage.EXPERIMENT) {
+    const experimentId = activeLensExperimentId(session);
+    if (!experimentId || !activeIncompleteLensEvidence(session, experimentId)) {
+      return blocked(session, "先完成这次要求的改变，再移动光屏看一看。");
+    }
+    return {
+      session: appendLensInteractionTrace(
+        {
+          ...session,
+          physicsState: wrapConvexLensPhysicsState(nextState),
+        },
+        {
+          action: "move-screen",
+          stage: session.stage,
+          from: String(current.screenAtImagePlane),
+          to: String(atImagePlane),
+          mode: "working",
+        },
+      ),
+      outcome: {
+        kind: "physics-applied",
+        review: false,
+        message: "已经移动光屏。看屏上有没有清楚的图样。",
+      },
     };
   }
   if (session.stage !== LearningStage.OBSERVE) {

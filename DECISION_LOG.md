@@ -797,3 +797,16 @@ Default Scene-scoped review request: `spec/prompts/review-physics-representation
 
 ---
 
+## D067 — Scene 07 formative learner-validation repair 1 (not a universal contract)
+
+**Date:** 2026-09-15
+
+**Decision:** After one Grade 9 learner with no prior convex-lens imaging instruction used Scene 07, repair ENTRY–EXPERIMENT for just-in-time vocabulary (F / 光屏 / 像), a visually dominant current action (3-second action test, Scene-07-local), PREDICT-as-guess rather than exam, and honest “I don’t know why yet” as a valid prediction state. Do not extract a universal current-action shell. Do not claim LEARNER_VALIDATED / PRODUCT_VALIDATED / MODEL_VALIDATED.
+
+**Why:** Cognitive difficulty should come from physics, not from searching the interface, guessing required words, or fabricating causal reasons the learner does not yet have.
+
+**Consequence:** Observation record: `spec/learner-validation/scene07-lv-001.md`. Physics Truth, later EXPLAIN–AI_OFF architecture, Evidence L4–L6, and other Scenes unchanged.
+
+---
+
+

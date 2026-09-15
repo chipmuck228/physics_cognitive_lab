@@ -16,6 +16,7 @@ import { LearningShell } from "@/components/learning/LearningShell";
 import { LensAiOffTask } from "@/components/learning/LensAiOffTask";
 import { LensCognitiveTrace } from "@/components/learning/LensCognitiveTrace";
 import { LensCompleteView } from "@/components/learning/LensCompleteView";
+import { LensCurrentAction } from "@/components/learning/LensCurrentAction";
 import { LensDescribeTask } from "@/components/learning/LensDescribeTask";
 import { LensExamTask } from "@/components/learning/LensExamTask";
 import { LensExperimentTask } from "@/components/learning/LensExperimentTask";
@@ -26,6 +27,7 @@ import { LensPredictTask } from "@/components/learning/LensPredictTask";
 import { LensRayConstruction } from "@/components/learning/LensRayConstruction";
 import { LensReviewBanner } from "@/components/learning/LensReviewBanner";
 import { LensTaskFrame } from "@/components/learning/LensTaskFrame";
+import { LensVocabRow } from "@/components/learning/LensTermTip";
 import { LensTransferTask } from "@/components/learning/LensTransferTask";
 import { ValidationMessage } from "@/components/learning/ValidationMessage";
 import { useConvexLensLearningSession } from "@/hooks/useConvexLensLearningSession";
@@ -51,6 +53,14 @@ import {
 } from "@/lib/learning/lens-ai-off";
 import { lensAiOffCanAdvanceToPostCheck } from "@/lib/learning/lens-ai-off-semantic";
 import { emptyLensDescribeInput } from "@/lib/learning/lens-describe";
+import {
+  lensDescribeNowDo,
+  lensEntryNowDo,
+  lensExperimentCurrentAction,
+  lensExperimentMoment,
+  lensObserveNowDo,
+  lensPredictNowDo,
+} from "@/lib/learning/lens-now-do";
 import {
   currentLensExamPatternId,
   emptyLensExamDraft,
@@ -114,6 +124,9 @@ import {
 import {
   firstCommittedLensPrediction,
   lensPredictLabel,
+  lensPredictReasonForCommit,
+  lensPredictStanceFromReason,
+  type LensPredictReasonStance,
 } from "@/lib/learning/lens-predict";
 import {
   LENS_EXAM_DRAFT_KEY,
@@ -197,7 +210,9 @@ export function ConvexLensOpticalBenchLab() {
   const [describeNeedStructure, setDescribeNeedStructure] = useState(false);
   const [predictOutcome, setPredictOutcome] = useState("");
   const [predictReason, setPredictReason] = useState("");
+  const [predictReasonStance, setPredictReasonStance] = useState<LensPredictReasonStance>("");
   const [predictNeedMore, setPredictNeedMore] = useState(false);
+  const [predictNeedMoreMessage, setPredictNeedMoreMessage] = useState("");
   const [observed, setObserved] = useState(emptyLensObservedResult());
   const [comparison, setComparison] = useState<"" | "same" | "different" | "partial">("");
   const [reflection, setReflection] = useState("");
@@ -349,17 +364,20 @@ export function ConvexLensOpticalBenchLab() {
         firstClosedLensEvidence(session, experimentId)
       : undefined;
     const predictDraft = experimentId ? lensPredictDraft(session) : null;
+    const storedReason =
+      predictDraft && predictDraft.experimentId === experimentId
+        ? predictDraft.reason
+        : (prediction?.reasoning ?? "");
+    const storedStance = lensPredictStanceFromReason(storedReason);
     setPredictOutcome(
       predictDraft && predictDraft.experimentId === experimentId
         ? predictDraft.outcome
         : (prediction?.prediction ?? ""),
     );
-    setPredictReason(
-      predictDraft && predictDraft.experimentId === experimentId
-        ? predictDraft.reason
-        : (prediction?.reasoning ?? ""),
-    );
+    setPredictReasonStance(storedStance);
+    setPredictReason(storedStance === "has-idea" ? storedReason : "");
     setPredictNeedMore(false);
+    setPredictNeedMoreMessage("");
     const formDraft = experimentId ? lensExperimentFormDraft(session) : null;
     const useForm = Boolean(formDraft && formDraft.experimentId === experimentId);
     setObserved(
@@ -447,6 +465,33 @@ export function ConvexLensOpticalBenchLab() {
   const presentAction = (outcome: LensDomainOutcome) => {
     setActionOutcome(outcome);
   };
+  const observeInteracted = revisiting || lensPerformedObserveInteraction(session);
+  const experimentMoment = displayExperiment
+    ? lensExperimentMoment({
+        predictionLocked,
+        interventionDone: hasRun,
+        observedSaved,
+        comparisonSaved,
+        reflectionSaved,
+        awaitingNext: awaitingNextTrial,
+      })
+    : null;
+  const currentAction = isEntry
+    ? { nowDo: lensEntryNowDo() }
+    : isObserve
+      ? { nowDo: lensObserveNowDo(observeInteracted) }
+      : isDescribe
+        ? { nowDo: lensDescribeNowDo() }
+        : isPredict
+          ? { nowDo: lensPredictNowDo(), nextHint: "记下猜想以后，再到光具座上动手。" }
+          : isExperiment && displayExperiment && experimentMoment
+            ? lensExperimentCurrentAction(displayExperiment, experimentMoment)
+            : null;
+  const vocabTerms = isEntry
+    ? (["screen"] as const)
+    : isObserve || isDescribe
+      ? (["F", "screen", "image"] as const)
+      : [];
   const latestModel = session.modelAttempts.at(-1);
   const transferTarget = lensTransferTarget(transferDraft.targetId);
   const transferProgress = lensTransferProgress(session.transferAttempts);
@@ -512,19 +557,7 @@ export function ConvexLensOpticalBenchLab() {
           }
           presentAction(setObjectStation(station));
         }}
-        caption={
-          isModel
-            ? LENS_COPY.modelFrozenCaption
-            : isExperiment && trial
-              ? awaitingNextTrial
-                ? undefined
-                : predictionLocked
-                  ? trial.instruction
-                  : LENS_COPY.trialPredictFirst
-              : isObserve
-                ? LENS_COPY.observeCaption
-                : undefined
-        }
+        caption={isModel ? LENS_COPY.modelFrozenCaption : undefined}
       />
     </div>
   );
@@ -533,28 +566,65 @@ export function ConvexLensOpticalBenchLab() {
     <LensPredictTask
       question={lensPredictQuestion(activeExperiment)}
       outcome={predictOutcome}
+      reasonStance={predictReasonStance}
       reason={predictReason}
       committedLabel={
         committedPrediction ? lensPredictLabel(committedPrediction.prediction) : null
       }
       locked={predictionLocked && (isExperiment || isPredict)}
       needMore={predictNeedMore}
+      needMoreMessage={predictNeedMoreMessage}
       onOutcomeChange={(value) => {
         setPredictOutcome(value);
         if (activeExperiment) {
-          savePredictDraft(activeExperiment, value, predictReason);
+          savePredictDraft(
+            activeExperiment,
+            value,
+            lensPredictReasonForCommit(predictReasonStance, predictReason),
+          );
+        }
+      }}
+      onReasonStanceChange={(value) => {
+        setPredictReasonStance(value);
+        if (value !== "has-idea") {
+          setPredictReason("");
+        }
+        if (activeExperiment) {
+          savePredictDraft(
+            activeExperiment,
+            predictOutcome,
+            lensPredictReasonForCommit(value, predictReason),
+          );
         }
       }}
       onReasonChange={(value) => {
         setPredictReason(value);
         if (activeExperiment) {
-          savePredictDraft(activeExperiment, predictOutcome, value);
+          savePredictDraft(
+            activeExperiment,
+            predictOutcome,
+            lensPredictReasonForCommit(predictReasonStance, value),
+          );
         }
       }}
       onCommit={() => {
-        const outcome = commitPrediction(activeExperiment, predictOutcome, predictReason);
+        if (!predictOutcome) {
+          setPredictNeedMore(true);
+          setPredictNeedMoreMessage(LENS_COPY.predictNeedBoth);
+          return;
+        }
+        if (!predictReasonStance) {
+          setPredictNeedMore(true);
+          setPredictNeedMoreMessage(LENS_COPY.predictNeedStance);
+          return;
+        }
+        const reason = lensPredictReasonForCommit(predictReasonStance, predictReason);
+        const outcome = commitPrediction(activeExperiment, predictOutcome, reason);
         presentAction(outcome);
         setPredictNeedMore(outcome.kind === "missing");
+        setPredictNeedMoreMessage(
+          outcome.kind === "missing" ? outcome.message ?? LENS_COPY.predictNeedBoth : "",
+        );
       }}
     />
   ) : null;
@@ -593,6 +663,7 @@ export function ConvexLensOpticalBenchLab() {
       needMoreMessage={observeNeedMoreMessage}
       saved={observeComplete}
       reviewOnly={revisiting}
+      canRecord={observeInteracted}
     />
   ) : isDescribe ? (
     <LensDescribeTask
@@ -613,14 +684,7 @@ export function ConvexLensOpticalBenchLab() {
     predictTask
   ) : isExperiment && displayExperiment && trial ? (
     <div className="space-y-6">
-      {awaitingNextTrial ? null : !predictionLocked ? (
-        <div className="space-y-3">
-          <p className="text-sm text-[var(--ink-muted)]" data-testid="lens-trial-progress">
-            {`第 ${trial.index} / 4 次验证`}
-          </p>
-          {predictTask}
-        </div>
-      ) : null}
+      {awaitingNextTrial ? null : !predictionLocked ? predictTask : null}
       {awaitingNextTrial || predictionLocked ? (
       <LensExperimentTask
         experimentId={displayExperiment}
@@ -649,6 +713,10 @@ export function ConvexLensOpticalBenchLab() {
         reflection={reflection}
         reflectionPrompt={lensReflectionPrompt(displayExperiment)}
         onCover={() => presentAction(coverLens())}
+        onLookScreen={() =>
+          presentAction(setScreenAtImagePlane(!physicsState.screenAtImagePlane))
+        }
+        screenAtImagePlane={physicsState.screenAtImagePlane}
         onStartNext={() => presentAction(acknowledgeNextTrial())}
         onObservedChange={(next) => {
           setObserved(next);
@@ -1059,6 +1127,14 @@ export function ConvexLensOpticalBenchLab() {
           }}
         />
       ) : null}
+      {currentAction ? (
+        <LensCurrentAction
+          kicker={"kicker" in currentAction ? currentAction.kicker : undefined}
+          nowDo={currentAction.nowDo}
+          nextHint={"nextHint" in currentAction ? currentAction.nextHint : undefined}
+        />
+      ) : null}
+      {vocabTerms.length > 0 ? <LensVocabRow terms={vocabTerms} /> : null}
       {frame && !isEntry && !isAiOff && !isComplete ? (
         <LensTaskFrame
           context={
@@ -1069,6 +1145,7 @@ export function ConvexLensOpticalBenchLab() {
           goal={frame.goal}
           focus={frame.focus}
           action={frame.action}
+          compact={isObserve || isDescribe || isPredict || isExperiment}
         />
       ) : null}
       {actionView &&

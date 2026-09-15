@@ -75,7 +75,20 @@ export async function completeLensDescribe(page: Page) {
 
 export async function completeLensPredictA(page: Page) {
   await page.getByRole("radio", { name: /还能接到实像，像会更大、更远/ }).click();
+  await page.getByRole("radio", { name: LENS_COPY.reasonHasIdea }).click();
   await page.getByLabel(LENS_COPY.reasonLabel).fill("物体更靠近焦点，我预计像会更大。");
+  await page.getByRole("button", { name: LENS_COPY.predictSubmit }).click();
+  await expect(
+    page.getByRole("heading", { name: lensStageHeading(LearningStage.EXPERIMENT) }),
+  ).toBeVisible();
+}
+
+export async function completeLensPredictNoviceWrongUnknown(page: Page) {
+  await expect(page.getByTestId("lens-predict-not-exam")).toBeVisible();
+  await expect(page.getByTestId("lens-now-do")).toContainText("现在不用答对");
+  await page.getByRole("radio", { name: /光屏接不到清晰像/ }).click();
+  await page.getByRole("radio", { name: LENS_COPY.reasonUnknown }).click();
+  await expect(page.getByTestId("lens-predict-reason")).toHaveCount(0);
   await page.getByRole("button", { name: LENS_COPY.predictSubmit }).click();
   await expect(
     page.getByRole("heading", { name: lensStageHeading(LearningStage.EXPERIMENT) }),
@@ -96,6 +109,7 @@ export async function completeLensExperimentCycle(
   if (input.predictOutcome) {
     await expect(page.getByTestId("lens-predict-task")).toBeVisible();
     await page.getByRole("radio", { name: new RegExp(input.predictOutcome) }).click();
+    await page.getByRole("radio", { name: LENS_COPY.reasonHasIdea }).click();
     await page.getByLabel(LENS_COPY.reasonLabel).fill(input.reason ?? "先猜一次。");
     await page.getByRole("button", { name: LENS_COPY.predictSubmit }).click();
   }

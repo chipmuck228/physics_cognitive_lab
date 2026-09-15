@@ -215,26 +215,14 @@ describe("Scene 07 enabled-action contract", () => {
   });
 
   it("OBSERVE checkboxes without a bench action show the interaction reason", async () => {
-    const user = userEvent.setup();
     replaceSession({
       ...createSession(() => "t0", () => "lens-observe-no-bench", CONVEX_LENS_SCENE_ID),
       stage: LearningStage.OBSERVE,
     });
     render(<ConvexLensOpticalBenchLab />);
-    const required = new Set<string>(LENS_OBSERVE_REQUIRED_IDS);
-    for (const option of LENS_OBSERVE_OPTIONS) {
-      if (required.has(option.id)) {
-        await user.click(screen.getByLabelText(option.label));
-      }
-    }
-    await user.click(screen.getByRole("button", { name: LENS_COPY.observeSubmit }));
-    expect(screen.getByTestId("lens-observe-need-more")).toHaveTextContent(
-      LENS_COPY.observeNeedInteraction,
-    );
-    expect(screen.getByTestId("lens-action-response")).toHaveAttribute(
-      "data-response-class",
-      "missing",
-    );
+    expect(screen.getByTestId("lens-observe-wait-record")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: LENS_COPY.observeSubmit })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(LENS_OBSERVE_OPTIONS[0].label)).not.toBeInTheDocument();
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.OBSERVE);
   });
 
@@ -245,17 +233,9 @@ describe("Scene 07 enabled-action contract", () => {
       stage: LearningStage.OBSERVE,
     });
     render(<ConvexLensOpticalBenchLab />);
-    const required = new Set<string>(LENS_OBSERVE_REQUIRED_IDS);
-    for (const option of LENS_OBSERVE_OPTIONS) {
-      if (required.has(option.id)) {
-        await user.click(screen.getByLabelText(option.label));
-      }
-    }
     await user.click(screen.getByTestId("lens-play-demo"));
-    await user.click(screen.getByRole("button", { name: LENS_COPY.observeSubmit }));
-    expect(screen.getByTestId("lens-observe-need-more")).toHaveTextContent(
-      LENS_COPY.observeNeedInteraction,
-    );
+    expect(screen.getByTestId("lens-observe-wait-record")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: LENS_COPY.observeSubmit })).not.toBeInTheDocument();
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.OBSERVE);
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).sceneData.watchedObserveDemo).toBe(true);
     expect(
@@ -270,13 +250,13 @@ describe("Scene 07 enabled-action contract", () => {
       stage: LearningStage.OBSERVE,
     });
     const first = render(<ConvexLensOpticalBenchLab />);
+    await user.click(screen.getByTestId("station-hit-between-f-and-2f"));
     const required = new Set<string>(LENS_OBSERVE_REQUIRED_IDS);
     for (const option of LENS_OBSERVE_OPTIONS) {
       if (required.has(option.id)) {
         await user.click(screen.getByLabelText(option.label));
       }
     }
-    await user.click(screen.getByTestId("station-hit-between-f-and-2f"));
     await user.click(screen.getByRole("button", { name: LENS_COPY.observeSubmit }));
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.DESCRIBE);
     expect(

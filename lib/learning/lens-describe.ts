@@ -14,8 +14,12 @@ export function evaluateLensDescription(input: LensDescribeInput) {
   const objectOk = input.object === "optical-bench";
   const quantitiesOk = input.quantities === "object-f-image-screen";
   const changeOk = input.change === "object-or-screen-changes-view";
+  // Physics: the learner must distinguish object / F / image / screen and say
+  // a visible change in ordinary Grade-9 Chinese. Token length is a vagueness
+  // floor, not a required textbook word. "变了" still fails; a short ordinary
+  // sentence may pass.
   const compact = input.studentDescription.replace(/\s+/g, "");
-  const notVague = !VAGUE.test(compact) && compact.length >= 8;
+  const notVague = !VAGUE.test(compact) && compact.length >= 4;
   const hasMeaningfulDescription = hasOwnWords(input.studentDescription) && notVague;
   return {
     objectOk,

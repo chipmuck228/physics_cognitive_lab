@@ -351,4 +351,27 @@ describe("Scene 07 authoritative stage actions", () => {
       true,
     );
   });
+
+  it("allows a look-only screen move after the required experiment intervention", () => {
+    const result = applyLensScreenChange(openTrial(), false);
+    expect(result.outcome.kind).toBe("physics-applied");
+    expect(result.outcome.message).toMatch(/光屏/);
+  });
+
+  it("blocks a screen move before the required experiment intervention", () => {
+    const session = {
+      ...stageSession(LearningStage.EXPERIMENT),
+      predictions: [
+        {
+          prediction: "real-larger-farther",
+          reasoning: "物体更靠近焦点。",
+          timestamp: "t3",
+          experimentId: LENS_EXPERIMENT_A,
+          committed: true,
+        },
+      ],
+    };
+    const result = applyLensScreenChange(session, false);
+    expect(result.outcome.kind).toBe("blocked");
+  });
 });
