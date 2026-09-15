@@ -41,6 +41,7 @@ import {
   LENS_STAGE_PROMPTS,
   LENS_TASK_FRAMES,
   lensExperimentTitle,
+  lensLightPathNeedCopy,
   lensPredictQuestion,
   lensReflectionPrompt,
 } from "@/lib/content/convex-lens-optical-bench";
@@ -78,9 +79,11 @@ import {
   firstClosedLensEvidence,
   hasCompleteLensObservedResult,
   isLensComparison,
+  lensClosedExperimentRecap,
 } from "@/lib/learning/lens-experiment";
 import { lensTrialSpec, nextLensTrialId } from "@/lib/learning/lens-trial-intervention";
 import { emptyLensExplainInput } from "@/lib/learning/lens-explain";
+import { lensExperimentPedagogicalRays } from "@/lib/learning/lens-experiment-rays";
 import {
   lensFeedbackForFailureKind,
   lensTransferRepairFeedback,
@@ -157,6 +160,7 @@ import {
 } from "@/lib/learning/lens-transfer";
 import {
   LENS_EXPERIMENT_A,
+  LENS_EXPERIMENT_C,
   LENS_EXPERIMENT_ORDER,
   isObjectStation,
   type LensExperimentId,
@@ -238,6 +242,7 @@ export function ConvexLensOpticalBenchLab() {
   const [aiOffChecking, setAiOffChecking] = useState(false);
   const [actionOutcome, setActionOutcome] = useState<LensDomainOutcome | null>(null);
   const [screenInspected, setScreenInspected] = useState(false);
+  const [revealBackwardExtension, setRevealBackwardExtension] = useState(false);
 
   const hydrateKey = session
     ? [
@@ -403,6 +408,7 @@ export function ConvexLensOpticalBenchLab() {
   useEffect(() => {
     setActionOutcome(null);
     setScreenInspected(false);
+    setRevealBackwardExtension(false);
   }, [experimentKey]);
 
   if (!hydrated || !session || !aiOffDraft) {
@@ -530,12 +536,25 @@ export function ConvexLensOpticalBenchLab() {
     aiOffDraft.step === "post-check" && latestAiOffAttempt ? "post-check" : "response";
 
   const physicsState = lensPreviewPhysics(session);
-  const studentRays = isModel ? visibleLensStudentRays(modelDraft) : [];
+  const pedagogicalRays =
+    isExperiment && displayExperiment
+      ? lensExperimentPedagogicalRays({
+          experimentId: displayExperiment,
+          observedSaved,
+          revealBackwardExtension,
+        })
+      : [];
+  const studentRays = isModel ? visibleLensStudentRays(modelDraft) : pedagogicalRays;
   const modelDisplayState =
     isModel && isObjectStation(modelDraft.objectStation)
       ? { ...physicsState, objectStation: modelDraft.objectStation }
       : physicsState;
   const hideScene = isExam || isAiOff || isComplete || isTransfer;
+  const benchCaption = isModel
+    ? LENS_COPY.modelFrozenCaption
+    : isExperiment && displayExperiment && observedSaved
+      ? lensLightPathNeedCopy(displayExperiment)
+      : undefined;
   const scene = hideScene ? undefined : (
     <div className="w-full max-w-3xl space-y-3">
       <ConvexLensOpticalBench
@@ -565,7 +584,7 @@ export function ConvexLensOpticalBenchLab() {
           }
           presentAction(setObjectStation(station));
         }}
-        caption={isModel ? LENS_COPY.modelFrozenCaption : undefined}
+        caption={benchCaption ?? undefined}
       />
     </div>
   );
@@ -720,6 +739,14 @@ export function ConvexLensOpticalBenchLab() {
         comparison={comparison}
         reflection={reflection}
         reflectionPrompt={lensReflectionPrompt(displayExperiment)}
+        lightPathNote={
+          observedSaved ? lensLightPathNeedCopy(displayExperiment) : null
+        }
+        showBackwardExtensionReveal={
+          displayExperiment === LENS_EXPERIMENT_C && observedSaved
+        }
+        backwardExtensionRevealed={revealBackwardExtension}
+        onRevealBackwardExtension={() => setRevealBackwardExtension(true)}
         onCover={() => presentAction(coverLens())}
         onLookScreen={() => {
           setScreenInspected(true);
@@ -789,6 +816,7 @@ export function ConvexLensOpticalBenchLab() {
   ) : isModel ? (
     <LensRayConstruction
       draft={modelDraft}
+      priorTrials={lensClosedExperimentRecap(session)}
       repairStep={
         latestModel && !latestModel.correctStructure
           ? lensModelRepairStep(latestModel.failureKinds?.[0], modelDraft)
@@ -1127,6 +1155,8 @@ export function ConvexLensOpticalBenchLab() {
         .join(",")}
       data-references={formatLensReferenceAttr(interaction)}
       data-student-ray-count={String(studentRays.length)}
+      data-pedagogical-rays={isExperiment && pedagogicalRays.length > 0 ? "true" : "false"}
+      data-backward-extension={revealBackwardExtension ? "true" : "false"}
     >
       {revisiting && viewingStage ? (
         <LensReviewBanner
@@ -1439,6 +1469,8 @@ export function ConvexLensOpticalBenchLab() {
               .join(",")}
             data-references={formatLensReferenceAttr(interaction)}
             data-student-ray-count={String(studentRays.length)}
+      data-pedagogical-rays={isExperiment && pedagogicalRays.length > 0 ? "true" : "false"}
+      data-backward-extension={revealBackwardExtension ? "true" : "false"}
           >
             {revisiting && viewingStage ? (
               <div className="mb-4">

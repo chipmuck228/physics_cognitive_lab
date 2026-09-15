@@ -120,9 +120,9 @@ test.describe("Scene 07 learner-visible flow", () => {
       predictOutcome: "光屏接不到清晰像",
       reason: "我还不确定，先试试看。",
       screen: "怎么移光屏都接不到",
-      sizeOrCover: "有限远处没有完整清晰的像",
+      sizeOrCover: "怎么移光屏都找不到清楚的像",
       comparison: "差不多一样",
-      reflection: "有限远处不相交，不要把它说成又一种普通成像。",
+      reflection: "这些光没有在前面碰到一起，所以怎么移光屏都接不到清楚的实像。",
     });
     await expect(page.getByTestId("lens-trial-progress")).toContainText("现在把物体放到 F 里面");
     await completeLensExperimentCycle(page, {
@@ -131,7 +131,7 @@ test.describe("Scene 07 learner-visible flow", () => {
       screen: "怎么移光屏都接不到",
       sizeOrCover: "看见的像更大",
       comparison: "差不多一样",
-      reflection: "焦点以内只有反向延长线相交，光屏接不到虚像。",
+      reflection: "这些光在另一边碰不到一起。透过透镜能看见，但光屏接不到。",
     });
     await expect(page.getByTestId("lens-trial-progress")).toContainText("遮住透镜一部分");
     await completeLensExperimentCycle(page, {
@@ -211,9 +211,9 @@ test.describe("Scene 07 learner-visible flow", () => {
       predictOutcome: "光屏接不到清晰像",
       reason: "物体正好在焦点上，我预计有限远处接不到清晰像。",
       screen: "怎么移光屏都接不到",
-      sizeOrCover: "有限远处没有完整清晰的像",
+      sizeOrCover: "怎么移光屏都找不到清楚的像",
       comparison: "差不多一样",
-      reflection: "有限远处不相交，不要把它说成又一种普通成像。",
+      reflection: "这些光没有在前面碰到一起，所以怎么移光屏都接不到清楚的实像。",
     });
     await completeLensExperimentCycle(page, {
       predictOutcome: "光屏接不到清晰像",
@@ -221,7 +221,7 @@ test.describe("Scene 07 learner-visible flow", () => {
       screen: "怎么移光屏都接不到",
       sizeOrCover: "看见的像更大",
       comparison: "差不多一样",
-      reflection: "焦点以内只有反向延长线相交，光屏接不到虚像。",
+      reflection: "这些光在另一边碰不到一起。透过透镜能看见，但光屏接不到。",
     });
     await completeLensExperimentCycle(page, {
       predictOutcome: "还能接到实像，像会更大、更远",
@@ -299,7 +299,7 @@ test.describe("Scene 07 learner-visible flow", () => {
       after: "过透镜后：方向不变",
     });
     await page.getByTestId("lens-model-next").click();
-    await page.getByRole("radio", { name: /出射光线真正会聚/ }).click();
+    await page.getByRole("radio", { name: /吗？ 会在前面碰到一起$/ }).click();
     await page.getByTestId("lens-model-next").click();
     await page.getByTestId("lens-model-side").getByRole("radio", { name: /像在透镜另一侧/ }).click();
     await page.getByTestId("lens-model-nature").getByRole("radio", { name: / 实像$/ }).click();
@@ -355,7 +355,7 @@ test.describe("Scene 07 learner-visible flow", () => {
       after: "过透镜后：方向不变",
     });
     await page.getByTestId("lens-model-next").click();
-    await page.getByRole("radio", { name: /出射光线真正会聚/ }).click();
+    await page.getByRole("radio", { name: /吗？ 会在前面碰到一起$/ }).click();
     await page.getByTestId("lens-model-next").click();
     await page.getByTestId("lens-model-side").getByRole("radio", { name: /像在透镜另一侧/ }).click();
     await page.getByTestId("lens-model-nature").getByRole("radio", { name: / 实像$/ }).click();
@@ -387,7 +387,7 @@ test.describe("Scene 07 learner-visible flow", () => {
       after: "过透镜后：方向不变",
     });
     await page.getByTestId("lens-model-next").click();
-    await page.getByRole("radio", { name: /出射光线真正会聚/ }).click();
+    await page.getByRole("radio", { name: /吗？ 会在前面碰到一起$/ }).click();
     await page.getByTestId("lens-model-next").click();
     await page.getByTestId("lens-model-side").getByRole("radio", { name: /像在透镜另一侧/ }).click();
     await page.getByTestId("lens-model-nature").getByRole("radio", { name: / 实像$/ }).click();
@@ -496,39 +496,9 @@ test.describe("Scene 07 learner-visible flow", () => {
 
     await fillAiOffCondition(page, "beyond-2f");
     await page.getByTestId("lens-ai-off-reasoning").fill(
-      "这些光穿过去以后在另一边碰到了一起，所以会形成能接到的像。",
+      "物体在 2F 以外，光线在另一侧真正会聚，所以成倒立缩小的实像，光屏放到交点才能接到。",
     );
     await page.getByRole("radio", { name: /只能透过透镜看到虚像/ }).click();
-    await page.route("**/api/lens-step6-parse", async (route) => {
-      const posted = route.request().postDataJSON() as { text?: string };
-      const text = posted?.text ?? "";
-      const virtual = /虚像|反向|散开|往回/.test(text);
-      await route.fulfill({
-        contentType: "application/json",
-        body: JSON.stringify({
-          ok: true,
-          parse: virtual
-            ? {
-                meetingClaim: "backward-extension",
-                imageNatureClaim: "virtual",
-                screenClaim: "not-receivable",
-                hasMeetingClaim: true,
-                hasConsequenceClaim: true,
-                hasCausalBind: true,
-                ambiguity: "none",
-              }
-            : {
-                meetingClaim: "actual-convergence",
-                imageNatureClaim: "real",
-                screenClaim: "receivable",
-                hasMeetingClaim: true,
-                hasConsequenceClaim: true,
-                hasCausalBind: true,
-                ambiguity: "none",
-              },
-        }),
-      });
-    });
     await page.getByTestId("lens-ai-off-commit").click();
     await expect(page.getByTestId("lens-ai-off-post-check")).toBeVisible();
 
@@ -550,7 +520,7 @@ test.describe("Scene 07 learner-visible flow", () => {
       "beyond-2f",
     );
     await expect(page.getByRole("radio", { name: /只能透过透镜看到虚像/ })).toBeChecked();
-    await expect(page.getByTestId("lens-ai-off-reasoning")).toHaveValue(/碰到了一起/);
+    await expect(page.getByTestId("lens-ai-off-reasoning")).toHaveValue(/真正会聚/);
     await expect(page.getByTestId("lens-ai-off-meeting")).toHaveCount(0);
 
     await page
@@ -584,7 +554,7 @@ test.describe("Scene 07 learner-visible flow", () => {
       })
       .click();
     await page.getByTestId("lens-ai-off-reasoning").fill(
-      "出来以后还是散开的，往回画才碰到，所以只能看到虚像，白纸接不到。物体正好在焦点上时，有限远处不成完整的像。",
+      "邮票在焦点以内，光线散开，只有反向延长线相交，所以是虚像，白纸接不到。物体正好在焦点上时，折射后的光线彼此平行，有限远处不相交，所以光屏怎么移动都接不到清晰像。",
     );
     await page.getByTestId("lens-ai-off-commit").click();
     await expect(page.getByTestId("lens-ai-off-post-check")).toBeVisible();

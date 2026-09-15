@@ -123,12 +123,40 @@ export async function completeLensExperimentCycle(
   await expect(page.getByTestId("lens-experiment-task")).toBeAttached();
   await performVisibleTrialIntervention(page);
   await inspectLensScreenIfNeeded(page);
+  const experimentId = await page.getByTestId("lens-experiment-task").getAttribute("data-experiment");
+  if (experimentId === LENS_EXPERIMENT_B || experimentId === LENS_EXPERIMENT_C) {
+    await expect(page.getByTestId("lens-interaction-context").first()).toHaveAttribute(
+      "data-pedagogical-rays",
+      "false",
+    );
+  }
   await page.getByRole("radio", { name: new RegExp(input.screen) }).click();
   await page.getByRole("radio", { name: new RegExp(input.sizeOrCover) }).click();
   await page.getByRole("button", { name: LENS_COPY.observeSubmitExperiment }).click();
   await expect(page.getByTestId("lens-compare-surface")).toBeVisible();
+  if (experimentId === LENS_EXPERIMENT_B || experimentId === LENS_EXPERIMENT_C) {
+    await expect(page.getByTestId("lens-interaction-context").first()).toHaveAttribute(
+      "data-pedagogical-rays",
+      "true",
+    );
+    await expect(page.getByTestId("lens-light-path-note")).toBeVisible();
+  }
+  if (experimentId === LENS_EXPERIMENT_B) {
+    await expect(page.getByTestId("lens-interaction-context").first()).toHaveAttribute(
+      "data-backward-extension",
+      "false",
+    );
+  }
   await page.getByRole("radio", { name: new RegExp(input.comparison) }).click();
   await page.getByRole("button", { name: LENS_COPY.compareSubmit }).click();
+  const reveal = page.getByTestId("lens-reveal-backward-extension");
+  if (await reveal.isVisible().catch(() => false)) {
+    await reveal.click();
+    await expect(page.getByTestId("lens-interaction-context").first()).toHaveAttribute(
+      "data-backward-extension",
+      "true",
+    );
+  }
   await page.locator("textarea").last().fill(input.reflection);
   await page.getByRole("button", { name: LENS_COPY.reflectionSubmit }).click();
   const nextTrial = page.getByTestId("lens-start-next-trial");
@@ -176,10 +204,10 @@ export async function performVisibleTrialIntervention(page: Page) {
 
 export async function completeLensExplain(page: Page) {
   await expect(page.getByTestId("lens-explain-task")).toBeVisible();
-  await page.getByRole("radio", { name: /有的位置上，光线会真正交在一起/ }).click();
-  await page.getByRole("radio", { name: /虚像可以看见，但光屏接不到/ }).click();
+  await page.getByRole("radio", { name: /有的位置能接到，有的位置怎么移都接不到/ }).click();
+  await page.getByRole("radio", { name: /透过透镜能看见，不等于光屏一定能接到/ }).click();
   await page.getByLabel(LENS_COPY.explainOwnWords).fill(
-    "有的位置光线真正会聚，光屏才能接到；焦点以内只有反向延长线相交。",
+    "有的位置光屏能接到清楚的像，放到 F 或 F 里面怎么移都接不到。透过透镜能看见也不等于光屏能接到。",
   );
   await page.getByRole("button", { name: LENS_COPY.explainSubmit }).click();
   await expect(
@@ -203,9 +231,9 @@ export async function reachLensModel(page: Page) {
     predictOutcome: "光屏接不到清晰像",
     reason: "物体正好在焦点上，我预计有限远处接不到清晰像。",
     screen: "怎么移光屏都接不到",
-    sizeOrCover: "有限远处没有完整清晰的像",
+    sizeOrCover: "怎么移光屏都找不到清楚的像",
     comparison: "差不多一样",
-    reflection: "有限远处不相交，不要把它说成又一种普通成像。",
+    reflection: "这些光没有在前面碰到一起，所以怎么移光屏都接不到清楚的实像。",
   });
   await completeLensExperimentCycle(page, {
     predictOutcome: "光屏接不到清晰像",
@@ -213,7 +241,7 @@ export async function reachLensModel(page: Page) {
     screen: "怎么移光屏都接不到",
     sizeOrCover: "看见的像更大",
     comparison: "差不多一样",
-    reflection: "焦点以内只有反向延长线相交，光屏接不到虚像。",
+    reflection: "这些光在另一边碰不到一起。透过透镜能看见，但光屏接不到。",
   });
   await completeLensExperimentCycle(page, {
     predictOutcome: "还能接到实像，像会更大、更远",
@@ -241,7 +269,7 @@ export async function completeLensModel(page: Page) {
     after: "过透镜后：方向不变",
   });
   await page.getByTestId("lens-model-next").click();
-  await chooseGroupOption(page, "lens-model-meeting", /出射光线真正会聚/);
+  await chooseGroupOption(page, "lens-model-meeting", /吗？ 会在前面碰到一起$/);
   await page.getByTestId("lens-model-next").click();
   await chooseGroupOption(page, "lens-model-side", /像在透镜另一侧/);
   await chooseGroupOption(page, "lens-model-nature", / 实像$/);

@@ -36,7 +36,11 @@ describe("Scene 07 experiment current action", () => {
       expect(intervene.nowDo).toBe(expectedNowDo[id]);
 
       const record = lensExperimentCurrentAction(id, "record");
-      expect(record.nowDo).toContain("你观察到了什么");
+      if (id === LENS_EXPERIMENT_B) {
+        expect(record.nowDo).toContain("怎么移动光屏");
+      } else {
+        expect(record.nowDo).toContain("你观察到了什么");
+      }
       if (id !== LENS_EXPERIMENT_D) {
         expect(lensExperimentCurrentAction(id, "inspect").nowDo).toContain("移动光屏");
       }

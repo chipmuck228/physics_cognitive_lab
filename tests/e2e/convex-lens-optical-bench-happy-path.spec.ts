@@ -53,9 +53,9 @@ test.describe("Scene 07 complete loop", () => {
       predictOutcome: "光屏接不到清晰像",
       reason: "物体正好在焦点上，我预计有限远处接不到清晰像。",
       screen: "怎么移光屏都接不到",
-      sizeOrCover: "有限远处没有完整清晰的像",
+      sizeOrCover: "怎么移光屏都找不到清楚的像",
       comparison: "差不多一样",
-      reflection: "有限远处不相交，不要把它说成又一种普通成像。",
+      reflection: "这些光没有在前面碰到一起，所以怎么移光屏都接不到清楚的实像。",
     });
     await completeLensExperimentCycle(page, {
       predictOutcome: "光屏接不到清晰像",
@@ -63,7 +63,7 @@ test.describe("Scene 07 complete loop", () => {
       screen: "怎么移光屏都接不到",
       sizeOrCover: "看见的像更大",
       comparison: "差不多一样",
-      reflection: "焦点以内只有反向延长线相交，光屏接不到虚像。",
+      reflection: "这些光在另一边碰不到一起。透过透镜能看见，但光屏接不到。",
     });
     await completeLensExperimentCycle(page, {
       predictOutcome: "还能接到实像，像会更大、更远",

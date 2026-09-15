@@ -131,7 +131,7 @@ describe("Scene 07 learner workspace pilot", () => {
     });
     render(<ConvexLensOpticalBenchLab />);
     expect(screen.getByTestId("learner-workspace")).toBeInTheDocument();
-    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("你觉得真正起作用的是什么");
+    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("光屏是不是每次都能接到清楚的像");
     expect(screen.getByTestId("lens-explain-task")).toBeInTheDocument();
     expect(screen.queryByTestId("lens-ray-construction")).not.toBeInTheDocument();
   });

@@ -1,6 +1,10 @@
 import { lensTrialPurpose } from "@/lib/content/convex-lens-optical-bench";
 import { lensTrialSpec, nextLensTrialId } from "@/lib/learning/lens-trial-intervention";
-import type { LensExperimentId } from "@/lib/physics/convex-lens-optical-bench";
+import {
+  LENS_EXPERIMENT_B,
+  LENS_EXPERIMENT_C,
+  type LensExperimentId,
+} from "@/lib/physics/convex-lens-optical-bench";
 
 export type LensExperimentMoment =
   | "predict"
@@ -30,7 +34,7 @@ export function lensPredictNowDo(): string {
 }
 
 export function lensExplainNowDo(): string {
-  return "你觉得真正起作用的是什么？";
+  return "前面几次，光屏是不是每次都能接到清楚的像？";
 }
 
 export function lensExperimentMoment(input: {
@@ -91,7 +95,10 @@ export function lensExperimentCurrentAction(
   if (moment === "record") {
     return {
       kicker,
-      nowDo: "你观察到了什么？",
+      nowDo:
+        experimentId === LENS_EXPERIMENT_B
+          ? "这一次怎么移动光屏，还能不能找到清楚的位置？"
+          : "你观察到了什么？",
     };
   }
   if (moment === "compare") {
@@ -105,6 +112,18 @@ export function lensExperimentCurrentAction(
     return {
       kicker,
       nowDo: nextId ? lensTrialPurpose(nextId) : "这一轮先到这里",
+    };
+  }
+  if (experimentId === LENS_EXPERIMENT_B) {
+    return {
+      kicker,
+      nowDo: "看看光通过透镜以后是怎么走的",
+    };
+  }
+  if (experimentId === LENS_EXPERIMENT_C) {
+    return {
+      kicker,
+      nowDo: "这些光还会在另一边碰到一起吗？",
     };
   }
   return {

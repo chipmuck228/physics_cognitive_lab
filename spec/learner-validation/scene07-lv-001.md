@@ -147,3 +147,60 @@ FORMATIVE LEARNER OBSERVATION only.
 
 Do not promote `convex-lens-imaging` or Scene 07 to LEARNER_VALIDATED,
 PRODUCT_VALIDATED, or MODEL_VALIDATED on the basis of this session.
+
+---
+
+## Design inspection findings (not learner observation)
+
+These three items come from inspecting the implemented Scene 07 v1 learner
+experience. They are **formative design observations**. They are not
+learner-validation results unless a learner was directly observed doing them.
+
+### LV-S07-011 — CONCEPT_INTRODUCTION_BREAK
+
+Learner-facing interaction used ray convergence / parallel / finite
+intersection concepts before those concepts had been grounded.
+
+Example style (trial B reflection):
+
+> 折射后的光线还彼此平行吗？有限远处有没有交点？
+> 不要把它说成又一种普通成像。
+> 可以理解为像在无限远处，但光屏接不到清晰像。
+
+Repair owner: Scene 07 Learner Experience Script v1.1 + Concept Ledger.
+
+### LV-S07-012 — MODEL_CONTROL_SEMANTIC_MISMATCH
+
+EXPLAIN (and any whole-model question using the same claims) presented
+simultaneously valid physical relations as mutually exclusive radio options,
+for example:
+
+- 有的位置上，光线会真正交在一起
+- 有的位置上，只有反向延长线相交
+- 物体正好在焦点上时，折射后光线平行……
+
+and
+
+- 真正会聚时，光屏放到交点才能接到
+- 虚像可以看见，但光屏接不到
+
+Radio → checkbox is not a sufficient repair if the stage requires construction.
+
+### LV-S07-013 — MODEL_SYSTEM_PRIMING_RISK
+
+System-provided correct relationship language could prime the final
+“own words” response, weakening its interpretation as independent
+model construction.
+
+```text
+SYSTEM PROVIDED CLAIM
+≠ LEARNER RECOGNIZED CLAIM
+≠ LEARNER CONNECTED RELATION
+≠ LEARNER AUTHORED RELATION
+≠ INDEPENDENT MODEL CONSTRUCTION
+```
+
+v1.1 records an `EVIDENCE_IMPLEMENTATION_GAP`: Scene 07 still stores
+`constructionSource = student-constructed` for the official ray-construction
+evaluator. Do not silently change L4/L5/L6. Authored summary alone must not
+manufacture MODEL construction evidence.

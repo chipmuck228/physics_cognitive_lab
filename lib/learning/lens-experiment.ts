@@ -1,4 +1,4 @@
-import { LENS_COMPARE_OPTIONS } from "@/lib/content/convex-lens-optical-bench";
+import { LENS_COMPARE_OPTIONS, lensExperimentTitle, lensObservedLabel } from "@/lib/content/convex-lens-optical-bench";
 import { hasOwnWords } from "@/lib/learning/engine-describe";
 import { firstCommittedLensPrediction } from "@/lib/learning/lens-predict";
 import {
@@ -135,6 +135,24 @@ export function hasCompletedLensExperiments(session: LearningSession): boolean {
   return LENS_EXPERIMENT_ORDER.every((experimentId) =>
     hasClosedLensExperiment(session, experimentId),
   );
+}
+
+export function lensClosedExperimentRecap(
+  session: LearningSession,
+): Array<{ title: string; result: string }> {
+  return LENS_EXPERIMENT_ORDER.flatMap((experimentId) => {
+    const evidence = firstClosedLensEvidence(session, experimentId);
+    if (!evidence) {
+      return [];
+    }
+    const observed = asLensObservedResult(evidence.observedResult);
+    return [
+      {
+        title: lensExperimentTitle(experimentId),
+        result: `${lensObservedLabel("screen", observed.screen)}；${lensObservedLabel("sizeOrCover", observed.sizeOrCover)}`,
+      },
+    ];
+  });
 }
 
 export function lensClosedExperimentReflection(

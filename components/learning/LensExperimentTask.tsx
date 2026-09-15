@@ -6,7 +6,10 @@ import {
   LENS_COMPARE_OPTIONS,
   LENS_COPY,
   LENS_OBSERVED_FIELDS,
+  lensLightPathNeedCopy,
   lensObservedLabel,
+  lensObservedSizeOptions,
+  lensRevealBackwardExtensionLabel,
   lensStartNextTrialLabel,
   lensTrialCompleteLabel,
 } from "@/lib/content/convex-lens-optical-bench";
@@ -55,6 +58,10 @@ interface LensExperimentTaskProps {
   reviewOnly?: boolean;
   screenInspected?: boolean;
   hidePhysicalControls?: boolean;
+  lightPathNote?: string | null;
+  showBackwardExtensionReveal?: boolean;
+  backwardExtensionRevealed?: boolean;
+  onRevealBackwardExtension?: () => void;
 }
 
 export function LensExperimentTask({
@@ -98,6 +105,10 @@ export function LensExperimentTask({
   reviewOnly = false,
   screenInspected,
   hidePhysicalControls = false,
+  lightPathNote = null,
+  showBackwardExtensionReveal = false,
+  backwardExtensionRevealed = false,
+  onRevealBackwardExtension,
 }: LensExperimentTaskProps) {
   void title;
   void whatChanges;
@@ -178,6 +189,11 @@ export function LensExperimentTask({
         </>
       ) : (
       <Card className="space-y-5 p-4">
+        {lightPathNote && (phase === "compare" || phase === "reflect") ? (
+          <p className="text-sm text-[var(--ink-muted)]" data-testid="lens-light-path-note">
+            {lightPathNote}
+          </p>
+        ) : null}
         {phase === "record" || phase === "compare" || phase === "reflect" ? (
           <fieldset disabled={reviewOnly} className="space-y-4 border-0 p-0">
             {phase === "record" ? (
@@ -215,7 +231,7 @@ export function LensExperimentTask({
                       sizeOrCover: sizeOrCover as LensObservedResult["sizeOrCover"],
                     })
                   }
-                  options={[...LENS_OBSERVED_FIELDS.sizeOrCover]}
+                  options={[...lensObservedSizeOptions(experimentId)]}
                 />
                 {observedNeedMore ? (
                   <ValidationMessage kind="missing">先记下光屏和像分别怎样了。</ValidationMessage>
@@ -277,6 +293,20 @@ export function LensExperimentTask({
 
             {phase === "reflect" ? (
               <section className="space-y-3">
+                {showBackwardExtensionReveal && !reviewOnly ? (
+                  <div className="flex justify-end">
+                    <Button
+                      variant="secondary"
+                      onClick={onRevealBackwardExtension}
+                      disabled={backwardExtensionRevealed || !onRevealBackwardExtension}
+                      data-testid="lens-reveal-backward-extension"
+                    >
+                      {backwardExtensionRevealed
+                        ? "已经往回画了"
+                        : lensRevealBackwardExtensionLabel()}
+                    </Button>
+                  </div>
+                ) : null}
                 <label className="block space-y-2">
                   <span className="text-sm font-medium">{reflectionPrompt}</span>
                   <textarea

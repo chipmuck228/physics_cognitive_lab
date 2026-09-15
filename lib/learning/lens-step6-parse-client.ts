@@ -9,10 +9,7 @@ import {
   applyLensTransferParse,
   resolveLensTransferWithoutLlm,
 } from "@/lib/learning/lens-transfer-semantic";
-import {
-  applyLensAiOffParse,
-  resolveLensAiOffWithoutLlm,
-} from "@/lib/learning/lens-ai-off-semantic";
+import { resolveLensAiOffWithoutLlm } from "@/lib/learning/lens-ai-off-semantic";
 import type { LensTransferDraft } from "@/lib/learning/lens-transfer";
 import type { LensAiOffDraft } from "@/lib/learning/lens-ai-off";
 import type { LensModelDraft, LensModelStepCheck } from "@/lib/learning/lens-model";
@@ -187,12 +184,17 @@ export async function resolveLensAiOffCheck(
     });
     return { draft: local.draft, check: local.check };
   }
-  const remote = await requestParse(draft.reasoning);
-  if (!remote.ok) {
-    return {
-      draft,
-      check: { status: "missing", message: LENS_AI_OFF_COPY.unclear },
-    };
-  }
-  return applyLensAiOffParse(draft, remote.parse, "llm-semantic-parse");
+  void requestParse;
+  console.info("[lens-step6-parse]", {
+    semanticPath: "ai-off-no-llm",
+    providerCalled: false,
+    providerHttpStatus: null,
+    parseResultStatus: "unavailable",
+    normalizedParseCategory: null,
+    failureCategory: "ai_off_hard_boundary",
+  });
+  return {
+    draft,
+    check: { status: "missing", message: LENS_AI_OFF_COPY.unclear },
+  };
 }

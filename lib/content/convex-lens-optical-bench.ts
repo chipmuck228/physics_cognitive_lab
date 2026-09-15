@@ -77,10 +77,10 @@ export const LENS_COPY = {
   predictNeedOwnWords: "先选一个你觉得可能发生的情况。没有理由也可以先猜。",
   predictSaved: "已经记下这次猜想。",
   reviewCannotEdit: "回看时不能再改已经记下的内容。",
-  explainMeeting: "物体放在不同位置时，光线后来是真的碰到一起、只有反向延长线相交，还是有限远处碰不到？",
-  explainScreen: "光屏接到像，和透过透镜看见像，是同一回事吗？",
+  explainMeeting: "前面几次实验，光屏是不是每次都能接到清楚的像？",
+  explainScreen: "透过透镜能看见，和光屏能接到，是同一回事吗？",
   explainOwnWords: "用自己的话说说：你觉得真正起作用的是什么？不必先背课本句子。",
-  explainNeedMore: "先选出一段会聚或接收关系，再用自己的话写。只背“2F 外倒立缩小实像”还不够。",
+  explainNeedMore: "先回答上面两个已经看见的结果，再用自己的话写。只背“2F 外倒立缩小实像”还不够。",
   explainSubmit: "记下我的说明",
   modelSubmit: "提交模型",
   modelStep6Checking: "正在看你这句话在说什么。",
@@ -163,8 +163,8 @@ export const LENS_STAGE_PROMPTS: Record<LearningStage, string> = {
   [LearningStage.DESCRIBE]: "看着左边的实验，用你自己的话说说你现在看到了什么。",
   [LearningStage.PREDICT]: "如果把物体移到 F 和 2F 之间，你觉得会发生什么？",
   [LearningStage.EXPERIMENT]: "记住你刚才的猜想。现在去光具座上试试看。",
-  [LearningStage.EXPLAIN]: "你觉得真正起作用的是什么？",
-  [LearningStage.MODEL]: "把刚才几次实验放在一起看。物体放在哪里，会先改变什么？",
+  [LearningStage.EXPLAIN]: "前面几次，光屏是不是每次都能接到清楚的像？",
+  [LearningStage.MODEL]: "把刚才几次实验放在一起看。到底是哪一步开始变得不一样？",
   [LearningStage.TRANSFER]: "光具座先放一边。刚才发现的关系还能不能用？",
   [LearningStage.EXAM]: "题目只是把刚才那个关系换了一种问法。",
   [LearningStage.AI_OFF]: "最后换一个新的情况。这一次没有提示。",
@@ -225,16 +225,16 @@ export const LENS_TASK_FRAMES: Partial<
     action: "先完成眼前这一步。",
   },
   [LearningStage.EXPLAIN]: {
-    context: "前几次实验里，物体的位置变了，看到的结果也跟着变了。",
-    goal: "你觉得真正起作用的是什么？",
+    context: "前几次实验里，物体的位置变了，光屏上的结果也跟着变了。",
+    goal: "前面几次，光屏是不是每次都能接到清楚的像？",
     focus: "先对着已经看见的光屏结果想，不要去找还没画出来的光线。",
-    action: "选出一段会聚或接收关系，再写一段说明。",
+    action: "先回答已经看见的结果，再写一段说明。",
   },
   [LearningStage.MODEL]: {
-    context: "现在要把物距、光线和像收成一条自己建构的关系。",
-    goal: "自己组装光线关系，不要点一张标准图。",
-    focus: "一次只做眼前这一步。",
-    action: "先放物体，再自己装两条光线。",
+    context: "前面几次实验，物体放的位置不一样，最后看到的结果也不一样。",
+    goal: "把它们放在一起看。到底是哪一步开始变得不一样？",
+    focus: "一次只做眼前这一步。先看你做过的实验，再自己装光线。",
+    action: "先对照刚才的实验，再自己装两条光线。",
   },
   [LearningStage.TRANSFER]: {
     context: "器材换了，但还是一块凸透镜。",
@@ -324,9 +324,9 @@ export const LENS_STATION_OPTIONS = [
 ] as const;
 
 export const LENS_MEETING_OPTIONS = [
-  { value: "actual-convergence", label: "出射光线真正会聚" },
-  { value: "backward-extension", label: "出射光线散开，只有反向延长线相交" },
-  { value: "no-finite-meeting", label: "出射光线平行，有限远处不相交" },
+  { value: "actual-convergence", label: "会在前面碰到一起" },
+  { value: "backward-extension", label: "前面碰不到，只有往回画才碰到" },
+  { value: "no-finite-meeting", label: "方向差不多，前面碰不到一起" },
 ] as const;
 
 export const LENS_RAY_KIND_OPTIONS = [
@@ -360,13 +360,13 @@ export const LENS_INCIDENT_OPTIONS = [
 export const LENS_SIDE_OPTIONS = [
   { value: "other-side", label: "像在透镜另一侧" },
   { value: "same-side", label: "像和物体在同一侧" },
-  { value: "none", label: "有限远处没有普通清晰像" },
+  { value: "none", label: "在光屏能放到的地方，没有清楚的像位置" },
 ] as const;
 
 export const LENS_NATURE_OPTIONS = [
   { value: "real", label: "实像" },
   { value: "virtual", label: "虚像" },
-  { value: "none", label: "有限远处不成普通清晰像" },
+  { value: "none", label: "接不到清楚的实像" },
 ] as const;
 
 export const LENS_ORIENTATION_OPTIONS = [
@@ -388,15 +388,15 @@ export const LENS_RECEIVE_OPTIONS = [
 ] as const;
 
 export const LENS_EXPLAIN_MEETING = [
-  { value: "actual-convergence", label: "有的位置上，光线会真正交在一起" },
-  { value: "backward-extension", label: "有的位置上，只有反向延长线相交" },
-  { value: "no-finite-meeting", label: "物体正好在焦点上时，折射后光线平行，有限远处不相交" },
+  { value: "sometimes-receives", label: "有的位置能接到，有的位置怎么移都接不到" },
+  { value: "always-receives", label: "每次都能接到清楚的像" },
+  { value: "never-receives", label: "每次都接不到" },
   { value: "slogan-only", label: "2F 外倒立缩小实像" },
 ] as const;
 
 export const LENS_EXPLAIN_SCREEN = [
-  { value: "screen-receives-real", label: "真正会聚时，光屏放到交点才能接到" },
-  { value: "virtual-not-on-screen", label: "虚像可以看见，但光屏接不到" },
+  { value: "visible-not-same", label: "透过透镜能看见，不等于光屏一定能接到" },
+  { value: "same-as-screen", label: "看见和接到是同一回事" },
   { value: "no-image-if-no-screen", label: "屏上没有就一定没有像" },
 ] as const;
 
@@ -405,7 +405,7 @@ export const LENS_TUTOR_GOALS: Partial<Record<LearningStage, string>> = {
   [LearningStage.DESCRIBE]: "帮助学生把物体、透镜、像、光屏分开说。",
   [LearningStage.PREDICT]: "让学生先猜物体相对 F / 2F 变了以后会怎样。",
   [LearningStage.EXPERIMENT]: "问学生刚改变的是物体位置还是光屏位置。",
-  [LearningStage.EXPLAIN]: "问光线是真的相交，还是只有延长线相交。",
+  [LearningStage.EXPLAIN]: "问已经看见的光屏结果有什么不一样。",
   [LearningStage.MODEL]: "问光线关系和像的性质之间还缺什么联系。",
   [LearningStage.TRANSFER]: "问这个新情境里光线怎样相遇，为什么会得到这样的像。",
   [LearningStage.EXAM]: "提醒先判断物体处在哪个成像区域。",
@@ -529,10 +529,10 @@ export function lensReflectionPrompt(id: LensExperimentId): string {
     return "这次让你看清了什么？像变大变远，是因为你移动了光屏，还是因为物体更靠近焦点？";
   }
   if (id === LENS_EXPERIMENT_B) {
-    return "折射后的光线还彼此平行吗？有限远处有没有交点？不要把它说成又一种普通成像。可以理解为像在无限远处，但光屏接不到清晰像。";
+    return "沿着这些光往前看，它们会不会在前面碰到一起？如果没有碰到一起，为什么光屏怎么移动都接不到清晰的实像？";
   }
   if (id === LENS_EXPERIMENT_C) {
-    return "光屏接不到，和透过透镜能看见，是不是一回事？";
+    return "这些光通过透镜以后，还会在另一边碰到一起吗？透过透镜能看见，和光屏能接到，是同一回事吗？";
   }
   return "透镜是不是把像按上下拼起来的？整幅像还在吗？";
 }
@@ -548,9 +548,42 @@ export const LENS_OBSERVED_FIELDS = {
     { value: "smaller", label: "看见的像更小" },
     { value: "whole-dimmer", label: "整幅像还在，通常更暗" },
     { value: "half-gone", label: "像少掉了一半" },
-    { value: "no-finite", label: "折射后光线平行，有限远处没有完整清晰的像" },
+    { value: "no-finite", label: "怎么移光屏都找不到清楚的像" },
   ],
 } as const;
+
+export function lensObservedSizeOptions(id: LensExperimentId) {
+  if (id === LENS_EXPERIMENT_A) {
+    return LENS_OBSERVED_FIELDS.sizeOrCover.filter(
+      (option) => option.value === "larger" || option.value === "smaller",
+    );
+  }
+  if (id === LENS_EXPERIMENT_B) {
+    return LENS_OBSERVED_FIELDS.sizeOrCover.filter((option) => option.value === "no-finite");
+  }
+  if (id === LENS_EXPERIMENT_C) {
+    return LENS_OBSERVED_FIELDS.sizeOrCover.filter(
+      (option) => option.value === "larger" || option.value === "smaller",
+    );
+  }
+  return LENS_OBSERVED_FIELDS.sizeOrCover.filter(
+    (option) => option.value === "whole-dimmer" || option.value === "half-gone",
+  );
+}
+
+export function lensLightPathNeedCopy(id: LensExperimentId): string | null {
+  if (id === LENS_EXPERIMENT_B) {
+    return "刚才我们一直在看光屏。这次换个角度，看看光通过透镜以后是怎么走的。";
+  }
+  if (id === LENS_EXPERIMENT_C) {
+    return "刚才我们一直在看光屏。这次看看光通过透镜以后是怎么走的。";
+  }
+  return null;
+}
+
+export function lensRevealBackwardExtensionLabel(): string {
+  return "把这些光往回画看看";
+}
 
 export function lensObservedLabel(
   field: "screen" | "sizeOrCover",

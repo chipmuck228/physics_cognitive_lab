@@ -178,16 +178,27 @@ One moment → one meaning. The four questions below should be obvious from the 
 6. **UPLP should be felt, not seen as a workflow.** Internally OBSERVE → … → AI_OFF. The learner should feel looking, guessing, trying, noticing, asking why, finding a relation, trying a new context, recognizing an exam, then doing it alone.
 7. **Do not copy another Scene’s interaction pattern** just because both follow UPLP. Spatial/optical relation ≠ temporal/causal/energy relation.
 
+Scene 07 v1.1 adds **candidate** principles. They are not canonical cross-Scene contracts. Do not promote them until a structurally different Scene is audited.
+
+8. **Concept Introduction Integrity (candidate).** No concept may appear as an explanatory premise before the learner has had a meaningful opportunity to ground it in physical experience. Canonical Physics Truth does not mean every canonical truth must be immediately exposed.
+9. **Control Semantic Integrity (candidate).** The control must match answer logic. Single-select means only one option can be true under the question as written. Radio → checkbox is not an automatic repair if the stage requires construction.
+10. **System Priming Risk (candidate evidence concern).** SYSTEM PROVIDED ≠ RECOGNIZED ≠ CONNECTED ≠ AUTHORED ≠ INDEPENDENT CONSTRUCTION. Do not teach the relation and then count a paraphrase as independent model construction.
+
+Design-time concept states (not L-levels): UNSEEN → REFERENCED → GROUNDED → NAMED → USED. See `scene07-concept-ledger-v1.md`.
+
 ---
 
 ## Files
 
 | File | Role |
 |---|---|
-| `scene07-learner-experience-v1.md` | Scene 07 Script |
+| `scene07-learner-experience-v1.md` | Scene 07 Script v1 (historical) |
+| `scene07-learner-experience-v1.1.md` | Scene 07 Script v1.1 (concept introduction + MODEL construction repair) |
+| `scene07-concept-ledger-v1.md` | Scene 07 concept sequencing ledger (EXPERIMENTAL / SCENE-SCOPED) |
+| `scene07-interaction-mapping-v1.md` | Scene 07 mapping v1 (historical) |
+| `scene07-interaction-mapping-v1.1.md` | Scene 07 mapping v1.1 |
 | `scene02-learner-experience-v1.md` | Scene 02 Script |
 | `contract-check-v1.md` | Phase 2: Script vs canonical contracts |
-| `scene07-interaction-mapping-v1.md` | Phase 3: experience → interaction bridge |
 | `scene02-interaction-mapping-v1.md` | Phase 3: experience → interaction bridge |
 
 Related, not in this folder:
@@ -201,5 +212,8 @@ Related, not in this folder:
 
 - `LEARNER_VALIDATED`
 - `UNIVERSAL_EXPERIENCE_STANDARD`
+- `UNIVERSAL_LEARNER_EXPERIENCE_STANDARD`
+- `CONCEPT_LEDGER_STANDARD`
+- `UNIVERSAL_MODEL_UI`
 - `AI_GENERATED_UI_READY`
 - `CANONICAL` (for this folder)

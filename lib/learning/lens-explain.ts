@@ -7,12 +7,8 @@ export interface LensExplainInput {
   studentExplanation: string;
 }
 
-const VALID_MEETING = new Set([
-  "actual-convergence",
-  "backward-extension",
-  "no-finite-meeting",
-]);
-const VALID_SCREEN = new Set(["screen-receives-real", "virtual-not-on-screen"]);
+const VALID_MEETING = new Set(["sometimes-receives"]);
+const VALID_SCREEN = new Set(["visible-not-same"]);
 
 export function evaluateLensExplanation(input: LensExplainInput) {
   const meetingOk = VALID_MEETING.has(input.meetingFragment);
@@ -20,15 +16,17 @@ export function evaluateLensExplanation(input: LensExplainInput) {
   const sloganOnly = input.meetingFragment === "slogan-only";
   const noImageIfNoScreen = input.screenFragment === "no-image-if-no-screen";
   const hasMeaningfulExplanation = hasOwnWords(input.studentExplanation);
-  const tableAsModel = /倒立缩小实像|五种情况/.test(input.studentExplanation.replace(/\s+/g, ""))
-    && !/真正会聚|反向延长|不相交/.test(input.studentExplanation.replace(/\s+/g, ""));
+  const tableAsModel =
+    /倒立缩小实像|五种情况/.test(input.studentExplanation.replace(/\s+/g, "")) &&
+    !/接到|碰不到|看不见|光屏/.test(input.studentExplanation.replace(/\s+/g, ""));
   return {
     meetingOk,
     screenOk,
     sloganOnly,
     hasMeaningfulExplanation,
     sufficient:
-      (meetingOk || screenOk) &&
+      meetingOk &&
+      screenOk &&
       hasMeaningfulExplanation &&
       !sloganOnly &&
       !noImageIfNoScreen &&
@@ -64,8 +62,9 @@ export function emptyLensExplainInput(): LensExplainInput {
 
 export function completeLensExplainInput(): LensExplainInput {
   return {
-    meetingFragment: "actual-convergence",
-    screenFragment: "virtual-not-on-screen",
-    studentExplanation: "有的位置光线真正会聚，光屏才能接到；焦点以内只有反向延长线相交，屏接不到。",
+    meetingFragment: "sometimes-receives",
+    screenFragment: "visible-not-same",
+    studentExplanation:
+      "有的位置光屏能接到清楚的像，放到 F 或 F 里面怎么移都接不到。透过透镜能看见也不等于光屏能接到。",
   };
 }

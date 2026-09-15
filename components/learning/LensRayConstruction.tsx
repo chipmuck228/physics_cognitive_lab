@@ -39,15 +39,16 @@ interface LensRayConstructionProps {
   feedback?: LensFeedback | null;
   repairStep?: number | null;
   reviewOnly?: boolean;
+  priorTrials?: ReadonlyArray<{ title: string; result: string }>;
 }
 
 const STEP_TITLES = [
-  "物体相对 F / 2F 在哪里",
-  "第一条必做光线",
-  "第二条必做光线",
-  "光线怎样相遇",
-  "像会怎样",
-  "用一句话连起来",
+  "把刚才几次放在一起看",
+  "第一条光线怎么走",
+  "第二条光线怎么走",
+  "这些光后来怎样",
+  "会成什么样的像，光屏能不能接到",
+  "用自己的话说说真正起作用的是什么",
   "检查后再提交",
 ];
 
@@ -61,6 +62,7 @@ export function LensRayConstruction({
   feedback,
   repairStep = null,
   reviewOnly = false,
+  priorTrials = [],
 }: LensRayConstructionProps) {
   const step = Math.min(Math.max(draft.constructionStep || 1, 1), LENS_MODEL_STEP_COUNT);
   const stepCheck = evaluateLensModelStep(draft, step);
@@ -90,9 +92,24 @@ export function LensRayConstruction({
       <Card className="space-y-5 p-4">
         <fieldset disabled={reviewOnly} className="space-y-5 border-0 p-0">
         {step === 1 ? (
-          <QuestionGroup
+          <>
+            <div className="space-y-2" data-testid="lens-model-experiment-recap">
+              <p className="text-sm text-[var(--ink)]">
+                前面几次实验，物体放的位置不一样，最后看到的结果也不一样。把它们放在一起看看：到底是哪一步开始变得不一样？
+              </p>
+              {priorTrials.length > 0 ? (
+                <ul className="space-y-1 text-sm text-[var(--ink-muted)]">
+                  {priorTrials.map((trial) => (
+                    <li key={trial.title}>{`${trial.title}：${trial.result}`}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-[var(--ink-muted)]">先回头看看你刚才记下的实验结果。</p>
+              )}
+            </div>
+            <QuestionGroup
             id="lens-model-station"
-            question="物体相对 F / 2F 在哪里？"
+            question="这一次，你要连起来说明的是物体相对 F / 2F 在哪里？"
             value={draft.objectStation}
             onChange={(objectStation) =>
               onChange({
@@ -106,6 +123,7 @@ export function LensRayConstruction({
             }
             options={[...LENS_STATION_OPTIONS]}
           />
+          </>
         ) : null}
         {step === 2 ? (
           <RayEditor
@@ -152,11 +170,7 @@ export function LensRayConstruction({
         {step === 4 ? (
           <QuestionGroup
             id="lens-model-meeting"
-            question={
-              draft.objectStation === "inside-f"
-                ? "这两条实际光线在另一侧散开。把它们反向延长后会怎样？"
-                : "两条出射的实际光线怎样？"
-            }
+            question="沿着这些光往前看，它们会在前面碰到一起吗？"
             value={draft.meetingMode}
             onChange={(meetingMode) => onChange({ ...draft, meetingMode })}
             options={[...LENS_MEETING_OPTIONS]}
@@ -173,7 +187,7 @@ export function LensRayConstruction({
             />
             <QuestionGroup
               id="lens-model-nature"
-              question="这是实像、虚像，还是有限远处不成普通清晰像？"
+              question="这是实像、虚像，还是接不到清楚的实像？"
               value={draft.nature}
               onChange={(nature) => onChange({ ...draft, nature })}
               options={[...LENS_NATURE_OPTIONS]}
@@ -194,7 +208,7 @@ export function LensRayConstruction({
             />
             <QuestionGroup
               id="lens-model-receive"
-              question="光屏能不能接到？"
+              question="什么时候光屏能接到清晰的像？这一次能不能？"
               value={draft.screenReceivable}
               onChange={(screenReceivable) => onChange({ ...draft, screenReceivable })}
               options={[...LENS_RECEIVE_OPTIONS]}
@@ -204,7 +218,7 @@ export function LensRayConstruction({
         {step === 6 ? (
           <label className="block space-y-2">
             <span className="text-sm font-medium">
-              用自己的话写出：会聚方式怎样决定像。不要只背表。
+              现在不用背几种情况。用自己的话说说：你觉得真正决定最后成像结果的是什么？
             </span>
             <textarea
               data-testid="lens-model-reasoning"

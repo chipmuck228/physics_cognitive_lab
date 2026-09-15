@@ -833,4 +833,16 @@ Default Scene-scoped review request: `spec/prompts/review-physics-representation
 
 ---
 
+## D070 — Scene 07 Learner Experience Script v1.1 (concept introduction + MODEL construction)
+
+**Date:** 2026-09-15
+
+**Decision:** Upgrade Scene 07 Learner Experience from v1 to v1.1 without overwriting v1. Introduce a Scene-scoped Concept Ledger and three candidate principles: Concept Introduction Integrity, Control Semantic Integrity, and System Priming Risk. Do not promote them into universal contracts. Do not change UPLP, Physics Truth, L4–L6 semantics, transfer/exam architecture, or Scene 02. “像在无限远” is OPTIONAL/ADVANCED in the Grade-9 primary flow. EXPLAIN radios that listed simultaneously true claims are invalid and must be rebuilt as exclusive observation questions. MODEL keeps `evaluateConvexLensModelConstruction`; it must not pass from authored summary alone or from whole-model sentence recognition. Scene 07 AI_OFF must not call `/api/lens-step6-parse`.
+
+**Why:** Direct inspection of the implemented v1 experience found premature ray-meeting language before grounding, misconception-guardrail voice in learner copy, and MODEL/EXPLAIN controls that treated coexisting physical relations as mutually exclusive.
+
+**Consequence:** Specs: `scene07-learner-experience-v1.1.md`, `scene07-concept-ledger-v1.md`, `scene07-interaction-mapping-v1.1.md`. Formative design findings LV-S07-011/012/013. Not LEARNER_VALIDATED. Not CONCEPT_LEDGER_STANDARD. Not UNIVERSAL_MODEL_UI.
+
+---
+
 

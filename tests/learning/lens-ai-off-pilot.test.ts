@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   classifyLensStep6FastPath,
@@ -283,6 +283,16 @@ describe("Scene 07 AI_OFF independent-use pilot", () => {
       LENS_AI_OFF_COPY.unclear,
     );
     expect(draftToLensAiOffAttempt(resolved.draft, false)).toBeNull();
+  });
+
+  it("never calls a parse provider in AI_OFF", async () => {
+    const requestParse = vi.fn(async () => ({
+      ok: true as const,
+      parse: ACTUAL_REAL,
+    }));
+    const draft = windowDraft("这些光穿过去以后在另一边碰到了一起，所以会形成能接到的像。", null);
+    await resolveLensAiOffCheck(draft, requestParse);
+    expect(requestParse).not.toHaveBeenCalled();
   });
 
   it("post-check cannot manufacture acceptance", () => {
