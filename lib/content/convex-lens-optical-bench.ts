@@ -86,7 +86,7 @@ export const LENS_COPY = {
   modelStep6Checking: "正在看你这句话在说什么。",
   modelStep6NeedCheck: "点下一步，我先看你这句话在说什么。",
   modelStep6Unclear:
-    "这句话我还没判断清楚。你可以再说具体一点：光线怎样相遇？然后形成什么像？",
+    "这句话我还没判断清楚。你可以再说具体一点：光通过透镜以后是怎么走的？然后光屏上会怎样？",
   modelCannotSubmit: "模型还不能提交",
   modelAccepted: "模型已经记下，可以看新情境。",
   modelFrozenCaption: "这是你正在建构的光路，不是一张已经画好的标准图。",
@@ -442,12 +442,13 @@ export const LENS_AI_OFF_COPY = {
   vague: "这句话还太笼统。再说具体一点：光线最后在哪里相遇？这会形成什么结果？",
   unclear:
     "这句话我还没看清你想表达的光线关系。可以再说具体一点：光线最后在哪里相遇？这会形成什么结果？",
-  inconsistent: "你写的光线关系和像的后果对不上。先看光线是会聚、反向延长还是平行，再接到对应的结果。",
+  inconsistent: "你写的光线走法和最后的结果对不上。先看光通过透镜以后有没有交到一个地方，再接到对应的结果。",
   judgmentDisagree: "你选的结果，和理由里的光线关系对不上。先对一下再提交。",
   postCheckTitle: "刚才判断时，哪些关系真正起作用？",
   postCheckSubmit: "记下这次对照",
   postCheckNeedFacts: "先勾出这次真正起作用的关系。",
-  postCheckMissingRequired: "还有一条关键关系没有对照到。再看看哪一项还没有核对？",
+  postCheckMissingRequired:
+    "刚才这次判断，还要对照和这次理由对应的那条关系。先对上这一次，不必把整个模型都勾上。",
   postCheckDistractor:
     "有一项只是表面上说得通，还不能说明这次真正起作用的关系。先去掉那一项。",
   postCheckPrecommit:

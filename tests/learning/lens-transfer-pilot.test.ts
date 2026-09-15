@@ -261,7 +261,7 @@ describe("Scene 07 TRANSFER learning-experience pilot", () => {
     const draft = {
       ...emptyLensTransferDraft("near-projector-real-enlarged"),
       objectStation: "between-f-and-2f",
-      studentExplanation: "光穿过透镜以后在另一边碰到了一起，所以成了实像。",
+      studentExplanation: "光最后碰到了，所以成了实像。",
     };
     const resolved = await resolveLensTransferCheck(draft, async () => ({
       ok: false,

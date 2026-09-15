@@ -14,6 +14,7 @@ import {
   nextLensAiOffDraft,
   type LensAiOffDraft,
 } from "@/lib/learning/lens-ai-off";
+import { inferLensAiOffLocalTask } from "@/lib/learning/lens-local-reasoning";
 import {
   evaluateLensDescription,
   type LensDescribeInput,
@@ -876,6 +877,11 @@ export function applyLensAiOffPostCheckSave(
       input.postCheckIds,
       false,
       evaluation.official.ok,
+      inferLensAiOffLocalTask({
+        challengeId: input.challengeId,
+        objectStation: evalDraft.objectStation,
+        reasoning: evalDraft.reasoning,
+      }),
     );
     return {
       session: next,

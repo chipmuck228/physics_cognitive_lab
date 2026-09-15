@@ -265,6 +265,15 @@ const MEETING_PATTERNS: ReadonlyArray<{ kind: MeetingMode; source: string }> = [
   { kind: "no-finite-meeting", source: "光线平行" },
   { kind: "no-finite-meeting", source: "没有交点" },
   { kind: "no-finite-meeting", source: "不成有限远" },
+  { kind: "no-finite-meeting", source: "无法相交" },
+  { kind: "no-finite-meeting", source: "没有相交" },
+  { kind: "no-finite-meeting", source: "不相交" },
+  { kind: "no-finite-meeting", source: "碰不到一起" },
+  { kind: "no-finite-meeting", source: "没有碰到一起" },
+  { kind: "no-finite-meeting", source: "没有交到一起" },
+  { kind: "no-finite-meeting", source: "没有聚到一起" },
+  { kind: "no-finite-meeting", source: "没有[会汇]聚" },
+  { kind: "no-finite-meeting", source: "一直没有碰到" },
   { kind: "actual-convergence", source: "真正[会汇]聚" },
   { kind: "actual-convergence", source: "实际[会汇]聚" },
   { kind: "actual-convergence", source: "真的交" },
@@ -274,6 +283,9 @@ const MEETING_PATTERNS: ReadonlyArray<{ kind: MeetingMode; source: string }> = [
   { kind: "actual-convergence", source: "聚到一起" },
   { kind: "actual-convergence", source: "聚在一起" },
   { kind: "actual-convergence", source: "光线交在一起" },
+  { kind: "actual-convergence", source: "碰到.{0,2}一起" },
+  { kind: "actual-convergence", source: "汇到.{0,2}一起" },
+  { kind: "actual-convergence", source: "交到一起" },
   { kind: "actual-convergence", source: "出射光线[会汇]聚" },
   { kind: "actual-convergence", source: "[会汇]聚在" },
   { kind: "actual-convergence", source: "(光线|折射后).{0,12}[会汇]聚" },
@@ -285,13 +297,22 @@ const CONSEQUENCE_PATTERNS: ReadonlyArray<{
   kind: "real" | "virtual" | "none";
   source: string;
 }> = [
+  { kind: "none", source: "无法成像" },
+  { kind: "none", source: "不能成像" },
   { kind: "none", source: "接不到清晰像" },
+  { kind: "none", source: "接不到清楚" },
+  { kind: "none", source: "接不到像" },
+  { kind: "none", source: "移到哪里都接不到" },
+  { kind: "none", source: "怎么移都接不到" },
   { kind: "none", source: "不能形成清晰像" },
   { kind: "none", source: "有限远.{0,12}(接不到|不能形成|没有).{0,6}(清晰|完整)" },
   { kind: "real", source: "(成|形成).{0,8}实像" },
   { kind: "real", source: "接到实像" },
   { kind: "real", source: "(光屏|幕布).{0,10}(能接到|可以接到)" },
   { kind: "real", source: "就能接到" },
+  { kind: "real", source: "能接到的像" },
+  { kind: "real", source: "可以接到" },
+  { kind: "real", source: "(卡片|光屏).{0,10}(能看到清楚|看到清楚)" },
   { kind: "real", source: "这是实像" },
   { kind: "real", source: "是实像" },
   { kind: "virtual", source: "(成|形成).{0,8}虚像" },
@@ -326,12 +347,49 @@ function collectSpans<K extends string>(
   return spans;
 }
 
+function isNegatedMeetingSpan(text: string, span: MeetingSpan): boolean {
+  if (span.kind !== "actual-convergence") {
+    return false;
+  }
+  const window = text.slice(Math.max(0, span.start - 4), span.end);
+  return /无法|没有|不能|不(?=相交|[会汇]聚|碰到|聚到|交到)/.test(window);
+}
+
 function findMeetingSpans(text: string): MeetingSpan[] {
-  return collectSpans(text, MEETING_PATTERNS);
+  return collectSpans(text, MEETING_PATTERNS).map((span) =>
+    isNegatedMeetingSpan(text, span) ? { ...span, kind: "no-finite-meeting" } : span,
+  );
 }
 
 function findConsequenceSpans(text: string): ConsequenceSpan[] {
   return collectSpans(text, CONSEQUENCE_PATTERNS);
+}
+
+function refineConsequenceSpans(
+  text: string,
+  meetingKinds: readonly MeetingMode[],
+  consequences: readonly ConsequenceSpan[],
+): ConsequenceSpan[] {
+  const namesVirtualImage = /虚像/.test(text);
+  const hasBackward = meetingKinds.includes("backward-extension");
+  const hasNoFinite = meetingKinds.includes("no-finite-meeting");
+  return consequences.map((span) => {
+    if (span.kind !== "virtual") {
+      return span;
+    }
+    const snippet = text.slice(span.start, span.end);
+    const fromScreenUnreceivable = /接不到/.test(snippet) && !/虚像/.test(snippet);
+    if (!fromScreenUnreceivable) {
+      return span;
+    }
+    if (namesVirtualImage || hasBackward) {
+      return span;
+    }
+    if (hasNoFinite || meetingKinds.length === 0) {
+      return { ...span, kind: "none" };
+    }
+    return span;
+  });
 }
 
 function uniqueKinds<T extends string>(spans: ReadonlyArray<{ kind: T }>): T[] {
@@ -492,8 +550,12 @@ export function analyzeConvexLensAuthored(text: string): ConvexLensAuthoredAnaly
   }
 
   const meetings = findMeetingSpans(compactText);
-  const consequences = findConsequenceSpans(compactText);
   const meetingKinds = uniqueKinds(meetings);
+  const consequences = refineConsequenceSpans(
+    compactText,
+    meetingKinds,
+    findConsequenceSpans(compactText),
+  );
   const consequenceKinds = uniqueKinds(consequences);
   const meetingKind = resolveKind(meetingKinds);
   const consequenceKind = resolveKind(consequenceKinds);
@@ -542,20 +604,20 @@ export function lensAuthoredBindMissingMessage(
     return "这句话还只是在背表或堆名词。先写出光线怎样相遇，再接到像的后果。";
   }
   if (authored.missingKind === "contradiction") {
-    return "你写的相遇方式和像的后果对不上。先看光线是会聚、反向延长还是平行，再接到对应的像。";
+    return "你写的光线走法和最后的结果对不上。先看光通过透镜以后有没有交到一个地方，再接到对应的结果。";
   }
   if (authored.missingKind === "meeting") {
     return authored.hasConsequenceLanguage
-      ? "还要写出光线怎样相遇：是会聚到一起、反向延长后相交，还是彼此平行。"
-      : "先写出光线怎样相遇，再接到像的后果。";
+      ? "你已经说了最后的结果。还差中间一步：光通过透镜以后是怎么走的？为什么这会让光屏接不到？"
+      : "先写出光通过透镜以后是怎么走的，再接到最后的结果。";
   }
   if (authored.missingKind === "consequence") {
-    return "还要写出这样相遇之后，像会怎样，比如成实像还是光屏接不到。";
+    return "你已经说了光线怎么走。还要接到最后的结果：这样走了以后，光屏上会怎样？";
   }
   if (authored.missingKind === "relation") {
-    return "相遇方式和像的后果都有了。还要用一句话把这两件事连起来。";
+    return "光线怎样走、最后结果都有了。还要用自己的话把这两件事连起来。";
   }
-  return "先写出光线怎样相遇，再接到像的后果。";
+  return "先写出光通过透镜以后是怎么走的，再接到最后的结果。";
 }
 
 export function normalizeLensStep6Text(text: string): string {
@@ -658,7 +720,7 @@ export type LensAuthoredClaimCheck =
   | { status: "inconsistent"; missingKind: "contradiction"; message: string };
 
 export const LENS_STEP6_UNCLEAR_MESSAGE =
-  "这句话我还没判断清楚。你可以再说具体一点：光线怎样相遇？然后形成什么像？";
+  "这句话我还没判断清楚。你可以再说具体一点：光通过透镜以后是怎么走的？然后光屏上会怎样？";
 
 export function evaluateLensAuthoredSemanticClaim(
   parse: LensReasoningSemanticParse,
@@ -677,22 +739,22 @@ export function evaluateLensAuthoredSemanticClaim(
       status: "missing",
       missingKind: "meeting",
       message: parse.hasConsequenceClaim
-        ? "还要写出光线怎样相遇：是会聚到一起、反向延长后相交，还是彼此平行。"
-        : "先写出光线怎样相遇，再接到像的后果。",
+        ? "你已经说了最后的结果。还差中间一步：光通过透镜以后是怎么走的？为什么这会让光屏接不到？"
+        : "先写出光通过透镜以后是怎么走的，再接到最后的结果。",
     };
   }
   if (!parse.hasConsequenceClaim && parse.imageNatureClaim === "unclear" && parse.screenClaim === "unclear") {
     return {
       status: "missing",
       missingKind: "consequence",
-      message: "还要写出这样相遇之后，像会怎样，比如成实像还是光屏接不到。",
+      message: "你已经说了光线怎么走。还要接到最后的结果：这样走了以后，光屏上会怎样？",
     };
   }
   if (!parse.hasCausalBind) {
     return {
       status: "missing",
       missingKind: "relation",
-      message: "相遇方式和像的后果都有了。还要用一句话把这两件事连起来。",
+      message: "光线怎样走、最后结果都有了。还要用自己的话把这两件事连起来。",
     };
   }
   const parsedMeeting = meetingModeFromClaim(parse.meetingClaim);
@@ -1029,6 +1091,13 @@ const AIOFF_EXPECTED: Record<
   },
 };
 
+function aiOffExpectedStations(challengeId: AiOffChallengeId): ObjectStation[] {
+  if (challengeId === "ai-off-boundary-magnifier-cannot-catch-virtual") {
+    return ["inside-f", "at-f"];
+  }
+  return [AIOFF_EXPECTED[challengeId].station];
+}
+
 function aiOffAuthoredOk(
   challengeId: AiOffChallengeId,
   text: string,
@@ -1059,9 +1128,7 @@ function aiOffAuthoredOk(
   }
   const compactText = compact(text);
   if (challengeId === "ai-off-boundary-magnifier-cannot-catch-virtual") {
-    const namesNoScreen = /接不到|不能接到|虚像.*屏/.test(compactText);
-    const treatsFAsLimit = /焦点上|u=f|正好在[Ff]|有限远|不成完整/.test(compactText);
-    return namesNoScreen && treatsFAsLimit;
+    return /接不到|不能接到|虚像|无法成像|不能成像/.test(compactText);
   }
   return /接收|光屏|卡片|放到像|接到/.test(compactText);
 }
@@ -1073,10 +1140,11 @@ export function evaluateConvexLensAiOff(
     return { ok: false, failureKind: "llm-used" };
   }
   const expected = AIOFF_EXPECTED[attempt.challengeId];
+  const stationOk = aiOffExpectedStations(attempt.challengeId).includes(attempt.objectStation);
   const preCommitStructureOk =
-    attempt.objectStation === expected.station &&
-    attempt.meetingMode === officialMeetingMode(expected.station) &&
-    imageMatchesOfficial(expected.station, attempt.image) &&
+    stationOk &&
+    attempt.meetingMode === officialMeetingMode(attempt.objectStation) &&
+    imageMatchesOfficial(attempt.objectStation, attempt.image) &&
     aiOffAuthoredOk(
       attempt.challengeId,
       attempt.preCommitReasoning,

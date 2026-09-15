@@ -395,7 +395,7 @@ test.describe("Scene 07 learner-visible flow", () => {
     await page.getByTestId("lens-model-size").getByRole("radio", { name: /比物体小/ }).click();
     await page.getByTestId("lens-model-receive").getByRole("radio", { name: /光屏放到像的位置可以接到/ }).click();
     await page.getByTestId("lens-model-next").click();
-    await page.getByTestId("lens-model-reasoning").fill("光线碰到一起，成实像。");
+    await page.getByTestId("lens-model-reasoning").fill("光最后碰到了，所以成了实像。");
     await page.getByTestId("lens-model-next").click();
     await expect(page.getByTestId("lens-model-next-reason")).toContainText(
       LENS_COPY.modelStep6Unclear,

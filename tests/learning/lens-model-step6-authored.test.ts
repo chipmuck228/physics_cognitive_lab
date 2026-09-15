@@ -99,7 +99,7 @@ describe("Scene 07 MODEL step 6 authored relation", () => {
     expect(flags.hasConsequenceBind).toBe(false);
     const blocked = step6(text);
     expect(blocked.status).toBe("inconsistent");
-    expect(blocked.status === "inconsistent" && blocked.message).toMatch(/怎样相遇/);
+    expect(blocked.status === "inconsistent" && blocked.message).toMatch(/怎样相遇|怎么走/);
     expect(blocked.status === "inconsistent" && blocked.message).not.toMatch(/真正相交/);
   });
 
@@ -110,7 +110,7 @@ describe("Scene 07 MODEL step 6 authored relation", () => {
     expect(flags.hasConsequenceLanguage).toBe(false);
     const blocked = step6(text);
     expect(blocked.status).not.toBe("ready");
-    expect(blocked.status !== "ready" && blocked.message).toMatch(/像会怎样|成实像|接不到/);
+    expect(blocked.status !== "ready" && blocked.message).toMatch(/像会怎样|成实像|接不到|光屏上会怎样/);
     expect(blocked.status !== "ready" && blocked.message).not.toMatch(/真正相交/);
   });
 

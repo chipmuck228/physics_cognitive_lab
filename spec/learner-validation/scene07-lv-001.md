@@ -204,3 +204,45 @@ v1.1 records an `EVIDENCE_IMPLEMENTATION_GAP`: Scene 07 still stores
 `constructionSource = student-constructed` for the official ray-construction
 evaluator. Do not silently change L4/L5/L6. Authored summary alone must not
 manufacture MODEL construction evidence.
+
+### LV-S07-014 — REASONABLE_REASONING_REJECTED
+
+Source: manual learner-flow inspection after Learner Experience v1.1.
+Not a learner-validation result.
+
+A physically sufficient learner explanation for the current u=f task was
+rejected by the implementation.
+
+Observed sentence:
+
+> 物体在F上，光线透过透镜后，光线平行无法相交，在白屏上无法成像，白屏上接不到像。
+
+The implementation treated screen-cannot-receive as virtual-image and then
+rejected no-finite-meeting + virtual as contradictory. It also demanded
+canonical slots (`有限远`, `实像`, expected connective) that this task does
+not require.
+
+### LV-S07-015 — WHOLE_MODEL_GATE_ON_LOCAL_TASK
+
+Source: manual learner-flow inspection after Learner Experience v1.1.
+Not a learner-validation result.
+
+A local u=f reasoning task appeared to require an unrelated u<f model
+relationship. The screen asked “刚才判断时，哪些关系真正起作用？” The learner
+selected the u=f relation. The evaluator still required the u<f virtual-image
+checkbox because both overlay items were `required: true`.
+
+---
+
+## Candidate principle (Scene 07 experimental; not universal)
+
+**REASONING SUFFICIENCY INTEGRITY**
+
+If a learner has already expressed enough physically valid reasoning to
+support the current task conclusion, the system must not block progression
+merely because the response lacks canonical wording, unnecessary relation
+slots, unrelated model branches, preferred textbook terminology, or
+redundant restatement.
+
+Do not promote this to a universal canonical contract. Audit:
+`spec/learner-experience/scene07-reasoning-sufficiency-audit-v1.md`. Decision D071.

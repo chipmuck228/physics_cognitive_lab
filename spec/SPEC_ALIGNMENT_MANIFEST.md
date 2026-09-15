@@ -135,7 +135,7 @@ Production Scene lives on the Universal Runtime (`app/scenes/convex-lens-optical
 - `physical-representation-plan.md` — design-time PRI locks.
 - `interaction-plan.md` — Scene 07 learner-interaction plan (first reference consumer). Not a universal runtime and not learner validation.
 
-Related experimental overlay (not an owner): `spec/learner-experience/scene07-learner-experience-v1.1.md` (v1 kept as history). Concept ledger: `spec/learner-experience/scene07-concept-ledger-v1.md` (EXPERIMENTAL / SCENE-SCOPED; not a standard).
+Related experimental overlay (not an owner): `spec/learner-experience/scene07-learner-experience-v1.1.md` (v1 kept as history). Concept ledger: `spec/learner-experience/scene07-concept-ledger-v1.md` (EXPERIMENTAL / SCENE-SCOPED; not a standard). Reasoning-sufficiency audit: `spec/learner-experience/scene07-reasoning-sufficiency-audit-v1.md` (EXPERIMENTAL; D071; not a universal semantic evaluator).
 
 Primary model: `convex-lens-imaging`  
 Secondary models: none
@@ -187,6 +187,7 @@ The canonical model definition lives in `content/physics-models/convex-lens-imag
 - `learner-experience/scene07-learner-experience-v1.1.md`
 - `learner-experience/scene07-concept-ledger-v1.md`
 - `learner-experience/scene07-interaction-mapping-v1.1.md`
+- `learner-experience/scene07-reasoning-sufficiency-audit-v1.md`
 - `learner-experience/scene02-learner-experience-v1.md`
 - `learner-experience/contract-check-v1.md`
 - `learner-experience/scene07-interaction-mapping-v1.md`

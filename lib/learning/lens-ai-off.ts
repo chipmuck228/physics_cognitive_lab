@@ -17,6 +17,7 @@ import {
 } from "@/content/physics-models/convex-lens-imaging/construction";
 import { normalizeLensStep6Text } from "@/content/physics-models/convex-lens-imaging/construction";
 import type { ObjectStation } from "@/content/physics-models/convex-lens-imaging/physics-boundary";
+import { inferLensAiOffLocalTask } from "@/lib/learning/lens-local-reasoning";
 import { parseLensReasoningSemantic } from "@/lib/learning/lens-step6-semantic";
 import type { LensStep6Interpretation } from "@/lib/learning/lens-model";
 import type {
@@ -137,6 +138,22 @@ export function intendedLensAiOffAnswerId(challengeId: string): string {
 export function intendedLensAiOffPostCheckIds(challengeId: string): string[] {
   return lensAiOffPostCheckOptions(challengeId)
     .filter((option) => option.required && !option.distractor)
+    .map((option) => option.id);
+}
+
+export function localRequiredLensAiOffPostCheckIds(
+  challengeId: string,
+  localTask: "window-real" | "u-equals-f" | "u-less-than-f" | "compound" = "compound",
+): string[] {
+  const options = lensAiOffPostCheckOptions(challengeId);
+  return options
+    .filter((option) => option.required && !option.distractor)
+    .filter((option) => {
+      if (!option.localScope || option.localScope === "always" || localTask === "compound" || localTask === "window-real") {
+        return true;
+      }
+      return option.localScope === localTask;
+    })
     .map((option) => option.id);
 }
 
@@ -371,22 +388,36 @@ export function lensAiOffJudgmentImplication(judgmentId: string): {
   nature?: ImageConsequence["nature"];
   screenReceivable?: boolean;
 } | null {
+  return lensAiOffJudgmentImplications(judgmentId)[0] ?? null;
+}
+
+export function lensAiOffJudgmentImplications(judgmentId: string): Array<{
+  meetingMode?: MeetingMode;
+  nature?: ImageConsequence["nature"];
+  screenReceivable?: boolean;
+}> {
   if (judgmentId === "distant-object-real-reduced") {
-    return { meetingMode: "actual-convergence", nature: "real", screenReceivable: true };
+    return [{ meetingMode: "actual-convergence", nature: "real", screenReceivable: true }];
   }
-  if (judgmentId === "also-convex-lens" || judgmentId === "virtual-not-on-screen-and-f-is-limit") {
-    return { meetingMode: "backward-extension", nature: "virtual", screenReceivable: false };
+  if (judgmentId === "also-convex-lens") {
+    return [{ meetingMode: "backward-extension", nature: "virtual", screenReceivable: false }];
+  }
+  if (judgmentId === "virtual-not-on-screen-and-f-is-limit") {
+    return [
+      { meetingMode: "backward-extension", nature: "virtual", screenReceivable: false },
+      { meetingMode: "no-finite-meeting", nature: "none", screenReceivable: false },
+    ];
   }
   if (judgmentId === "image-on-card-is-the-image-itself") {
-    return { meetingMode: "no-finite-meeting", nature: "none", screenReceivable: false };
+    return [{ meetingMode: "no-finite-meeting", nature: "none", screenReceivable: false }];
   }
   if (judgmentId === "catch-virtual-on-paper") {
-    return { screenReceivable: true };
+    return [{ screenReceivable: true }];
   }
   if (judgmentId === "at-f-ordinary-row") {
-    return { meetingMode: "actual-convergence", nature: "real" };
+    return [{ meetingMode: "actual-convergence", nature: "real" }];
   }
-  return null;
+  return [];
 }
 
 function encodeAiOffParse(parse: LensReasoningSemanticParse | null | undefined): string[] {
@@ -451,14 +482,15 @@ export function draftToLensAiOffAttempt(
 export function postCheckMatchesRequired(
   challengeId: string,
   postCheckIds: readonly string[],
+  localTask: "window-real" | "u-equals-f" | "u-less-than-f" | "compound" = "compound",
 ): boolean {
   const options = lensAiOffPostCheckOptions(challengeId);
   const selected = new Set(postCheckIds);
-  const required = options.filter((option) => option.required && !option.distractor);
+  const required = localRequiredLensAiOffPostCheckIds(challengeId, localTask);
   const distractors = options.filter((option) => option.distractor);
   return (
     required.length > 0 &&
-    required.every((option) => selected.has(option.id)) &&
+    required.every((id) => selected.has(id)) &&
     distractors.every((option) => !selected.has(option.id))
   );
 }
@@ -486,9 +518,15 @@ export function evaluateLensAiOffAttempt(input: {
     : { ok: false, failureKind: "wrong-precommit-structure" as const };
   const answerCorrect =
     input.draft.selectedAnswer === intendedLensAiOffAnswerId(input.draft.currentChallengeId);
+  const localTask = inferLensAiOffLocalTask({
+    challengeId: input.draft.currentChallengeId,
+    objectStation: input.draft.objectStation,
+    reasoning: input.draft.reasoning,
+  });
   const matchesPostCheck = postCheckMatchesRequired(
     input.draft.currentChallengeId,
     input.postCheckIds,
+    localTask,
   );
   const accepted = official.ok && matchesPostCheck && input.llmUsed === false;
   return {
@@ -588,6 +626,7 @@ export function classifyLensAiOffPostCheck(input: {
   challengeId: string;
   postCheckIds: readonly string[];
   officialOk: boolean;
+  localTask?: "window-real" | "u-equals-f" | "u-less-than-f" | "compound";
 }): { kind: "missing" | "rejected"; message: string } | { kind: "ok" } {
   if (input.postCheckIds.length === 0) {
     return { kind: "missing", message: LENS_AI_OFF_COPY.postCheckNeedFacts };
@@ -601,12 +640,15 @@ export function classifyLensAiOffPostCheck(input: {
     return { kind: "rejected", message: LENS_AI_OFF_COPY.postCheckWrongChallenge };
   }
   const selected = new Set(input.postCheckIds);
-  const required = options.filter((option) => option.required && !option.distractor);
+  const required = localRequiredLensAiOffPostCheckIds(
+    input.challengeId,
+    input.localTask ?? "compound",
+  );
   const distractors = options.filter((option) => option.distractor);
   if (distractors.some((option) => selected.has(option.id))) {
     return { kind: "rejected", message: LENS_AI_OFF_COPY.postCheckDistractor };
   }
-  if (required.some((option) => !selected.has(option.id))) {
+  if (required.some((id) => !selected.has(id))) {
     return { kind: "rejected", message: LENS_AI_OFF_COPY.postCheckMissingRequired };
   }
   if (!input.officialOk) {
@@ -620,6 +662,7 @@ export function lensAiOffPostCheckRepair(
   postCheckIds: readonly string[],
   accepted: boolean,
   officialOk = false,
+  localTask: "window-real" | "u-equals-f" | "u-less-than-f" | "compound" = "compound",
 ): { kind: "missing" | "rejected"; message: string } | null {
   if (accepted) {
     return null;
@@ -628,6 +671,7 @@ export function lensAiOffPostCheckRepair(
     challengeId,
     postCheckIds,
     officialOk,
+    localTask,
   });
   return classified.kind === "ok" ? { kind: "rejected", message: LENS_AI_OFF_COPY.postCheckSystem } : classified;
 }

@@ -39,9 +39,9 @@ function beyondDraft(text: string) {
 }
 
 describe("Scene 07 Step 6 semantic layer", () => {
-  it("sends the live TRANSFER paraphrase to the LLM path, not insufficient", () => {
+  it("maps the live TRANSFER paraphrase on the deterministic path", () => {
     const text = "这些光穿过去以后在另一边碰到了一起，所以会形成能接到的像。";
-    expect(classifyLensStep6FastPath(text).kind).toBe("needs-llm");
+    expect(classifyLensStep6FastPath(text).kind).toBe("sufficient");
   });
 
   it("maps the learner sentence on the deterministic fast path", () => {
@@ -126,16 +126,13 @@ describe("Scene 07 Step 6 semantic layer", () => {
     expect(smuggled).not.toHaveProperty("successfulTransfer");
   });
 
-  it("treats 碰到一起 as an LLM boundary case, then validates deterministically", async () => {
+  it("maps 碰到一起 deterministically, without requiring 会聚", () => {
     const text = "光线碰到一起，成实像。";
-    expect(classifyLensStep6FastPath(text).kind).toBe("needs-llm");
-    const resolved = await resolveLensStep6Check(beyondDraft(text), async () => ({
-      ok: true,
-      parse: CONVERGENCE_REAL,
-    }));
+    expect(classifyLensStep6FastPath(text).kind).toBe("sufficient");
+    const resolved = resolveLensStep6WithoutLlm(beyondDraft(text));
+    expect(resolved.handled).toBe(true);
     expect(resolved.check.status).toBe("ready");
-    expect(resolved.draft.step6Interpretation?.provenance).toBe("system-derived");
-    expect(resolved.draft.step6Interpretation?.source).toBe("llm-semantic-parse");
+    expect(resolved.draft.step6Interpretation?.source).toBe("deterministic-fast-path");
     expect(
       evaluateConvexLensModelConstruction({
         objectStation: "beyond-2f",
@@ -175,7 +172,7 @@ describe("Scene 07 Step 6 semantic layer", () => {
   });
 
   it("does not treat AI failure as an incorrect answer", async () => {
-    const text = "光线碰到一起，成实像。";
+    const text = "光最后碰到了，所以卡片能看到清楚的像。";
     const failed = await resolveLensStep6Check(beyondDraft(text), async () => ({
       ok: false,
       reason: "unavailable",

@@ -845,4 +845,16 @@ Default Scene-scoped review request: `spec/prompts/review-physics-representation
 
 ---
 
+## D071 — Scene 07 reasoning sufficiency vs whole-model coverage (experimental; not universal)
+
+**Date:** 2026-09-15
+
+**Decision:** After a manual learner-flow inspection, repair Scene 07 evaluators so local reasoning sufficiency is not the same gate as whole-model coverage. Accept physically sufficient natural-language u=f reasoning without requiring canonical tokens (`有限远`, `实像`, `会聚`) or unrelated u<f branches. Keep Physics Truth, UPLP, MODEL construction evidence, and AI_OFF zero-LLM. Introduce Scene-scoped candidate principle REASONING_SUFFICIENCY_INTEGRITY. Do not promote it to a universal contract. Do not claim LEARNER_VALIDATED / UNIVERSAL_SEMANTIC_EVALUATOR / MODEL_VALIDATED.
+
+**Why:** A learner should solve physics, not the evaluator. Semantic flexibility must not become physics leniency.
+
+**Consequence:** Audit `spec/learner-experience/scene07-reasoning-sufficiency-audit-v1.md`. Formative observations LV-S07-014 / LV-S07-015. LocalReasoningResult vs ModelCoverageResult in Scene 07 only.
+
+---
+
 

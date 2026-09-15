@@ -10,7 +10,7 @@ import { LENS_AI_OFF_COPY } from "@/lib/content/convex-lens-optical-bench";
 import {
   applyDerivedAiOffFields,
   hasLensAiOffDerivedStructure,
-  lensAiOffJudgmentImplication,
+  lensAiOffJudgmentImplications,
   type LensAiOffDraft,
 } from "@/lib/learning/lens-ai-off";
 import type { LensModelStepCheck, LensStep6Interpretation } from "@/lib/learning/lens-model";
@@ -41,33 +41,35 @@ function judgmentDisagreesWithParse(
   draft: LensAiOffDraft,
   parse: LensReasoningSemanticParse,
 ): boolean {
-  const implied = lensAiOffJudgmentImplication(draft.selectedAnswer);
-  if (!implied) {
+  const implications = lensAiOffJudgmentImplications(draft.selectedAnswer);
+  if (implications.length === 0) {
     return false;
   }
   const meeting = parse.meetingClaim === "unclear" ? null : parse.meetingClaim;
-  if (
-    implied.meetingMode &&
-    meeting &&
-    implied.meetingMode !==
-      (meeting === "parallel-no-finite-meeting" ? "no-finite-meeting" : meeting)
-  ) {
-    return true;
-  }
-  if (
-    implied.nature &&
-    parse.imageNatureClaim !== "unclear" &&
-    implied.nature !== parse.imageNatureClaim
-  ) {
-    return true;
-  }
-  if (implied.screenReceivable !== undefined && parse.screenClaim !== "unclear") {
-    const receivable = parse.screenClaim === "receivable";
-    if (receivable !== implied.screenReceivable) {
-      return true;
+  return !implications.some((implied) => {
+    if (
+      implied.meetingMode &&
+      meeting &&
+      implied.meetingMode !==
+        (meeting === "parallel-no-finite-meeting" ? "no-finite-meeting" : meeting)
+    ) {
+      return false;
     }
-  }
-  return false;
+    if (
+      implied.nature &&
+      parse.imageNatureClaim !== "unclear" &&
+      implied.nature !== parse.imageNatureClaim
+    ) {
+      return false;
+    }
+    if (implied.screenReceivable !== undefined && parse.screenClaim !== "unclear") {
+      const receivable = parse.screenClaim === "receivable";
+      if (receivable !== implied.screenReceivable) {
+        return false;
+      }
+    }
+    return true;
+  });
 }
 
 export function applyLensAiOffParse(
@@ -168,17 +170,24 @@ export function resolveLensAiOffWithoutLlm(draft: LensAiOffDraft): {
         ),
       };
     }
+    if (!fast.authored.hasMeetingLanguage && !fast.authored.hasConsequenceLanguage) {
+      return {
+        handled: true,
+        draft: { ...draft, authoredInterpretation: null },
+        check: { status: "missing", message: LENS_AI_OFF_COPY.unclear },
+      };
+    }
     return {
       handled: true,
       draft: { ...draft, authoredInterpretation: null },
       check: {
-        status: "inconsistent",
+        status: fast.authored.contradictory ? "inconsistent" : "missing",
         message: lensAuthoredBindMissingMessage(fast.authored),
       },
     };
   }
   return {
-    handled: false,
+    handled: true,
     draft,
     check: { status: "missing", message: LENS_AI_OFF_COPY.unclear },
   };

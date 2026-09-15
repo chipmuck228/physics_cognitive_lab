@@ -23,6 +23,12 @@ export interface IndependentPostCheckOption {
   label: string;
   required: boolean;
   distractor: boolean;
+  /**
+   * Scene 07 local-task scope. Overlay `required` means the relation belongs
+   * to the challenge's full set; a local reasoning gate may require only the
+   * scopes that this judgment actually used.
+   */
+  localScope?: "always" | "u-equals-f" | "u-less-than-f";
 }
 
 export interface IndependentAssessmentDefinition {

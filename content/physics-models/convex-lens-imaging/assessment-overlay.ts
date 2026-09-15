@@ -98,12 +98,14 @@ export const convexLensImagingAssessmentOverlay: AssessmentOverlay = {
           label: "焦点以内出来的光还是散开的，往回延长才相交，所以纸接不到。",
           required: true,
           distractor: false,
+          localScope: "u-less-than-f",
         },
         {
           id: "f-is-not-ordinary",
           label: "物体在焦点上时，有限远处不成完整的像。",
           required: true,
           distractor: false,
+          localScope: "u-equals-f",
         },
         {
           id: "project-virtual",

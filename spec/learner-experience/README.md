@@ -183,6 +183,7 @@ Scene 07 v1.1 adds **candidate** principles. They are not canonical cross-Scene 
 8. **Concept Introduction Integrity (candidate).** No concept may appear as an explanatory premise before the learner has had a meaningful opportunity to ground it in physical experience. Canonical Physics Truth does not mean every canonical truth must be immediately exposed.
 9. **Control Semantic Integrity (candidate).** The control must match answer logic. Single-select means only one option can be true under the question as written. Radio → checkbox is not an automatic repair if the stage requires construction.
 10. **System Priming Risk (candidate evidence concern).** SYSTEM PROVIDED ≠ RECOGNIZED ≠ CONNECTED ≠ AUTHORED ≠ INDEPENDENT CONSTRUCTION. Do not teach the relation and then count a paraphrase as independent model construction.
+11. **Reasoning Sufficiency Integrity (candidate).** If the learner has expressed enough physically valid reasoning for the **current** claim, do not block because canonical wording, extra model branches, or textbook tokens are missing. Local sufficiency ≠ whole-model coverage. Semantic flexibility must not become physics leniency. Scene 07 evidence only; not a universal contract.
 
 Design-time concept states (not L-levels): UNSEEN → REFERENCED → GROUNDED → NAMED → USED. See `scene07-concept-ledger-v1.md`.
 
@@ -197,6 +198,7 @@ Design-time concept states (not L-levels): UNSEEN → REFERENCED → GROUNDED �
 | `scene07-concept-ledger-v1.md` | Scene 07 concept sequencing ledger (EXPERIMENTAL / SCENE-SCOPED) |
 | `scene07-interaction-mapping-v1.md` | Scene 07 mapping v1 (historical) |
 | `scene07-interaction-mapping-v1.1.md` | Scene 07 mapping v1.1 |
+| `scene07-reasoning-sufficiency-audit-v1.md` | Scene 07 evaluator audit: local sufficiency vs model coverage (EXPERIMENTAL) |
 | `scene02-learner-experience-v1.md` | Scene 02 Script |
 | `contract-check-v1.md` | Phase 2: Script vs canonical contracts |
 | `scene02-interaction-mapping-v1.md` | Phase 3: experience → interaction bridge |
@@ -215,5 +217,7 @@ Related, not in this folder:
 - `UNIVERSAL_LEARNER_EXPERIENCE_STANDARD`
 - `CONCEPT_LEDGER_STANDARD`
 - `UNIVERSAL_MODEL_UI`
+- `UNIVERSAL_SEMANTIC_EVALUATOR`
+- `UNIVERSAL_REASONING_SUFFICIENCY_STANDARD`
 - `AI_GENERATED_UI_READY`
 - `CANONICAL` (for this folder)

@@ -206,9 +206,9 @@ describe("Scene 07 AI_OFF independent-use pilot", () => {
     expect(evaluateConvexLensAiOff(draftToLensAiOffAttempt(draft, false)!).ok).toBe(true);
   });
 
-  it("challenge B: virtual paraphrase without F-limit is rejected", () => {
+  it("challenge B: virtual paraphrase without F-limit can pass locally", () => {
     const draft = magnifierDraft("出来以后还是散开的，往回画才碰到，所以只能看到虚像，白纸接不到。");
-    expect(evaluateConvexLensAiOff(draftToLensAiOffAttempt(draft, false)!).ok).toBe(false);
+    expect(evaluateConvexLensAiOff(draftToLensAiOffAttempt(draft, false)!).ok).toBe(true);
   });
 
   it("paraphrase A/B/C are interpretable; D/E rejected; F insufficient", () => {
@@ -273,7 +273,7 @@ describe("Scene 07 AI_OFF independent-use pilot", () => {
   });
 
   it("parser failure stays recoverable and does not accept", async () => {
-    const draft = windowDraft("这些光穿过去以后在另一边碰到了一起，所以会形成能接到的像。", null);
+    const draft = windowDraft("这些光穿过去以后有一种特别的走法。", null);
     const resolved = await resolveLensAiOffCheck(draft, async () => ({
       ok: false,
       reason: "unavailable",
