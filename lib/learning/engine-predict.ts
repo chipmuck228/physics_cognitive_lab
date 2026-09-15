@@ -1,10 +1,52 @@
 import {
+  ENGINE_COPY,
   ENGINE_PREDICT_OUTCOMES,
   type EnginePredictOutcome,
   type EngineSceneExperimentId,
 } from "@/lib/content/four-stroke-engine";
 import { hasOwnWords } from "@/lib/learning/engine-describe";
 import type { PredictionEvidence } from "@/types/learning";
+
+export type EnginePredictReasonStance = "" | "has-idea" | "guess-only" | "unknown";
+
+const HONEST_NO_REASON: ReadonlySet<string> = new Set([
+  ENGINE_COPY.reasonUnknown,
+  ENGINE_COPY.reasonGuessOnly,
+]);
+
+export function enginePredictReasonForCommit(
+  stance: EnginePredictReasonStance,
+  authored: string,
+): string {
+  if (stance === "unknown") {
+    return ENGINE_COPY.reasonUnknown;
+  }
+  if (stance === "guess-only") {
+    return ENGINE_COPY.reasonGuessOnly;
+  }
+  if (stance === "has-idea") {
+    return authored;
+  }
+  return authored;
+}
+
+export function enginePredictStanceFromReason(reason: string): EnginePredictReasonStance {
+  const trimmed = reason.trim();
+  if (!trimmed) {
+    return "";
+  }
+  if (trimmed === ENGINE_COPY.reasonUnknown) {
+    return "unknown";
+  }
+  if (trimmed === ENGINE_COPY.reasonGuessOnly) {
+    return "guess-only";
+  }
+  return "has-idea";
+}
+
+export function isEngineHonestNoReason(reason: string): boolean {
+  return HONEST_NO_REASON.has(reason.trim());
+}
 
 export interface EnginePredictEvaluation {
   hasOutcome: boolean;

@@ -108,7 +108,7 @@ export function LensExperimentTask({
         <Card className="space-y-4 p-4">
           <p className="font-serif text-xl">{lensTrialCompleteLabel(trialIndex)}</p>
           <p className="text-sm text-[var(--ink-muted)]">
-            这一轮已经记下。下一轮会换一件要改的事，先不要沿用刚才的操作。
+            这一轮已经记下。下一次会换一个新的问题，先不要沿用刚才的操作。
           </p>
           {reviewOnly ? null : (
             <div className="flex justify-end">

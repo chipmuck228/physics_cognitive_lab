@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ENGINE_COPY,
   ENGINE_EXPERIMENT_A,
   ENGINE_EXPERIMENT_B,
 } from "@/lib/content/four-stroke-engine";
@@ -28,6 +29,9 @@ describe("engine PREDICT evidence", () => {
     expect(evaluateEnginePrediction("no-main-output", "a").sufficient).toBe(false);
     expect(evaluateEnginePrediction("no-main-output", "   ").sufficient).toBe(false);
     expect(evaluateEnginePrediction("unsure", "我还看不太懂。").sufficient).toBe(true);
+    expect(
+      evaluateEnginePrediction("no-main-output", ENGINE_COPY.reasonUnknown).sufficient,
+    ).toBe(true);
   });
 
   it("treats a wrong prediction as valid prediction evidence", () => {

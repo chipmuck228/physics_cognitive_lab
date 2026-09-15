@@ -8,6 +8,8 @@ export type LensPredictReasonStance = "" | "has-idea" | "guess-only" | "unknown"
 const HONEST_NO_REASON: ReadonlySet<string> = new Set([
   LENS_COPY.reasonUnknown,
   LENS_COPY.reasonGuessOnly,
+  "我还不知道为什么",
+  "我只是先猜的",
 ]);
 
 export function lensPredictReasonForCommit(

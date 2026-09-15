@@ -23,7 +23,9 @@
 
 Learner-observation documents are not architecture owners. `learner-validation/learner-validation-prep.md` (D050) owns WHY/WHAT for one informal Grade-9 observation of Scene 03. `learner-validation/first-learner-observation-guide.md` (D051) owns HOW to execute that first observation. They must not redefine UPLP stages, L1–L6, Schema lifecycle, Quality Review gates, or Evidence Design rules. They do not mark any model `validated`. `learner-validation/scene07-lv-001.md` is a formative Scene 07 observation record only.
 
-`architecture/learner-workspace-layout.md` is a **PILOT / NOT YET UNIVERSALIZED** layout-responsibility candidate (D068). First consumer: Scene 07 ENTRY–EXPERIMENT. It does not own physics, evidence, progression, MODEL grammar, or Scene DSL. It is not an architecture source of truth above this list. Do not claim UNIVERSAL_LAYOUT_VALIDATED. Interaction Shell freeze still applies.
+`architecture/learner-workspace-layout.md` is a **PILOT / NOT YET UNIVERSALIZED** layout-responsibility candidate (D068). First consumer: Scene 07. Scene 02 may compose the same slots for layout only. It does not own physics, evidence, progression, MODEL grammar, or Scene DSL. It is not an architecture source of truth above this list. Do not claim UNIVERSAL_LAYOUT_VALIDATED. Interaction Shell freeze still applies.
+
+`learner-experience/` Scripts are an **EXPERIMENTAL DESIGN ARTIFACT** (D069). They are not architecture owners and not a Source of Truth. Canonical contracts win on conflict. Do not claim UNIVERSAL_EXPERIENCE_STANDARD, LEARNER_VALIDATED, or AI_GENERATED_UI_READY. `architecture/learner-experience-ai-compilation.md` is DESIGN_ONLY; runtime LLM UI generation is forbidden.
 
 ## Scene 01 documents
 
@@ -52,7 +54,7 @@ Scene 01 remains flat under `spec/` for historical reasons. New Scenes should fo
 - `scene-spec.md` — purpose, pedagogical boundaries, future UI/component plan; does not own UPLP or the Physics Model.
 - `physics-state.md` — deterministic `EngineState` and four-stroke table; LLM must not own these values.
 - `learning-flow.md` — Scene-specific mapping onto canonical UPLP stages; does not redefine stage semantics.
-- `interaction-script.md` — Grade 9 Chinese student experience.
+- `interaction-script.md` — Grade 9 Chinese student experience. Not deleted by the experimental Learner Experience Script overlay (`spec/learner-experience/scene02-learner-experience-v1.md`).
 - `evidence-contract.md` — Scene evidence → `AccumulatedModelEvidence`; Scene never assigns L1–L6.
 - `ai-guardrails.md` — Scene-specific tutor constraints; H1–H5 remain UPLP-owned.
 - `exam-mapping.md` — Exam World uses the model's existing `examPatterns`; not a second question bank.
@@ -133,6 +135,8 @@ Production Scene lives on the Universal Runtime (`app/scenes/convex-lens-optical
 - `physical-representation-plan.md` — design-time PRI locks.
 - `interaction-plan.md` — Scene 07 learner-interaction plan (first reference consumer). Not a universal runtime and not learner validation.
 
+Related experimental overlay (not an owner): `spec/learner-experience/scene07-learner-experience-v1.md`.
+
 Primary model: `convex-lens-imaging`  
 Secondary models: none
 
@@ -143,7 +147,9 @@ The canonical model definition lives in `content/physics-models/convex-lens-imag
 - `architecture/scene-01-06-abstraction-audit.md` — discovery-only classification of Scenes 01–06 (D058). Not a source of truth for UPLP, L-levels, or lifecycle. Does not authorize a renderer or Scene 07.
 - `architecture/scene-04-hybrid-dsl-pilot.md` — Scene 04 chrome/options extraction (D059). Not a universal renderer. Recommendation: `KEEP_SCENE04_ONLY`.
 - `architecture/interaction-shell-contract.md` — reusable interaction-shell boundary after Scene 03/04/05 Observe+Predict reuse. Freeze: do not extract more shells merely because duplication exists. Not a Scene DSL. Not Scene 07.
-- `architecture/learner-workspace-layout.md` — PILOT layout slots for World / Task / Support (D068). Scene 07 ENTRY–EXPERIMENT first consumer. Not universal. Not an architecture owner. Does not authorize Scene 01–06 migration.
+- `architecture/learner-workspace-layout.md` — PILOT layout slots for World / Task / Support (D068). Scene 07 first consumer; Scene 02 may compose slots for layout only. Not universal. Not an architecture owner. Does not authorize Scene 01, 03–06 migration.
+- `architecture/learner-experience-ai-compilation.md` — DESIGN_ONLY future authoring compiler. Not an owner. Runtime LLM UI generation is forbidden.
+- `learner-experience/README.md` — experimental Learner Experience Script overlay (D069). Not canonical. Canonical contracts win.
 - `EXPERIMENT_LOG.md` — evidence log; non-authoritative for architecture.
 - `OPEN_QUESTIONS.md` — research backlog; non-authoritative for settled design decisions.
 - `microwave-bread-development-notes.md` — dated implementation snapshot; must be re-verified against code.
@@ -175,6 +181,13 @@ The canonical model definition lives in `content/physics-models/convex-lens-imag
 - `OPEN_QUESTIONS.md`
 - `architecture/interaction-shell-contract.md`
 - `architecture/learner-workspace-layout.md` (PILOT; not an owner)
+- `architecture/learner-experience-ai-compilation.md` (DESIGN_ONLY; not an owner)
+- `learner-experience/README.md` (EXPERIMENTAL; not an owner)
+- `learner-experience/scene07-learner-experience-v1.md`
+- `learner-experience/scene02-learner-experience-v1.md`
+- `learner-experience/contract-check-v1.md`
+- `learner-experience/scene07-interaction-mapping-v1.md`
+- `learner-experience/scene02-interaction-mapping-v1.md`
 - `architecture/learner-interaction-runtime-audit.md`
 - `architecture/learner-interaction-runtime-contract.md`
 - `architecture/learner-interaction-state-contract.md`

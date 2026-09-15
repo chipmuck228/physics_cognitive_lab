@@ -116,7 +116,9 @@ describe("Scene 07 learner UX chrome", () => {
     });
     render(<ConvexLensOpticalBenchLab />);
     expect(screen.getByTestId("learner-workspace")).toBeInTheDocument();
-    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("点物体位置，或移动一次光屏");
+    expect(screen.getByTestId("lens-now-do")).toHaveTextContent(
+      "先看看这个装置。物体、透镜和光屏分别在哪里？",
+    );
     expect(screen.getByTestId("lens-help-panel")).toBeInTheDocument();
     expect(screen.queryByTestId("lens-task-context")).not.toBeInTheDocument();
   });

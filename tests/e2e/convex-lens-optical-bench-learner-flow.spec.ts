@@ -45,12 +45,12 @@ test.describe("Scene 07 learner-visible flow", () => {
     await openLensLab(page);
     await startLensLesson(page);
     await expect(page.getByTestId("lens-observe-task")).toBeAttached();
-    await expect(page.getByTestId("lens-now-do")).toContainText("点物体位置，或移动一次光屏");
+    await expect(page.getByTestId("lens-now-do")).toContainText("物体、透镜和光屏分别在哪里");
     await expect(page.getByTestId("learner-workspace-world")).toBeVisible();
     await expect(page.getByTestId("station-hit-between-f-and-2f")).toBeVisible();
     await expect(page.getByRole("button", { name: LENS_COPY.observeSubmit })).toHaveCount(0);
     await page.getByTestId("lens-play-demo").click();
-    await expect(page.getByTestId("lens-now-do")).toContainText("点物体位置，或移动一次光屏");
+    await expect(page.getByTestId("lens-now-do")).toContainText("物体、透镜和光屏分别在哪里");
     await page.getByTestId("lens-move-screen").click();
     await expect(page.getByTestId("lens-now-do")).toContainText("勾出你确实看见的变化");
     const required = new Set<string>(LENS_OBSERVE_REQUIRED_IDS);
@@ -78,7 +78,7 @@ test.describe("Scene 07 learner-visible flow", () => {
     await startLensLesson(page);
 
     await expect(page.getByTestId("lens-vocab-F")).toBeVisible();
-    await expect(page.getByTestId("lens-vocab-F")).toContainText("认得这个位置");
+    await expect(page.getByTestId("lens-vocab-F")).toContainText("认得它就可以");
     await expect(page.getByTestId("lens-vocab-screen")).toBeVisible();
     await expect(page.getByTestId("lens-vocab-image")).toBeVisible();
     await expect(page.getByTestId("lens-vocab-F")).not.toContainText("实像");
@@ -105,41 +105,41 @@ test.describe("Scene 07 learner-visible flow", () => {
     await page.getByRole("radio", { name: /看见的像更大/ }).click();
     await page.getByRole("button", { name: LENS_COPY.observeSubmitExperiment }).click();
     await expect(page.getByTestId("lens-now-do")).toContainText("和刚才猜的一样吗");
-    await page.getByRole("radio", { name: /不一样/ }).click();
+    await page.getByRole("radio", { name: /不太一样/ }).click();
     await page.getByRole("button", { name: LENS_COPY.compareSubmit }).click();
     await expect(page.getByTestId("lens-now-do")).toContainText("你现在怎么想");
     await page.locator("textarea").last().fill("我刚才猜错了，光屏上还是出现了清楚的图样。");
     await page.getByRole("button", { name: LENS_COPY.reflectionSubmit }).click();
-    await expect(page.getByTestId("lens-now-do")).toContainText("开始下一次");
+    await expect(page.getByTestId("lens-now-do")).toContainText("如果继续把物体移近 F");
     await page.getByTestId("lens-start-next-trial").click();
 
-    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 2 / 4 次");
+    await expect(page.getByTestId("lens-trial-progress")).toContainText("如果继续把物体移近 F");
     await expect(page.getByTestId("lens-predict-not-exam")).toBeVisible();
-    await expect(page.getByTestId("lens-now-do")).toContainText("物体正好放在焦点上");
+    await expect(page.getByTestId("lens-now-do")).toContainText("这次把物体放到 F");
     await completeLensExperimentCycle(page, {
       predictOutcome: "光屏接不到清晰像",
       reason: "我还不确定，先试试看。",
       screen: "怎么移光屏都接不到",
       sizeOrCover: "有限远处没有完整清晰的像",
-      comparison: "基本一样",
+      comparison: "差不多一样",
       reflection: "有限远处不相交，不要把它说成又一种普通成像。",
     });
-    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 3 / 4 次");
+    await expect(page.getByTestId("lens-trial-progress")).toContainText("现在把物体放到 F 里面");
     await completeLensExperimentCycle(page, {
       predictOutcome: "光屏接不到清晰像",
       reason: "物体在焦点以内，我预计光屏接不到。",
       screen: "怎么移光屏都接不到",
       sizeOrCover: "看见的像更大",
-      comparison: "基本一样",
+      comparison: "差不多一样",
       reflection: "焦点以内只有反向延长线相交，光屏接不到虚像。",
     });
-    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 4 / 4 次");
+    await expect(page.getByTestId("lens-trial-progress")).toContainText("遮住透镜一部分");
     await completeLensExperimentCycle(page, {
       predictOutcome: "还能接到实像，像会更大、更远",
       reason: "我预计整幅像还在，只是可能更暗。",
       screen: "光屏接到清晰像",
       sizeOrCover: "整幅像还在，通常更暗",
-      comparison: "基本一样",
+      comparison: "差不多一样",
       reflection: "透镜不是把像按上下拼起来的，整幅像还在。",
     });
 
@@ -169,7 +169,7 @@ test.describe("Scene 07 learner-visible flow", () => {
     await expect(
       page.getByRole("heading", { name: lensStageHeading(LearningStage.EXPERIMENT) }),
     ).toBeVisible();
-    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 1 / 4 次");
+    await expect(page.getByTestId("lens-trial-progress")).toContainText("先看 F 和 2F 之间");
     await expect(page.getByTestId("lens-now-do")).toContainText("把物体移到 F 和 2F 之间");
     await expect(page.getByTestId("lens-intervention-prompt")).toContainText("F 和 2F 之间");
     await expect(page.getByRole("button", { name: LENS_COPY.runExperiment })).toHaveCount(0);
@@ -193,16 +193,16 @@ test.describe("Scene 07 learner-visible flow", () => {
     await expect(page.getByTestId("lens-compare-surface")).toBeVisible();
     await expect(page.getByTestId("lens-compare-prediction")).toBeAttached();
     await expect(page.getByTestId("lens-compare-observation")).toBeAttached();
-    await page.getByRole("radio", { name: /基本一样/ }).click();
+    await page.getByRole("radio", { name: /差不多一样/ }).click();
     await page.getByRole("button", { name: LENS_COPY.compareSubmit }).click();
     await page.locator("textarea").last().fill(
       "物体更靠近焦点时，像变大变远，不是光屏在制造像。",
     );
     await page.getByRole("button", { name: LENS_COPY.reflectionSubmit }).click();
-    await expect(page.getByTestId("lens-trial-complete")).toContainText("第 1 次验证完成");
+    await expect(page.getByTestId("lens-trial-complete")).toContainText("这一轮看完了");
     await expect(page.getByTestId("lens-start-next-trial")).toBeVisible();
     await page.getByTestId("lens-start-next-trial").click();
-    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 2 / 4 次");
+    await expect(page.getByTestId("lens-trial-progress")).toContainText("如果继续把物体移近 F");
     await expect(page.getByTestId("lens-predict-task")).toBeVisible();
     await expect(page.getByTestId("lens-predict-not-exam")).toBeVisible();
     await expect(page.getByTestId("station-hit-at-f")).toHaveCount(0);
@@ -212,7 +212,7 @@ test.describe("Scene 07 learner-visible flow", () => {
       reason: "物体正好在焦点上，我预计有限远处接不到清晰像。",
       screen: "怎么移光屏都接不到",
       sizeOrCover: "有限远处没有完整清晰的像",
-      comparison: "基本一样",
+      comparison: "差不多一样",
       reflection: "有限远处不相交，不要把它说成又一种普通成像。",
     });
     await completeLensExperimentCycle(page, {
@@ -220,7 +220,7 @@ test.describe("Scene 07 learner-visible flow", () => {
       reason: "物体在焦点以内，我预计光屏接不到。",
       screen: "怎么移光屏都接不到",
       sizeOrCover: "看见的像更大",
-      comparison: "基本一样",
+      comparison: "差不多一样",
       reflection: "焦点以内只有反向延长线相交，光屏接不到虚像。",
     });
     await completeLensExperimentCycle(page, {
@@ -228,7 +228,7 @@ test.describe("Scene 07 learner-visible flow", () => {
       reason: "我预计整幅像还在，只是可能更暗。",
       screen: "光屏接到清晰像",
       sizeOrCover: "整幅像还在，通常更暗",
-      comparison: "基本一样",
+      comparison: "差不多一样",
       reflection: "透镜不是把像按上下拼起来的，整幅像还在。",
     });
 
@@ -271,7 +271,7 @@ test.describe("Scene 07 learner-visible flow", () => {
     await page.getByTestId("lens-return-progress").click();
     await expect(page.getByTestId("lens-experiment-task")).toBeVisible();
     await expect(page.getByTestId("lens-compare-surface")).toBeVisible();
-    await expect(page.getByTestId("lens-trial-progress")).toContainText("第 1 / 4 次");
+    await expect(page.getByTestId("lens-trial-progress")).toContainText("先看 F 和 2F 之间");
   });
 
   test("MODEL blocks an inconsistent ray and offers a repair path after final reject", async ({

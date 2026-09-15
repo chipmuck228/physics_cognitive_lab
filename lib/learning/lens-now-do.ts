@@ -1,4 +1,5 @@
-import { lensTrialSpec } from "@/lib/learning/lens-trial-intervention";
+import { lensTrialPurpose } from "@/lib/content/convex-lens-optical-bench";
+import { lensTrialSpec, nextLensTrialId } from "@/lib/learning/lens-trial-intervention";
 import type { LensExperimentId } from "@/lib/physics/convex-lens-optical-bench";
 
 export type LensExperimentMoment =
@@ -17,7 +18,7 @@ export interface LensCurrentActionCopy {
 }
 
 export function lensObserveNowDo(interacted: boolean): string {
-  return interacted ? "勾出你确实看见的变化" : "点物体位置，或移动一次光屏";
+  return interacted ? "勾出你确实看见的变化" : "先看看这个装置。物体、透镜和光屏分别在哪里？";
 }
 
 export function lensDescribeNowDo(): string {
@@ -25,7 +26,11 @@ export function lensDescribeNowDo(): string {
 }
 
 export function lensPredictNowDo(): string {
-  return "先猜你会看见什么";
+  return "如果把物体移到 F 和 2F 之间，你觉得会发生什么？";
+}
+
+export function lensExplainNowDo(): string {
+  return "你觉得真正起作用的是什么？";
 }
 
 export function lensExperimentMoment(input: {
@@ -64,7 +69,7 @@ export function lensExperimentCurrentAction(
   moment: LensExperimentMoment,
 ): LensCurrentActionCopy {
   const trial = lensTrialSpec(experimentId);
-  const kicker = `动手试试 · 第 ${trial.index} / 4 次`;
+  const kicker = lensTrialPurpose(experimentId);
   if (moment === "predict") {
     return {
       kicker,
@@ -96,9 +101,10 @@ export function lensExperimentCurrentAction(
     };
   }
   if (moment === "next") {
+    const nextId = nextLensTrialId(experimentId);
     return {
       kicker,
-      nowDo: "开始下一次",
+      nowDo: nextId ? lensTrialPurpose(nextId) : "这一轮先到这里",
     };
   }
   return {

@@ -14,8 +14,10 @@ import { EngineExplainTask } from "@/components/learning/EngineExplainTask";
 import { EngineModelBuilder } from "@/components/learning/EngineModelBuilder";
 import { EngineObserveTask } from "@/components/learning/EngineObserveTask";
 import { EnginePredictTask } from "@/components/learning/EnginePredictTask";
+import { EngineVocabRow } from "@/components/learning/EngineTermTip";
 import { EngineTransferPhenomenon } from "@/components/learning/EngineTransferPhenomenon";
 import { EngineTransferTask } from "@/components/learning/EngineTransferTask";
+import { LearnerWorkspace } from "@/components/learning/LearnerWorkspace";
 import { LearningShell } from "@/components/learning/LearningShell";
 import { EnginePlaybackControls } from "@/components/physics/engine/EnginePlaybackControls";
 import { FourStrokeEngine } from "@/components/physics/engine/FourStrokeEngine";
@@ -114,8 +116,11 @@ import {
   type EngineExamDraft,
 } from "@/lib/learning/engine-exam";
 import {
+  enginePredictReasonForCommit,
+  enginePredictStanceFromReason,
   evaluateEnginePrediction,
   firstCommittedEnginePrediction,
+  type EnginePredictReasonStance,
 } from "@/lib/learning/engine-predict";
 import {
   nextEngineHint,
@@ -166,6 +171,7 @@ export function FourStrokeEngineLab() {
   const [describeNeedStructure, setDescribeNeedStructure] = useState(false);
   const [predictOutcome, setPredictOutcome] = useState("");
   const [predictReason, setPredictReason] = useState("");
+  const [predictReasonStance, setPredictReasonStance] = useState<EnginePredictReasonStance>("");
   const [predictNeedMore, setPredictNeedMore] = useState(false);
   const [observed, setObserved] = useState<EngineObservedResult>(emptyObservedResult);
   const [comparison, setComparison] = useState<"" | "same" | "different" | "partial">(
@@ -209,6 +215,7 @@ export function FourStrokeEngineLab() {
     applyExperimentForm(session, experimentKey, {
       setPredictOutcome,
       setPredictReason,
+      setPredictReasonStance,
       setPredictNeedMore,
       setObserved,
       setComparison,
@@ -547,12 +554,21 @@ export function FourStrokeEngineLab() {
   }
 
   function handleCommitPrediction(experimentId: EngineSceneExperimentId) {
-    const evaluation = evaluateEnginePrediction(predictOutcome, predictReason);
+    if (!predictOutcome) {
+      setPredictNeedMore(true);
+      return;
+    }
+    if (!predictReasonStance) {
+      setPredictNeedMore(true);
+      return;
+    }
+    const reason = enginePredictReasonForCommit(predictReasonStance, predictReason);
+    const evaluation = evaluateEnginePrediction(predictOutcome, reason);
     setPredictNeedMore(!evaluation.sufficient);
     if (!evaluation.sufficient) {
       return;
     }
-    commitPrediction(experimentId, predictOutcome, predictReason);
+    commitPrediction(experimentId, predictOutcome, reason);
   }
 
   function handleRun(experimentId: EngineSceneExperimentId) {
@@ -658,11 +674,20 @@ export function FourStrokeEngineLab() {
       key={ENGINE_EXPERIMENT_A}
       question={ENGINE_COPY.predictAQuestion}
       outcome={predictOutcome}
+      reasonStance={predictReasonStance}
       reason={predictReason}
       needMore={predictNeedMore}
+      hideLead
       onOutcomeChange={(value) => {
         setPredictNeedMore(false);
         setPredictOutcome(value);
+      }}
+      onReasonStanceChange={(value) => {
+        setPredictNeedMore(false);
+        setPredictReasonStance(value);
+        if (value !== "has-idea") {
+          setPredictReason("");
+        }
       }}
       onReasonChange={(value) => {
         setPredictNeedMore(false);
@@ -675,11 +700,20 @@ export function FourStrokeEngineLab() {
       key={ENGINE_EXPERIMENT_B}
       question={ENGINE_COPY.predictBQuestion}
       outcome={predictOutcome}
+      reasonStance={predictReasonStance}
       reason={predictReason}
       needMore={predictNeedMore}
+      hideLead
       onOutcomeChange={(value) => {
         setPredictNeedMore(false);
         setPredictOutcome(value);
+      }}
+      onReasonStanceChange={(value) => {
+        setPredictNeedMore(false);
+        setPredictReasonStance(value);
+        if (value !== "has-idea") {
+          setPredictReason("");
+        }
       }}
       onReasonChange={(value) => {
         setPredictNeedMore(false);
@@ -761,6 +795,7 @@ export function FourStrokeEngineLab() {
       }}
       onSubmit={handleSaveExplanation}
       onRevealHint={revealHint}
+      hideLead
     />
   ) : isModel && !modelComplete ? (
     <EngineModelBuilder
@@ -1058,27 +1093,82 @@ export function FourStrokeEngineLab() {
               ? examDraft.reasoning
               : predictReason;
 
+  const useWorkspace =
+    isEntry || isObserve || isDescribe || isPredict || isExperiment || isExplain;
+  const predictLeadQuestion = isPredict
+    ? ENGINE_COPY.predictAQuestion
+    : awaitingExperimentBPrediction
+      ? ENGINE_COPY.predictBQuestion
+      : null;
+  const workspaceLead = isEntry ? (
+    <div>
+      <h1 className="font-serif text-3xl leading-tight text-[var(--ink)] sm:text-4xl">
+        {ENGINE_COPY.headline}
+      </h1>
+      <p className="mt-3 text-lg text-[var(--ink-muted)]">{ENGINE_COPY.subheadline}</p>
+    </div>
+  ) : predictLeadQuestion ? (
+    <div>
+      <p className="text-xs font-medium tracking-wide text-[var(--heat)]">先预测</p>
+      <h1 className="mt-1 font-serif text-2xl leading-snug text-[var(--ink)] sm:text-3xl">
+        {ENGINE_STAGE_PROMPTS[LearningStage.PREDICT]}
+      </h1>
+      <p className="mt-2 text-sm font-medium leading-relaxed text-[var(--ink)]">
+        {predictLeadQuestion}
+      </p>
+      <p
+        className="mt-2 text-sm text-[var(--ink-muted)]"
+        data-testid="engine-predict-not-exam"
+      >
+        {ENGINE_COPY.predictNotExam}
+      </p>
+    </div>
+  ) : (
+    <h1 className="font-serif text-2xl leading-snug text-[var(--ink)] sm:text-3xl">
+      {ENGINE_STAGE_PROMPTS[session.stage]}
+    </h1>
+  );
+  const workspaceWorld = (
+    <div className="space-y-4">
+      {scene}
+      {isEntry || isObserve || isDescribe ? (
+        <EngineVocabRow terms={["piston", "cylinder"]} />
+      ) : null}
+    </div>
+  );
+  const tutorNode =
+    tutor.allowed && !isAiOff && !isComplete ? (
+      <TutorPanel
+        message={tutor.message}
+        loading={tutor.loading}
+        onAsk={() => {
+          void tutor.askTutor(tutorStudentText);
+        }}
+      />
+    ) : null;
+
   return (
     <LearningShell
       stage={session.stage}
       stageLabels={ENGINE_STAGE_LABELS}
-      stagePrompts={ENGINE_STAGE_PROMPTS}
+      stagePrompts={useWorkspace ? {} : ENGINE_STAGE_PROMPTS}
       progressStages={[...ENGINE_PHASE8_STAGES]}
       examNotice={isExam ? ENGINE_EXAM_COPY.notice : undefined}
-      scene={scene}
-      task={task}
-      tutor={
-        tutor.allowed && !isAiOff && !isComplete ? (
-          <TutorPanel
-            message={tutor.message}
-            loading={tutor.loading}
-            onAsk={() => {
-              void tutor.askTutor(tutorStudentText);
-            }}
+      scene={useWorkspace ? undefined : scene}
+      task={useWorkspace ? undefined : task}
+      workspace={
+        useWorkspace ? (
+          <LearnerWorkspace
+            emphasis={isObserve || isExperiment ? "world" : "task"}
+            lead={workspaceLead}
+            world={workspaceWorld}
+            task={isEntry ? actions : task}
+            support={tutorNode}
           />
-        ) : null
+        ) : undefined
       }
-      actions={actions}
+      tutor={useWorkspace ? null : tutorNode}
+      actions={useWorkspace && isEntry ? null : actions}
       onStartOver={handleStartOver}
       onGoBack={goBack}
       canGoBack={canGoBack}
@@ -1118,6 +1208,7 @@ function applyExperimentForm(
   setters: {
     setPredictOutcome: (value: string) => void;
     setPredictReason: (value: string) => void;
+    setPredictReasonStance: (value: EnginePredictReasonStance) => void;
     setPredictNeedMore: (value: boolean) => void;
     setObserved: (value: EngineObservedResult) => void;
     setComparison: (value: "" | "same" | "different" | "partial") => void;
@@ -1133,6 +1224,7 @@ function applyExperimentForm(
   if (!experimentId) {
     setters.setPredictOutcome("");
     setters.setPredictReason("");
+    setters.setPredictReasonStance("");
     setters.setPredictNeedMore(false);
     setters.setObserved(emptyObservedResult());
     setters.setComparison("");
@@ -1155,6 +1247,9 @@ function applyExperimentForm(
   );
   setters.setPredictOutcome(committed?.prediction ?? "");
   setters.setPredictReason(committed?.reasoning ?? "");
+  setters.setPredictReasonStance(
+    committed?.reasoning ? enginePredictStanceFromReason(committed.reasoning) : "",
+  );
   setters.setPredictNeedMore(false);
 
   const evidence =

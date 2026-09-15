@@ -85,7 +85,7 @@ export async function completeLensPredictA(page: Page) {
 
 export async function completeLensPredictNoviceWrongUnknown(page: Page) {
   await expect(page.getByTestId("lens-predict-not-exam")).toBeVisible();
-  await expect(page.getByTestId("lens-now-do")).toContainText("你觉得会看到什么");
+  await expect(page.getByTestId("lens-now-do")).toContainText("你觉得会发生什么");
   await page.getByRole("radio", { name: /光屏接不到清晰像/ }).click();
   await page.getByRole("radio", { name: LENS_COPY.reasonUnknown }).click();
   await expect(page.getByTestId("lens-predict-reason")).toHaveCount(0);
@@ -196,7 +196,7 @@ export async function reachLensModel(page: Page) {
   await completeLensExperimentCycle(page, {
     screen: "光屏接到清晰像",
     sizeOrCover: "看见的像更大",
-    comparison: "基本一样",
+    comparison: "差不多一样",
     reflection: "物体更靠近焦点时，像变大变远，不是光屏在制造像。",
   });
   await completeLensExperimentCycle(page, {
@@ -204,7 +204,7 @@ export async function reachLensModel(page: Page) {
     reason: "物体正好在焦点上，我预计有限远处接不到清晰像。",
     screen: "怎么移光屏都接不到",
     sizeOrCover: "有限远处没有完整清晰的像",
-    comparison: "基本一样",
+    comparison: "差不多一样",
     reflection: "有限远处不相交，不要把它说成又一种普通成像。",
   });
   await completeLensExperimentCycle(page, {
@@ -212,7 +212,7 @@ export async function reachLensModel(page: Page) {
     reason: "物体在焦点以内，我预计光屏接不到。",
     screen: "怎么移光屏都接不到",
     sizeOrCover: "看见的像更大",
-    comparison: "基本一样",
+    comparison: "差不多一样",
     reflection: "焦点以内只有反向延长线相交，光屏接不到虚像。",
   });
   await completeLensExperimentCycle(page, {
@@ -220,7 +220,7 @@ export async function reachLensModel(page: Page) {
     reason: "我预计整幅像还在，只是可能更暗。",
     screen: "光屏接到清晰像",
     sizeOrCover: "整幅像还在，通常更暗",
-    comparison: "基本一样",
+    comparison: "差不多一样",
     reflection: "透镜不是把像按上下拼起来的，整幅像还在。",
   });
   await completeLensExplain(page);

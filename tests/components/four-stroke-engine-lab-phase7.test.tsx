@@ -135,7 +135,9 @@ describe("FourStrokeEngineLab Phase 7 EXAM", () => {
     expect(await screen.findByTestId("engine-exam-world")).toBeInTheDocument();
     expect(screen.queryByTestId("engine-phase6-end")).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("heading", { name: "这一次，自己来。" }),
+      screen.queryByRole("heading", {
+        name: ENGINE_STAGE_PROMPTS[LearningStage.AI_OFF],
+      }),
     ).not.toBeInTheDocument();
   });
 
@@ -271,7 +273,9 @@ describe("FourStrokeEngineLab Phase 7 EXAM", () => {
     expect(screen.queryByTestId("engine-phase7-end")).not.toBeInTheDocument();
     expect(screen.queryByTestId("engine-exam-options")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "这一次，自己来。" }),
+      screen.getByRole("heading", {
+        name: ENGINE_STAGE_PROMPTS[LearningStage.AI_OFF],
+      }),
     ).toBeInTheDocument();
   });
 

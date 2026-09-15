@@ -61,12 +61,12 @@ describe("Scene 07 learner workspace pilot", () => {
     expect(screen.getByRole("button", { name: LENS_COPY.predictSubmit })).toBeInTheDocument();
   });
 
-  it("lets 我还不知道为什么 commit a wrong prediction", async () => {
+  it("lets 我现在还说不上来 commit a wrong prediction", async () => {
     const user = userEvent.setup();
     replaceSession(predictSession());
     render(<ConvexLensOpticalBenchLab />);
     await user.click(screen.getByRole("radio", { name: /光屏接不到清晰像/ }));
-    await user.click(screen.getByRole("radio", { name: /我还不知道为什么/ }));
+    await user.click(screen.getByRole("radio", { name: /我现在还说不上来/ }));
     await user.click(screen.getByRole("button", { name: LENS_COPY.predictSubmit }));
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).stage).toBe(LearningStage.EXPERIMENT);
     expect(getSessionSnapshot(CONVEX_LENS_SCENE_ID).predictions[0]?.prediction).toBe(
@@ -122,6 +122,18 @@ describe("Scene 07 learner workspace pilot", () => {
     );
     expect(screen.getByLabelText(LENS_COPY.describeQuestion)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: LENS_COPY.describeSubmit })).toBeInTheDocument();
+  });
+
+  it("EXPLAIN uses LearnerWorkspace with a causal question, not ray construction", () => {
+    replaceSession({
+      ...createSession(() => "t0", () => "lens-workspace-explain", CONVEX_LENS_SCENE_ID),
+      stage: LearningStage.EXPLAIN,
+    });
+    render(<ConvexLensOpticalBenchLab />);
+    expect(screen.getByTestId("learner-workspace")).toBeInTheDocument();
+    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("你觉得真正起作用的是什么");
+    expect(screen.getByTestId("lens-explain-task")).toBeInTheDocument();
+    expect(screen.queryByTestId("lens-ray-construction")).not.toBeInTheDocument();
   });
 
   it("keeps current action first in source order for narrow screens", () => {

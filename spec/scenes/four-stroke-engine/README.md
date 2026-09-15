@@ -41,7 +41,7 @@ This folder instantiates those documents. It does **not** redefine:
 | [`scene-spec.md`](./scene-spec.md) | Scene purpose, boundaries, future UI/component plan |
 | [`physics-state.md`](./physics-state.md) | Deterministic `EngineState` and four-stroke table |
 | [`learning-flow.md`](./learning-flow.md) | Scene-specific mapping onto UPLP stages |
-| [`interaction-script.md`](./interaction-script.md) | Grade 9 Chinese student experience |
+| [`interaction-script.md`](./interaction-script.md) | Grade 9 Chinese student experience. Not replaced by the experimental Learner Experience Script overlay. |
 | [`evidence-contract.md`](./evidence-contract.md) | Evidence mapping to `deriveModelEvidenceLevel` |
 | [`ai-guardrails.md`](./ai-guardrails.md) | Scene-specific tutor constraints |
 | [`exam-mapping.md`](./exam-mapping.md) | Exam World uses the model's exam patterns |

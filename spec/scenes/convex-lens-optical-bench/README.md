@@ -17,4 +17,6 @@ Library `metadata.status` is `prototype` after POST `LEARNING_EVIDENCE_PASS_WITH
 | [`physical-representation-plan.md`](./physical-representation-plan.md) | design-time PRI locks |
 | [`interaction-plan.md`](./interaction-plan.md) | learner-interaction plan; first runtime reference consumer |
 
+Experimental overlay (not an owner): [`../../learner-experience/scene07-learner-experience-v1.md`](../../learner-experience/scene07-learner-experience-v1.md). Canonical contracts win.
+
 Do not extract a generic optics shell. Do not widen Scene DSL.

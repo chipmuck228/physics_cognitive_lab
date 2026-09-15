@@ -24,6 +24,7 @@ interface EngineExplainTaskProps {
   onExplanationChange: (value: string) => void;
   onSubmit: () => void;
   onRevealHint: () => void;
+  hideLead?: boolean;
 }
 
 export function EngineExplainTask({
@@ -42,6 +43,7 @@ export function EngineExplainTask({
   onExplanationChange,
   onSubmit,
   onRevealHint,
+  hideLead = false,
 }: EngineExplainTaskProps) {
   const showStep2 = firstChange.length > 0;
   const showStep3 = showStep2 && gasEffect.length > 0;
@@ -49,6 +51,7 @@ export function EngineExplainTask({
 
   return (
     <div className="space-y-4" data-testid="engine-explain-task">
+      {hideLead ? null : (
       <div className="space-y-2">
         <p className="text-sm font-medium leading-relaxed text-[var(--ink)]">
           {ENGINE_COPY.explainLead}
@@ -57,6 +60,7 @@ export function EngineExplainTask({
           {ENGINE_COPY.explainFollow}
         </p>
       </div>
+      )}
 
       <EngineEvidenceDrawer evidenceA={evidenceA} evidenceB={evidenceB} />
 

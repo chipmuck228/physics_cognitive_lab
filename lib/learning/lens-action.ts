@@ -1,4 +1,4 @@
-import { LENS_AI_OFF_COPY, LENS_COPY, LENS_PHASE_STAGES } from "@/lib/content/convex-lens-optical-bench";
+import { LENS_AI_OFF_COPY, LENS_COPY, LENS_PHASE_STAGES, lensTrialPurpose } from "@/lib/content/convex-lens-optical-bench";
 import { hasOwnWords } from "@/lib/learning/engine-describe";
 import { advanceIfReady } from "@/lib/learning/advance";
 import type { LensDomainOutcome } from "@/lib/learning/lens-action-response";
@@ -228,7 +228,7 @@ export function applyLensReflectionSave(
       kind: "committed",
       advanced: advanced.stage !== session.stage,
       message: closed
-        ? `第 ${LENS_EXPERIMENT_ORDER.indexOf(experimentId) + 1} 次验证完成`
+        ? "这一轮看完了"
         : LENS_COPY.reflectionSaved,
     },
   };
@@ -947,7 +947,9 @@ export function applyLensAcknowledgeNextTrial(
     ),
     outcome: {
       kind: "committed",
-      message: `可以开始第 ${LENS_EXPERIMENT_ORDER.indexOf(gate.completedId) + 2} 次验证。`,
+      message: nextLensTrialId(gate.completedId)
+        ? lensTrialPurpose(nextLensTrialId(gate.completedId)!)
+        : "这一轮先到这里。",
     },
   };
 }

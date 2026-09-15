@@ -59,6 +59,7 @@ import {
   lensEntryNowDo,
   lensExperimentCurrentAction,
   lensExperimentMoment,
+  lensExplainNowDo,
   lensObserveNowDo,
   lensPredictNowDo,
 } from "@/lib/learning/lens-now-do";
@@ -491,6 +492,8 @@ export function ConvexLensOpticalBenchLab() {
           ? { nowDo: lensPredictNowDo() }
           : isExperiment && displayExperiment && experimentMoment
             ? lensExperimentCurrentAction(displayExperiment, experimentMoment)
+            : isExplain
+              ? { nowDo: lensExplainNowDo() }
             : null;
   const vocabTerms = isEntry
     ? (["screen"] as const)
@@ -1180,7 +1183,7 @@ export function ConvexLensOpticalBenchLab() {
     </div>
   );
 
-  const useWorkspace = isEntry || isObserve || isDescribe || isPredict || isExperiment;
+  const useWorkspace = isEntry || isObserve || isDescribe || isPredict || isExperiment || isExplain;
   const showPredictLead =
     (isPredict || (isExperiment && !predictionLocked && !awaitingNextTrial)) && Boolean(activeExperiment);
   const workspaceLead = showPredictLead ? (

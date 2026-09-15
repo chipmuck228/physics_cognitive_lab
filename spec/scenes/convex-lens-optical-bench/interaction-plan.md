@@ -7,9 +7,11 @@
 > First reference consumer of Learner Interaction Runtime / State contracts  
 > Not a universal runtime. Not learner-validated.
 
-LearnerWorkspace layout pilot (D068): ENTRY → EXPERIMENT uses World / Task / Support
-slots. Later stages keep the existing shell split. The layout does not own physics,
-evaluators, or progression.
+LearnerWorkspace layout (D068 / D069): ENTRY → EXPLAIN uses World / Task / Support
+slots. MODEL → COMPLETE keep the existing shell split unless a later pass inspects
+them. The layout does not own physics, evaluators, or progression. Experimental
+Learner Experience Script: `spec/learner-experience/scene07-learner-experience-v1.md`.
+Not an owner. Canonical contracts win.
 
 Do not reopen: UPLP stage meanings, official physics, evaluators / L-claim design, AI_OFF evidence rules, Scene DSL freeze, Interaction Shell freeze.
 

@@ -3,8 +3,9 @@
 > Kind: architecture candidate  
 > Status: **PILOT / NOT YET UNIVERSALIZED**  
 > Date: 2026-09-15  
-> First consumer: Scene 07 ENTRY → EXPERIMENT  
-> Decision: D068
+> First consumer: Scene 07  
+> Second layout consumer (composition only): Scene 02 ENTRY → EXPLAIN  
+> Decision: D068; D069 notes Scene 02 may compose the same slots without unifying domain UI
 
 ```text
 UNIVERSAL_LAYOUT_CANDIDATE
@@ -63,9 +64,11 @@ This is not a Scene DSL extension.
 
 The Interaction Shell freeze (`SUFFICIENT_EVIDENCE_TO_FREEZE`) still wins
 for whether reusable chrome may absorb domain semantics. This layout is a
-**slot primitive**, not a domain shell. Scene 07 is the first pilot. A
-second production consumer has **not** been identified. Do not migrate
-Scene 01–06 from this document.
+**slot primitive**, not a domain shell. Scene 07 is the first pilot. Scene 02
+may compose the same World / Task / Support slots for layout only. It must
+keep engine playback, energy MODEL, and Engine* tasks. Do not migrate
+Scene 01, 03–06 from this document. Do not force Scene 07 domain widgets
+onto Scene 02.
 
 ---
 

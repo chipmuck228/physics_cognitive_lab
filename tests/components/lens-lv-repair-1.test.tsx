@@ -25,7 +25,9 @@ describe("Scene 07 learner-validation repair 1", () => {
     expect(within(world).getByTestId("lens-vocab-F")).toHaveTextContent(LENS_VOCAB.F.body);
     expect(within(world).getByTestId("lens-vocab-screen")).toHaveTextContent(LENS_VOCAB.screen.body);
     expect(within(world).getByTestId("lens-vocab-image")).toHaveTextContent(LENS_VOCAB.image.body);
-    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("点物体位置，或移动一次光屏");
+    expect(screen.getByTestId("lens-now-do")).toHaveTextContent(
+      "先看看这个装置。物体、透镜和光屏分别在哪里？",
+    );
     expect(screen.getByTestId("lens-vocab-F")).not.toHaveTextContent("实像");
   });
 
@@ -40,10 +42,10 @@ describe("Scene 07 learner-validation repair 1", () => {
     );
     expect(screen.getByRole("button", { name: LENS_COPY.predictSubmit })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /提交答案|正确答案|答题/ })).not.toBeInTheDocument();
-    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("你觉得会看到什么");
+    expect(screen.getByTestId("lens-now-do")).toHaveTextContent("你觉得会发生什么");
   });
 
-  it("lets 我还不知道为什么 commit a wrong prediction into EXPERIMENT", async () => {
+  it("lets 我现在还说不上来 commit a wrong prediction into EXPERIMENT", async () => {
     const user = userEvent.setup();
     replaceSession({
       ...createSession(() => "t0", () => "lens-lv-unknown", CONVEX_LENS_SCENE_ID),
@@ -51,11 +53,11 @@ describe("Scene 07 learner-validation repair 1", () => {
     });
     render(<ConvexLensOpticalBenchLab />);
     await user.click(screen.getByRole("radio", { name: /光屏接不到清晰像/ }));
-    await user.click(screen.getByRole("radio", { name: /我还不知道为什么/ }));
+    await user.click(screen.getByRole("radio", { name: /我现在还说不上来/ }));
     expect(screen.queryByTestId("lens-predict-reason")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: LENS_COPY.predictSubmit }));
     expect(screen.getByTestId("lens-now-do")).toHaveTextContent("把物体移到 F 和 2F 之间");
-    expect(screen.getByTestId("lens-trial-progress")).toHaveTextContent("第 1 / 4 次");
+    expect(screen.getByTestId("lens-trial-progress")).toHaveTextContent("先看 F 和 2F 之间");
     expect(screen.getByTestId("lens-experiment-task")).toHaveAttribute("data-phase", "intervene");
   });
 

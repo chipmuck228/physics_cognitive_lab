@@ -821,4 +821,16 @@ Default Scene-scoped review request: `spec/prompts/review-physics-representation
 
 ---
 
+## D069 — Learner Experience Script v1 (experimental; not canonical)
+
+**Date:** 2026-09-15
+
+**Decision:** Introduce a Scene-owned experimental design artifact, Learner Experience Script, sitting between canonical architecture and Interaction Plan. Pilot Scripts for Scene 07 and Scene 02. The Script is **not** a Source of Truth. UPLP, Physics Model Schema/Library, Evidence Design, Interaction Runtime/State, PRI, AI_OFF, and Scene/model specs win on conflict. Do not modify those contracts to fit the Script. Do not extract a universal experience shell. Do not implement runtime LLM UI generation. A future AI authoring compiler, if any, is build-time + validators + human review only (`spec/architecture/learner-experience-ai-compilation.md`, DESIGN_ONLY).
+
+**Why:** Learner-facing interaction was still being designed from evaluator fields. The Script asks what the learner is thinking, noticing, and doing, then maps that onto existing software interaction.
+
+**Consequence:** Specs live in `spec/learner-experience/`. Scene 07 learner-facing copy/layout for ENTRY–EXPLAIN follows the Script without rewriting physics/evaluators. Scene 07 MODEL/TRANSFER architecture is inspected, not rewritten. Scene 07 AI_OFF LLM fallthrough remains a known defect and is not authorized. Scene 02 may compose LearnerWorkspace for layout only and must keep engine physics, energy MODEL, and its own experiment rhythm. Honest-unknown prediction copy is allowed; Scene 02 PREDICT `hasOwnWords` gate is not deleted. Not LEARNER_VALIDATED. Not UNIVERSAL_EXPERIENCE_STANDARD. Not AI_GENERATED_UI_READY.
+
+---
+
 

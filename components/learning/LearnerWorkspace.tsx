@@ -12,7 +12,7 @@ interface LearnerWorkspaceProps {
 
 /**
  * Layout slots only. Scene / evaluator / physics stay outside.
- * Pilot: Scene 07 ENTRY–EXPERIMENT. Not a universal renderer.
+ * Pilot: Scene 07; Scene 02 may compose the same slots. Not a universal renderer.
  */
 export function LearnerWorkspace({
   lead,

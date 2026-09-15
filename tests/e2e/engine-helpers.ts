@@ -72,6 +72,7 @@ export async function completeEngineDescribe(page: Page) {
 
 export async function completeEnginePredictA(page: Page) {
   await page.getByRole("radio", { name: "不能产生主要动力" }).click();
+  await page.getByRole("radio", { name: ENGINE_COPY.reasonHasIdea }).click();
   await page.getByLabel(ENGINE_COPY.reasonLabel).fill(
     "没有燃烧，可能就没有刚才那种主要动力。",
   );
@@ -90,7 +91,7 @@ export async function completeEngineExperimentA(page: Page) {
     .getByRole("radio", { name: "有没有正常的主要动力输出？ 没有正常的主要动力输出" })
     .click();
   await page.getByRole("button", { name: ENGINE_COPY.observeSubmitExperiment }).click();
-  await page.getByTestId("engine-comparison").getByRole("radio", { name: "不一样" }).click();
+  await page.getByTestId("engine-comparison").getByRole("radio", { name: ENGINE_COPY.compareDifferent }).click();
   await page.getByRole("button", { name: ENGINE_COPY.compareSubmit }).click();
   await page.getByLabel(ENGINE_COPY.reflectionA).fill(
     "燃烧对发动机产生动力好像很重要。",
@@ -101,6 +102,7 @@ export async function completeEngineExperimentA(page: Page) {
 export async function completeEngineExperimentB(page: Page) {
   await expect(page.getByTestId("engine-predict-task")).toBeVisible();
   await page.getByRole("radio", { name: "不能产生主要动力" }).click();
+  await page.getByRole("radio", { name: ENGINE_COPY.reasonHasIdea }).click();
   await page.getByLabel(ENGINE_COPY.reasonLabel).fill(
     "活塞不能动，可能就没有正常输出。",
   );
@@ -111,7 +113,7 @@ export async function completeEngineExperimentB(page: Page) {
   await observed.getByRole("radio", { name: "活塞有没有正常向下运动？ 没有" }).click();
   await observed.getByRole("radio", { name: "动力输出是否成功？ 没有成功" }).click();
   await page.getByRole("button", { name: ENGINE_COPY.observeSubmitExperiment }).click();
-  await page.getByTestId("engine-comparison").getByRole("radio", { name: "不一样" }).click();
+  await page.getByTestId("engine-comparison").getByRole("radio", { name: ENGINE_COPY.compareDifferent }).click();
   await page.getByRole("button", { name: ENGINE_COPY.compareSubmit }).click();
   await page.getByLabel(ENGINE_COPY.reflectionB).fill(
     "燃烧已经发生了，但活塞不能动，所以没有正常输出。",

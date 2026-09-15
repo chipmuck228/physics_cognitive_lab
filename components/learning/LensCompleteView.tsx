@@ -31,7 +31,7 @@ export function LensCompleteView({
         <p className="text-sm leading-relaxed">{LENS_COMPLETE_COPY.body}</p>
       </div>
       <Card className="space-y-4 p-5" data-testid="lens-complete-review">
-        <p className="text-sm font-medium">回头看看</p>
+        <p className="text-sm font-medium">你留下的痕迹</p>
         {review.map((item) => (
           <div key={item.id} className="space-y-1">
             <p className="text-xs tracking-[0.16em] text-[var(--ink-muted)]">{item.label}</p>

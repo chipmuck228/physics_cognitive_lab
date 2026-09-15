@@ -91,6 +91,7 @@ async function reachPredict(user: ReturnType<typeof userEvent.setup>) {
 
 async function commitPredictionA(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("radio", { name: "不能产生主要动力" }));
+  await user.click(screen.getByRole("radio", { name: ENGINE_COPY.reasonHasIdea }));
   await user.type(
     screen.getByLabelText(ENGINE_COPY.reasonLabel),
     "没有燃烧，可能就没有刚才那种主要动力。",
@@ -124,7 +125,7 @@ async function closeExperimentA(user: ReturnType<typeof userEvent.setup>) {
   );
 
   const comparison = await screen.findByTestId("engine-comparison");
-  await user.click(within(comparison).getByRole("radio", { name: "不一样" }));
+  await user.click(within(comparison).getByRole("radio", { name: ENGINE_COPY.compareDifferent }));
   await user.click(screen.getByRole("button", { name: ENGINE_COPY.compareSubmit }));
 
   await user.type(
@@ -270,12 +271,32 @@ describe("FourStrokeEngineLab Phase 4", () => {
     expect(screen.queryByTestId("engine-run-experiment")).not.toBeInTheDocument();
   });
 
+  it("lets 我现在还说不上来 continue without fabricating energy reasoning", async () => {
+    mockReducedMotion();
+    const user = userEvent.setup();
+    await reachPredict(user);
+
+    await user.click(screen.getByRole("radio", { name: "不能产生主要动力" }));
+    await user.click(screen.getByRole("radio", { name: ENGINE_COPY.reasonUnknown }));
+    expect(screen.queryByLabelText(ENGINE_COPY.reasonLabel)).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: ENGINE_COPY.predictSubmit }));
+
+    expect(
+      await screen.findByRole("heading", {
+        name: ENGINE_STAGE_PROMPTS[LearningStage.EXPERIMENT],
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("engine-run-experiment")).toBeEnabled();
+    expect(screen.getByTestId("learner-workspace")).toBeInTheDocument();
+  });
+
   it("accepts a wrong prediction and unlocks experiment A", async () => {
     mockReducedMotion();
     const user = userEvent.setup();
     await reachPredict(user);
 
     await user.click(screen.getByRole("radio", { name: "还能产生主要动力" }));
+    await user.click(screen.getByRole("radio", { name: ENGINE_COPY.reasonHasIdea }));
     await user.type(
       screen.getByLabelText(ENGINE_COPY.reasonLabel),
       "它还在转，所以应该还有主要动力。",
@@ -322,8 +343,9 @@ describe("FourStrokeEngineLab Phase 4", () => {
     expect(
       screen.getAllByText(ENGINE_COPY.predictBQuestion).length,
     ).toBeGreaterThan(0);
-    expect(screen.getByLabelText(ENGINE_COPY.reasonLabel)).toHaveValue("");
+    expect(screen.queryByLabelText(ENGINE_COPY.reasonLabel)).not.toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "不能产生主要动力" }));
+    await user.click(screen.getByRole("radio", { name: ENGINE_COPY.reasonHasIdea }));
     await user.type(
       screen.getByLabelText(ENGINE_COPY.reasonLabel),
       "活塞不能动，可能就没有正常输出。",
@@ -347,7 +369,7 @@ describe("FourStrokeEngineLab Phase 4", () => {
       screen.getByRole("button", { name: ENGINE_COPY.observeSubmitExperiment }),
     );
     const comparison = await screen.findByTestId("engine-comparison");
-    await user.click(within(comparison).getByRole("radio", { name: "不一样" }));
+    await user.click(within(comparison).getByRole("radio", { name: ENGINE_COPY.compareDifferent }));
     await user.click(screen.getByRole("button", { name: ENGINE_COPY.compareSubmit }));
     await user.type(
       screen.getByLabelText(ENGINE_COPY.reflectionB),
@@ -399,6 +421,7 @@ describe("FourStrokeEngineLab Phase 4", () => {
 
     await user.click(screen.getByRole("button", { name: STUDENT_CHROME.tutorAskAria }));
     await user.click(screen.getByRole("radio", { name: "不能产生主要动力" }));
+    await user.click(screen.getByRole("radio", { name: ENGINE_COPY.reasonHasIdea }));
     await user.type(
       screen.getByLabelText(ENGINE_COPY.reasonLabel),
       "没有燃烧可能就没有主要动力。",
